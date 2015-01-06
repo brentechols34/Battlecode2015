@@ -10,6 +10,7 @@ public class RobotPlayer {
     static int myRange;
     static Random rand;
     static Direction[] directions = {Direction.NORTH, Direction.NORTH_EAST, Direction.EAST, Direction.SOUTH_EAST, Direction.SOUTH, Direction.SOUTH_WEST, Direction.WEST, Direction.NORTH_WEST};
+    static boolean isAttacking = false;
 
     public static void run(RobotController tomatojuice) {
         rc = tomatojuice;
@@ -75,22 +76,6 @@ public class RobotPlayer {
 
 
             if (rc.getType() == RobotType.BASHER) {
-                try {
-                    RobotInfo[] adjacentEnemies = rc.senseNearbyRobots(2, enemyTeam);
-
-                    // BASHERs attack automatically, so let's just move around mostly randomly
-                    if (rc.isCoreReady()) {
-                        int fate = rand.nextInt(1000);
-                        if (fate < 800) {
-                            tryMove(directions[rand.nextInt(8)]);
-                        } else {
-                            tryMove(rc.getLocation().directionTo(rc.senseEnemyHQLocation()));
-                        }
-                    }
-                } catch (Exception e) {
-                    System.out.println("Basher Exception");
-                    e.printStackTrace();
-                }
             }
 
             if (rc.getType() == RobotType.SOLDIER) {
@@ -98,12 +83,25 @@ public class RobotPlayer {
                     if (rc.isWeaponReady()) {
                         attackSomething();
                     }
-                    if (rc.isCoreReady()) {
-                        int fate = rand.nextInt(1000);
-                        if (fate < 800) {
-                            tryMove(directions[rand.nextInt(8)]);
-                        } else {
+
+                    RobotInfo[] adjacentEnemies = rc.senseNearbyRobots(rc.getType().attackRadiusSquared, enemyTeam);
+                    if (rc.isCoreReady() && adjacentEnemies.length == 0) {
+                        int numSoldiers = rc.readBroadcast(1);
+
+                        if (numSoldiers > 80) {
+                            isAttacking = true;
+                        } else if (numSoldiers < 55) {
+                            isAttacking = false;
+                        }
+
+                        if (!isAttacking && rc.getLocation().distanceSquaredTo(rc.senseHQLocation()) > 150) {
+                            tryMove(rc.getLocation().directionTo(rc.senseHQLocation()));
+                        }
+
+                        if (isAttacking) {
                             tryMove(rc.getLocation().directionTo(rc.senseEnemyHQLocation()));
+                        } else {
+                            tryMove(directions[rand.nextInt(8)]);
                         }
                     }
                 } catch (Exception e) {
@@ -145,11 +143,7 @@ public class RobotPlayer {
                     int numBashers = rc.readBroadcast(2);
 
                     if (rc.isCoreReady() && rc.getTeamOre() >= 60 && fate < Math.pow(1.2,15-numSoldiers-numBashers+numBeavers)*10000) {
-                        if (rc.getTeamOre() > 80 && fate % 2 == 0) {
-                            trySpawn(directions[rand.nextInt(8)],RobotType.BASHER);
-                        } else {
-                            trySpawn(directions[rand.nextInt(8)],RobotType.SOLDIER);
-                        }
+                        trySpawn(directions[rand.nextInt(8)],RobotType.SOLDIER);
                     }
                 } catch (Exception e) {
                     System.out.println("Barracks Exception");
