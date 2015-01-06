@@ -70,14 +70,7 @@ public class RobotPlayer {
             }
 
             if (rc.getType() == RobotType.TOWER) {
-                try {
-                    if (rc.isWeaponReady()) {
-                        attackSomething();
-                    }
-                } catch (Exception e) {
-                    System.out.println("Tower Exception");
-                    e.printStackTrace();
-                }
+                Tower.run(tomatojuice);
             }
 
 
