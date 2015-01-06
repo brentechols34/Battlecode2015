@@ -93,40 +93,7 @@ public class RobotPlayer {
 			}
 
 			if (rc.getType() == RobotType.SOLDIER) {
-				try {
-					if (rc.isWeaponReady()) {
-						attackSomething();
-					}
-
-					RobotInfo[] adjacentEnemies = rc.senseNearbyRobots(
-							rc.getType().attackRadiusSquared, enemyTeam);
-					if (rc.isCoreReady() && adjacentEnemies.length == 0) {
-						int numSoldiers = rc.readBroadcast(1);
-
-						if (numSoldiers > 80) {
-							isAttacking = true;
-						} else if (numSoldiers < 55) {
-							isAttacking = false;
-						}
-
-						if (!isAttacking
-								&& rc.getLocation().distanceSquaredTo(
-										rc.senseHQLocation()) > 150) {
-							tryMove(rc.getLocation().directionTo(
-									rc.senseHQLocation()));
-						}
-
-						if (isAttacking) {
-							tryMove(rc.getLocation().directionTo(
-									rc.senseEnemyHQLocation()));
-						} else {
-							tryMove(directions[rand.nextInt(8)]);
-						}
-					}
-				} catch (Exception e) {
-					System.out.println("Soldier Exception");
-					e.printStackTrace();
-				}
+				Soldier.run(tomatojuice)
 			}
 
 			if (rc.getType() == RobotType.BEAVER) {
