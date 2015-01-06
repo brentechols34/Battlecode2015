@@ -8,6 +8,7 @@ SETUP
 2. Run the .jar you just downloaded
 3. In your terminal: `cd path/to/install/dir/Battlecode2015/teams`
 4. `git clone git@github.com/brentechols34/Battlecode2015.git`
+5. `mv -r Battlecode2015 team163`
 
 RUNNING
 -------------
