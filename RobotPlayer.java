@@ -1,6 +1,7 @@
 package team163;
 
 import battlecode.common.*;
+import team163.tanks.Tank;
 import java.util.*;
 
 public class RobotPlayer {
@@ -87,6 +88,10 @@ public class RobotPlayer {
 
 			if (rc.getType() == RobotType.DRONE) {
 				Drone.run(tomatojuice);
+			}
+			
+			if (rc.getType() == RobotType.TANK) {
+				Tank.run(tomatojuice);
 			}
 
 			if (rc.getType() == RobotType.BASHER) {
