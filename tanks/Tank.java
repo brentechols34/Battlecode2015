@@ -1,48 +1,67 @@
 package team163.tanks;
 
-import java.util.Random;
-
-import team163.RobotPlayer;
-import team163.utils.AttackUtils;
 import battlecode.common.*;
 
 public class Tank {
 	static RobotController rc;
-	private static boolean isAttacking;	
-	static Direction[] directions = { Direction.NORTH, Direction.NORTH_EAST,
-		Direction.EAST, Direction.SOUTH_EAST, Direction.SOUTH,
-		Direction.SOUTH_WEST, Direction.WEST, Direction.NORTH_WEST };
+	static Behavior mood; /* current behavior */
+	static int range;
+	static Team team;
 
+	static Direction[] directions = { Direction.NORTH, Direction.NORTH_EAST,
+			Direction.EAST, Direction.SOUTH_EAST, Direction.SOUTH,
+			Direction.SOUTH_WEST, Direction.WEST, Direction.NORTH_WEST };
 
 	public static void run(RobotController rc) {
 		try {
-			Tank.rc = rc;
-			Random rand = new Random();
-			while (true) {
-				if (rc.isWeaponReady()) {
-					AttackUtils.attackSomething(rc,
-							rc.getType().attackRadiusSquared, rc.getTeam()
-									.opponent());
-				}
-				if (rc.getCoreDelay() > 0) {
-					rc.yield();
-				}
 
-				if (rc.readBroadcast(3) > 15) {
-					isAttacking = true;
-				}
-				if (rc.readBroadcast(3) > 10 && isAttacking) {
-					Move.tryMove(rc.getLocation().directionTo(
-							rc.senseEnemyHQLocation()));
-				} else {
-					/* move random */
-					Move.tryMove(directions[rand.nextInt(8)]);
-				}
-				rc.yield();
+			Tank.rc = rc;
+			Tank.range = rc.getType().attackRadiusSquared;
+			Tank.team = rc.getTeam();
+
+			mood = new B_Turtle(); /* starting behavior of turtling */
+			while (true) {
+
+				/* get behavior */
+				mood = chooseB();
+
+				/* perform round */
+				mood.perception();
+				mood.calculation();
+				mood.action();
+
+				/* end round */
+				Tank.rc.yield();
 			}
 		} catch (Exception e) {
-			System.out.println("Drone Exception");
+			System.out.println("Tank Exception");
 			e.printStackTrace();
 		}
+	}
+
+	/**
+	 * Logic to choose which behavior to use -- this could get large and require
+	 * refactoring...(source of technical debt)
+	 * 
+	 * @return Behavior interface
+	 */
+	private static Behavior chooseB() {
+		try {
+			/* if more than 10 tanks trigger aggresive behavior */
+			if (rc.readBroadcast(4) > 10) {
+				mood = new B_Attack();
+			}
+
+			/* if less than 5 tanks trigger turtling */
+			if (rc.readBroadcast(4) < 5) {
+				mood = new B_Turtle();
+			}
+
+			/* if mood has not been altered than current mood is kept */
+			return mood;
+		} catch (Exception e) {
+			System.out.println("Error caught in choosing tank behavior");
+		}
+		return mood; /* if error happens use current mood */
 	}
 }

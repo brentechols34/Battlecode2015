@@ -2,6 +2,7 @@ package team163;
 
 import battlecode.common.*;
 import team163.tanks.Tank;
+import team163.tanks.TankFactory;
 import java.util.*;
 
 public class RobotPlayer {
@@ -44,6 +45,7 @@ public class RobotPlayer {
 					int numBeavers = 0;
 					int numBarracks = 0;
 					int numDrones = 0;
+					int numTanks = 0;
 					for (RobotInfo r : myRobots) {
 						RobotType type = r.type;
 						if (type == RobotType.SOLDIER) {
@@ -56,12 +58,15 @@ public class RobotPlayer {
 							numBarracks++;
 						} else if (type == RobotType.DRONE) {
 							numDrones++;
+						} else if (type == RobotType.TANK) {
+							numTanks++;
 						}
 					}
 					rc.broadcast(0, numBeavers);
 					rc.broadcast(1, numSoldiers);
 					rc.broadcast(2, numBashers);
 					rc.broadcast(3, numDrones);
+					rc.broadcast(4, numTanks);
 					rc.broadcast(100, numBarracks);
 
 					if (rc.isWeaponReady()) {
@@ -89,9 +94,13 @@ public class RobotPlayer {
 			if (rc.getType() == RobotType.DRONE) {
 				Drone.run(tomatojuice);
 			}
-			
+
 			if (rc.getType() == RobotType.TANK) {
 				Tank.run(tomatojuice);
+			}
+
+			if (rc.getType() == RobotType.TANKFACTORY) {
+				TankFactory.run(tomatojuice);
 			}
 
 			if (rc.getType() == RobotType.BASHER) {
@@ -116,7 +125,7 @@ public class RobotPlayer {
 
 						if (!isAttacking
 								&& rc.getLocation().distanceSquaredTo(
-								rc.senseHQLocation()) > 150) {
+										rc.senseHQLocation()) > 150) {
 							tryMove(rc.getLocation().directionTo(
 									rc.senseHQLocation()));
 						}
@@ -141,14 +150,28 @@ public class RobotPlayer {
 					}
 					if (rc.isCoreReady()) {
 						int fate = rand.nextInt(1000);
-						if (fate < 8 && rc.getTeamOre() >= 300) {
+
+						/*
+						 * @TODO for testing build tanks factories after first
+						 * barracks
+						 */
+						if (rc.readBroadcast(100) > 0) {
+							if (fate < 8 && rc.getTeamOre() > 500) {
+								tryBuild(directions[rand.nextInt(8)],
+										RobotType.TANKFACTORY);
+							}
+						}
+
+
+						if (fate < 100 && rc.getTeamOre() >= 300
+								&& rc.readBroadcast(100) < 1) {
 							tryBuild(directions[rand.nextInt(8)],
 									RobotType.BARRACKS);
-						} else if (fate < 600) {
+						} else if (fate < 600 && rc.isCoreReady()) {
 							rc.mine();
 						} else if (fate < 900) {
 							tryMove(directions[rand.nextInt(8)]);
-						} else if (fate < 908 && rc.getTeamOre() >= 300) {
+						} else if (fate < 900 && rc.getTeamOre() >= 300) {
 							tryBuild(directions[rand.nextInt(8)],
 									RobotType.HELIPAD);
 						} else {
@@ -242,7 +265,7 @@ public class RobotPlayer {
 				&& !rc.canMove(directions[(dirint + offsets[offsetIndex] + 8) % 8])) {
 			offsetIndex++;
 		}
-		if (offsetIndex < 8) {
+		if (offsetIndex < 8 && rc.isCoreReady()) {
 			rc.build(directions[(dirint + offsets[offsetIndex] + 8) % 8], type);
 		}
 	}

@@ -46,9 +46,11 @@ public class MBugger {
 	public void setWidth(int width) {
 		this.width = width;
 	}
+
 	public void setHeight(int height) {
 		this.height = height;
 	}
+
 	/**
 	 * 
 	 * @return the position that this agent is at
@@ -81,8 +83,9 @@ public class MBugger {
 
 			// if it is an obstacle add obstacle and update map
 			if (rc.senseTerrainTile(next) != TerrainTile.NORMAL) {
-				p.addObstacle(new Point(x, y));
-				map[x][y] = false;
+				/* commented out because of the new possible negative values */
+				//p.addObstacle(new Point(x, y));
+				// map[x][y] = false;
 				return false;
 			}
 
@@ -94,11 +97,12 @@ public class MBugger {
 	}
 
 	private boolean isOOB(int x, int y) {
-		return (x >= width || x < 0 || y >= height || y < 0);
+		return (rc.senseTerrainTile(new MapLocation(x, y)) == TerrainTile.OFF_MAP);
 	}
 
 	/**
 	 * Finds the path from current location to target finish location
+	 * 
 	 * @param finish
 	 */
 	public void setTargetLocation(Point finish) {
