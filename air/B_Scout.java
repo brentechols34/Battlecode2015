@@ -5,6 +5,7 @@
  */
 package team163.air;
 
+import team163.utils.*;
 import battlecode.common.*;
 
 /**
@@ -84,7 +85,7 @@ public class B_Scout implements Behavior {
                 }
             } else {
                 if (rc.isCoreReady()) {
-                    Move.ranMove();
+                    Move.randMove();
                 }
             }
         } catch (Exception e) {

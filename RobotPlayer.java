@@ -8,304 +8,62 @@ import team163.tanks.TankFactory;
 import team163.utils.Move;
 
 import java.util.*;
+import team163.land.Barracks;
+import team163.land.Basher;
+import team163.land.Soldier;
+import team163.logistics.Beaver;
 
 public class RobotPlayer {
-	static RobotController rc;
-	static Team myTeam;
-	static Team enemyTeam;
-	static int myRange;
-	static Random rand;
-	static Direction[] directions = { Direction.NORTH, Direction.NORTH_EAST,
-			Direction.EAST, Direction.SOUTH_EAST, Direction.SOUTH,
-			Direction.SOUTH_WEST, Direction.WEST, Direction.NORTH_WEST };
-	static boolean isAttacking = false;
 
-	public static void run(RobotController tomatojuice) {
-		rc = tomatojuice;
-		rand = new Random(rc.getID());
-		team163.utils.Move.setRc(tomatojuice);
+    public static void run(RobotController tomatojuice) {
+        team163.utils.Move.setRc(tomatojuice); //set rc in utils/move
+        while (true) {
+            switch (tomatojuice.getType()) {
 
-		myRange = rc.getType().attackRadiusSquared;
-		MapLocation enemyLoc = rc.senseEnemyHQLocation();
-		Direction lastDirection = null;
-		myTeam = rc.getTeam();
-		enemyTeam = myTeam.opponent();
-		RobotInfo[] myRobots;
+                case HQ:
+                    HQ.run(tomatojuice);
+                    break;
 
-		while (true) {
-			try {
-				rc.setIndicatorString(0, "This is an indicator string.");
-				rc.setIndicatorString(1, "I am a " + rc.getType());
-			} catch (Exception e) {
-				System.out.println("Unexpected exception");
-				e.printStackTrace();
-			}
+                case TOWER:
+                    Tower.run(tomatojuice);
+                    break;
 
-			if (rc.getType() == RobotType.HQ) {
-				try {
-					int fate = rand.nextInt(10000);
-					myRobots = rc.senseNearbyRobots(999999, myTeam);
-					int numSoldiers = 0;
-					int numBashers = 0;
-					int numBeavers = 0;
-					int numBarracks = 0;
-					int numDrones = 0;
-					int numTanks = 0;
-					for (RobotInfo r : myRobots) {
-						RobotType type = r.type;
-						if (type == RobotType.SOLDIER) {
-							numSoldiers++;
-						} else if (type == RobotType.BASHER) {
-							numBashers++;
-						} else if (type == RobotType.BEAVER) {
-							numBeavers++;
-						} else if (type == RobotType.BARRACKS) {
-							numBarracks++;
-						} else if (type == RobotType.DRONE) {
-							numDrones++;
-						} else if (type == RobotType.TANK) {
-							numTanks++;
-						}
-					}
-					rc.broadcast(0, numBeavers);
-					rc.broadcast(1, numSoldiers);
-					rc.broadcast(2, numBashers);
-					rc.broadcast(3, numDrones);
-					rc.broadcast(4, numTanks);
-					rc.broadcast(100, numBarracks);
+                case HELIPAD:
+                    Helipad.run(tomatojuice);
+                    break;
 
-					/* if more than 60 units execute order 66 (full out attack) */
-					if ((numSoldiers + numDrones + numTanks) > 66) {
-						rc.broadcast(66, 1);
-					}
-					if ((numSoldiers + numDrones + numTanks) < 30) {
-						rc.broadcast(66, 0);
-					}
+                case DRONE:
+                    Drone.run(tomatojuice);
+                    break;
 
-					if (rc.isWeaponReady()) {
-						attackSomething();
-					}
+                case TANK:
+                    Tank.run(tomatojuice);
+                    break;
 
-					if (rc.isCoreReady() && rc.getTeamOre() >= 100
-							&& fate < Math.pow(1.2, 12 - numBeavers) * 10000) {
-						trySpawn(directions[rand.nextInt(8)], RobotType.BEAVER);
-					}
-				} catch (Exception e) {
-					System.out.println("HQ Exception");
-					e.printStackTrace();
-				}
-			}
+                case TANKFACTORY:
+                    TankFactory.run(tomatojuice);
+                    break;
 
-			if (rc.getType() == RobotType.TOWER) {
-				Tower.run(tomatojuice);
-			}
+                case BASHER:
+                    Basher.run(tomatojuice);
+                    break;
 
-			if (rc.getType() == RobotType.HELIPAD) {
-				Helipad.run(tomatojuice);
-			}
+                case SOLDIER:
+                    Soldier.run(tomatojuice);
+                    break;
 
-			if (rc.getType() == RobotType.DRONE) {
-				Drone.run(tomatojuice);
-			}
+                case BEAVER:
+                    Beaver.run(tomatojuice);
+                    break;
 
-			if (rc.getType() == RobotType.TANK) {
-				Tank.run(tomatojuice);
-			}
+                case BARRACKS:
+                    Barracks.run(tomatojuice);
+                    break;
 
-			if (rc.getType() == RobotType.TANKFACTORY) {
-				TankFactory.run(tomatojuice);
-			}
-
-			if (rc.getType() == RobotType.BASHER) {
-			}
-
-			if (rc.getType() == RobotType.SOLDIER) {
-				try {
-					if (rc.isWeaponReady()) {
-						attackSomething();
-					}
-
-					RobotInfo[] adjacentEnemies = rc.senseNearbyRobots(
-							rc.getType().attackRadiusSquared, enemyTeam);
-					if (rc.isCoreReady() && adjacentEnemies.length == 0) {
-						int numSoldiers = rc.readBroadcast(1);
-
-						if (numSoldiers > 80) {
-							isAttacking = true;
-						} else if (numSoldiers < 55) {
-							isAttacking = false;
-						}
-
-						if (rc.readBroadcast(66) == 0) {
-							if (!isAttacking
-									&& rc.getLocation().distanceSquaredTo(
-											rc.senseHQLocation()) > 150) {
-								tryMove(rc.getLocation().directionTo(
-										rc.senseHQLocation()));
-							} else {
-								tryMove(rc.getLocation().directionTo(
-										rc.senseEnemyHQLocation()));
-
-							}
-						} else {
-							tryMove(rc.getLocation().directionTo(
-									rc.senseEnemyHQLocation()));
-
-						}
-					}
-				} catch (Exception e) {
-					System.out.println("Soldier Exception");
-					e.printStackTrace();
-				}
-			}
-
-			if (rc.getType() == RobotType.BEAVER) {
-				try {
-					if (rc.isWeaponReady()) {
-						attackSomething();
-					}
-					if (rc.isCoreReady()) {
-						int fate = rand.nextInt(1000);
-
-						/*
-						 * @TODO for testing build tanks factories after first
-						 * barracks
-						 */
-						if (rc.readBroadcast(100) > 0) {
-							if (fate < 8 && rc.getTeamOre() > 500) {
-								tryBuild(directions[rand.nextInt(8)],
-										RobotType.TANKFACTORY);
-							}
-						}
-
-						if (fate < 100 && rc.getTeamOre() >= 300
-								&& rc.readBroadcast(100) < 1) {
-							tryBuild(directions[rand.nextInt(8)],
-									RobotType.BARRACKS);
-						} else if (fate < 600 && rc.isCoreReady()) {
-							rc.mine();
-						} else if (fate < 900) {
-							tryMove(directions[rand.nextInt(8)]);
-						} else if (fate < 900 && rc.getTeamOre() >= 300) {
-							tryBuild(directions[rand.nextInt(8)],
-									RobotType.HELIPAD);
-						} else {
-							tryMove(rc.senseHQLocation().directionTo(
-									rc.getLocation()));
-						}
-					}
-				} catch (Exception e) {
-					System.out.println("Beaver Exception");
-					e.printStackTrace();
-				}
-			}
-
-			if (rc.getType() == RobotType.BARRACKS) {
-				try {
-					int fate = rand.nextInt(10000);
-
-					// get information broadcasted by the HQ
-					int numBeavers = rc.readBroadcast(0);
-					int numSoldiers = rc.readBroadcast(1);
-					int numBashers = rc.readBroadcast(2);
-
-					if (rc.isCoreReady()
-							&& rc.getTeamOre() >= 60
-							&& numSoldiers < 1) {
-							//&& fate < Math.pow(1.2, 15 - numSoldiers
-							//		- numBashers + numBeavers) * 10000) {
-						trySpawn(directions[rand.nextInt(8)], RobotType.SOLDIER);
-					}
-				} catch (Exception e) {
-					System.out.println("Barracks Exception");
-					e.printStackTrace();
-				}
-			}
-
-			rc.yield();
-		}
-	}
-
-	// This method will attack an enemy in sight, if there is one
-	static void attackSomething() throws GameActionException {
-		RobotInfo[] enemies = rc.senseNearbyRobots(myRange, enemyTeam);
-		if (enemies.length > 0) {
-			rc.attackLocation(enemies[0].location);
-		}
-	}
-
-	// This method will attempt to move in Direction d (or as close to it as
-	// possible)
-	static void tryMove(Direction d) throws GameActionException {
-		int offsetIndex = 0;
-		int[] offsets = { 0, 1, -1, 2, -2 };
-		int dirint = directionToInt(d);
-		boolean blocked = false;
-		while (offsetIndex < 5
-				&& !rc.canMove(directions[(dirint + offsets[offsetIndex] + 8) % 8])) {
-			offsetIndex++;
-		}
-		if (offsetIndex < 5 && rc.isCoreReady()) {
-			rc.move(directions[(dirint + offsets[offsetIndex] + 8) % 8]);
-		}
-	}
-
-	// This method will attempt to spawn in the given direction (or as close to
-	// it as possible)
-	static void trySpawn(Direction d, RobotType type)
-			throws GameActionException {
-		int offsetIndex = 0;
-		int[] offsets = { 0, 1, -1, 2, -2, 3, -3, 4 };
-		int dirint = directionToInt(d);
-		boolean blocked = false;
-		while (offsetIndex < 8
-				&& !rc.canSpawn(
-						directions[(dirint + offsets[offsetIndex] + 8) % 8],
-						type)) {
-			offsetIndex++;
-		}
-		if (offsetIndex < 8) {
-			rc.spawn(directions[(dirint + offsets[offsetIndex] + 8) % 8], type);
-		}
-	}
-
-	// This method will attempt to build in the given direction (or as close to
-	// it as possible)
-	static void tryBuild(Direction d, RobotType type)
-			throws GameActionException {
-		int offsetIndex = 0;
-		int[] offsets = { 0, 1, -1, 2, -2, 3, -3, 4 };
-		int dirint = directionToInt(d);
-		boolean blocked = false;
-		while (offsetIndex < 8
-				&& !rc.canMove(directions[(dirint + offsets[offsetIndex] + 8) % 8])) {
-			offsetIndex++;
-		}
-		if (offsetIndex < 8 && rc.isCoreReady()) {
-			rc.build(directions[(dirint + offsets[offsetIndex] + 8) % 8], type);
-		}
-	}
-
-	static int directionToInt(Direction d) {
-		switch (d) {
-		case NORTH:
-			return 0;
-		case NORTH_EAST:
-			return 1;
-		case EAST:
-			return 2;
-		case SOUTH_EAST:
-			return 3;
-		case SOUTH:
-			return 4;
-		case SOUTH_WEST:
-			return 5;
-		case WEST:
-			return 6;
-		case NORTH_WEST:
-			return 7;
-		default:
-			return -1;
-		}
-	}
+                default:
+                    System.out.println("Unhandeled robot type");
+                    tomatojuice.yield();
+            }
+        }
+    }
 }

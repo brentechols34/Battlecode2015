@@ -1,15 +1,21 @@
+/*
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
+ */
 package team163.air;
 
-import java.util.Random;
-
-import battlecode.common.Direction;
-import battlecode.common.GameActionException;
 import battlecode.common.RobotController;
 import battlecode.common.RobotType;
+import java.util.Random;
 import team163.utils.Spawn;
 
-public class Helipad {
-    
+/**
+ *
+ * @author sweetness
+ */
+public class Aerospace {
+
     static RobotController rc;
     static Random rand;
 
@@ -18,16 +24,16 @@ public class Helipad {
             Spawn.rc = rc;
             Helipad.rc = rc;
             while (true) {
-                if (rc.isCoreReady() && rc.getTeamOre() >= 125
+                if (rc.isCoreReady() && rc.getTeamOre() >= 400
                         && rand.nextBoolean()) {
                     Spawn.randSpawn(
-                            RobotType.DRONE);
+                            RobotType.LAUNCHER);
                 }
 
                 rc.yield();
             }
         } catch (Exception e) {
-            System.out.println("Helipad Exception");
+            System.out.println("Aerospace Exception");
             e.printStackTrace();
         }
     }
