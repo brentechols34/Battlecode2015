@@ -1,5 +1,8 @@
 package team163.tanks;
 
+import java.util.Random;
+import team163.utils.*;
+
 import battlecode.common.*;
 
 public class B_Turtle implements Behavior {
@@ -8,6 +11,7 @@ public class B_Turtle implements Behavior {
 	RobotInfo[] allies;
 	RobotInfo[] enemies;
 	MapLocation nearest;
+	Random rand = new Random();
 
 	public void perception() {
 		nearest = rc.senseHQLocation();
@@ -35,8 +39,12 @@ public class B_Turtle implements Behavior {
 			if (enemies.length > 0 && rc.isWeaponReady()) {
 				rc.attackLocation(enemies[0].location);
 			} else {
-				/* move towards nearest */
-				Move.tryMove(nearest);
+				if (rand.nextBoolean()) {
+					Move.tryMove(rc.senseHQLocation());
+				} else {
+					/* move towards nearest */
+					Move.tryMove(nearest);
+				}
 			}
 		} catch (Exception e) {
 			System.out.println("Tank Tutle action Error");

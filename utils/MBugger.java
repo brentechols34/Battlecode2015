@@ -56,8 +56,13 @@ public class MBugger {
 	 * @return the position that this agent is at
 	 */
 	private Point getCurrentPosn() {
-		MapLocation m = rc.getLocation();
-		return new Point(m.x, m.y);
+		try {
+			MapLocation m = rc.getLocation();
+			return new Point(m.x, m.y);
+		} catch (Exception e) {
+			System.out.println("Error in getCurrentPosen" + e);
+		}
+		return null;
 	}
 
 	/**
@@ -78,13 +83,13 @@ public class MBugger {
 
 			if (rc.senseRobotAtLocation(next) != null) {
 				// traversable but currently can not go there object in way
-				return false;
+				// return false;
 			}
 
 			// if it is an obstacle add obstacle and update map
 			if (rc.senseTerrainTile(next) != TerrainTile.NORMAL) {
 				/* commented out because of the new possible negative values */
-				//p.addObstacle(new Point(x, y));
+				// p.addObstacle(new Point(x, y));
 				// map[x][y] = false;
 				return false;
 			}
@@ -120,10 +125,21 @@ public class MBugger {
 	}
 
 	private double isOnLine(Point p) {
-		double m = ((double) (finish.y - start.y)) / (finish.x - start.x);
-		double b = -m * start.x + start.y;
-		double ty = m * p.x + b;
-		return Math.abs(ty - p.y);
+		try {
+			if(start == null) {
+				System.out.println("\n\nStart is null\n\n");
+			}
+			if(finish == null) {
+				System.out.println("\n\nFinish is null\n\n");
+			}
+			double m = ((double) (finish.y - start.y)) / (finish.x - start.x);
+			double b = -m * start.x + start.y;
+			double ty = m * p.x + b;
+			return Math.abs(ty - p.y);
+		} catch (Exception e) {
+			System.out.println("Error in isOnline " + e);
+		}
+		return 0.0;
 	}
 
 	/**
@@ -198,6 +214,10 @@ public class MBugger {
 		double dis;
 		for (int i = 0; i < 8; i++) {
 			potential = moveTo(me, i);
+			
+			if(potential == null) {
+				System.out.println("\n\npotential was null\n\n");
+			}
 			dis = isOnLine(potential);
 			if (dis < 2
 					&& Point.manhattan(finish, potential) < Point.manhattan(me,

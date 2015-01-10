@@ -1,5 +1,6 @@
 package team163.tanks;
 
+import team163.utils.Move;
 import battlecode.common.*;
 
 public class Tank {
@@ -15,10 +16,11 @@ public class Tank {
 
 	public static void run(RobotController rc) {
 		try {
-
 			Tank.rc = rc;
 			Tank.range = rc.getType().attackRadiusSquared;
 			Tank.team = rc.getTeam();
+
+			//Move.setRc(rc);
 
 			mood = new B_Turtle(); /* starting behavior of turtling */
 			while (true) {
@@ -49,7 +51,7 @@ public class Tank {
 	private static Behavior chooseB() {
 		try {
 			/* if more than 10 tanks trigger aggresive behavior */
-			if (rc.readBroadcast(4) > 10) {
+			if (rc.readBroadcast(4) > 10 || rc.readBroadcast(66) == 1) {
 				mood = new B_Attack();
 			}
 

@@ -5,6 +5,8 @@ import team163.air.Helipad;
 import battlecode.common.*;
 import team163.tanks.Tank;
 import team163.tanks.TankFactory;
+import team163.utils.Move;
+
 import java.util.*;
 
 public class RobotPlayer {
@@ -21,6 +23,7 @@ public class RobotPlayer {
 	public static void run(RobotController tomatojuice) {
 		rc = tomatojuice;
 		rand = new Random(rc.getID());
+		team163.utils.Move.setRc(tomatojuice);
 
 		myRange = rc.getType().attackRadiusSquared;
 		MapLocation enemyLoc = rc.senseEnemyHQLocation();
@@ -70,6 +73,14 @@ public class RobotPlayer {
 					rc.broadcast(3, numDrones);
 					rc.broadcast(4, numTanks);
 					rc.broadcast(100, numBarracks);
+
+					/* if more than 60 units execute order 66 (full out attack) */
+					if ((numSoldiers + numDrones + numTanks) > 66) {
+						rc.broadcast(66, 1);
+					}
+					if ((numSoldiers + numDrones + numTanks) < 30) {
+						rc.broadcast(66, 0);
+					}
 
 					if (rc.isWeaponReady()) {
 						attackSomething();
@@ -125,18 +136,21 @@ public class RobotPlayer {
 							isAttacking = false;
 						}
 
-						if (!isAttacking
-								&& rc.getLocation().distanceSquaredTo(
-										rc.senseHQLocation()) > 150) {
-							tryMove(rc.getLocation().directionTo(
-									rc.senseHQLocation()));
-						}
+						if (rc.readBroadcast(66) == 0) {
+							if (!isAttacking
+									&& rc.getLocation().distanceSquaredTo(
+											rc.senseHQLocation()) > 150) {
+								tryMove(rc.getLocation().directionTo(
+										rc.senseHQLocation()));
+							} else {
+								tryMove(rc.getLocation().directionTo(
+										rc.senseEnemyHQLocation()));
 
-						if (isAttacking) {
+							}
+						} else {
 							tryMove(rc.getLocation().directionTo(
 									rc.senseEnemyHQLocation()));
-						} else {
-							tryMove(directions[rand.nextInt(8)]);
+
 						}
 					}
 				} catch (Exception e) {
@@ -164,7 +178,6 @@ public class RobotPlayer {
 							}
 						}
 
-
 						if (fate < 100 && rc.getTeamOre() >= 300
 								&& rc.readBroadcast(100) < 1) {
 							tryBuild(directions[rand.nextInt(8)],
@@ -173,7 +186,7 @@ public class RobotPlayer {
 							rc.mine();
 						} else if (fate < 900) {
 							tryMove(directions[rand.nextInt(8)]);
-						} else if (fate < 908 && rc.getTeamOre() >= 300) {
+						} else if (fate < 900 && rc.getTeamOre() >= 300) {
 							tryBuild(directions[rand.nextInt(8)],
 									RobotType.HELIPAD);
 						} else {
@@ -198,8 +211,9 @@ public class RobotPlayer {
 
 					if (rc.isCoreReady()
 							&& rc.getTeamOre() >= 60
-							&& fate < Math.pow(1.2, 15 - numSoldiers
-									- numBashers + numBeavers) * 10000) {
+							&& numSoldiers < 1) {
+							//&& fate < Math.pow(1.2, 15 - numSoldiers
+							//		- numBashers + numBeavers) * 10000) {
 						trySpawn(directions[rand.nextInt(8)], RobotType.SOLDIER);
 					}
 				} catch (Exception e) {
