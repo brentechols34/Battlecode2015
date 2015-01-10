@@ -1,6 +1,8 @@
 Battlecode2015
 ==============
 
+version 0.1
+
 SETUP
 ------------
 
