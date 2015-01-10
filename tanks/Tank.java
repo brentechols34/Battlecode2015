@@ -6,6 +6,7 @@ public class Tank {
 	static RobotController rc;
 	static Behavior mood; /* current behavior */
 	static int range;
+        static int senseRange = 24;
 	static Team team;
 
 	static Direction[] directions = { Direction.NORTH, Direction.NORTH_EAST,

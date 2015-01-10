@@ -1,5 +1,7 @@
 package team163;
 
+import team163.air.Drone;
+import team163.air.Helipad;
 import battlecode.common.*;
 import team163.tanks.Tank;
 import team163.tanks.TankFactory;
@@ -171,7 +173,7 @@ public class RobotPlayer {
 							rc.mine();
 						} else if (fate < 900) {
 							tryMove(directions[rand.nextInt(8)]);
-						} else if (fate < 900 && rc.getTeamOre() >= 300) {
+						} else if (fate < 908 && rc.getTeamOre() >= 300) {
 							tryBuild(directions[rand.nextInt(8)],
 									RobotType.HELIPAD);
 						} else {

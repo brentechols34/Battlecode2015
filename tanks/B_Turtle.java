@@ -11,7 +11,7 @@ public class B_Turtle implements Behavior {
 
 	public void perception() {
 		nearest = rc.senseHQLocation();
-		allies = rc.senseNearbyRobots(Tank.range, Tank.team);
+		allies = rc.senseNearbyRobots(Tank.senseRange, Tank.team);
 		enemies = rc.senseNearbyRobots(Tank.range, Tank.team.opponent());
 
 	}
