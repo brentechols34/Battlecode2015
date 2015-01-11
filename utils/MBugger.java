@@ -1,6 +1,8 @@
 package team163.utils;
 
 import java.util.Arrays;
+import java.util.Random;
+
 import battlecode.common.*;
 
 /**
@@ -10,12 +12,12 @@ import battlecode.common.*;
  */
 public class MBugger {
 
-	private Point start;
-	private Point finish;
+	public Point start;
+	public Point finish;
 	private int moveCount;
-	private int last_move;
-	private Point closest;
+	public Point closest;
 	private boolean reverse;
+	private Random rand;
 
 	/**
 	 * Code in the following range needs to be modified for specific purposes
@@ -35,12 +37,12 @@ public class MBugger {
 
 		this.closest = null;
 		reverse = true;
-		last_move = -1;
 		moveCount = 0;
 		this.rc = rc;
 		this.p = p;
 		this.width = 120;
 		this.height = 120;
+		rand = new Random(rc.getID());
 	}
 
 	public void setWidth(int width) {
@@ -81,11 +83,6 @@ public class MBugger {
 				return false;
 			}
 
-			if (rc.senseRobotAtLocation(next) != null) {
-				// traversable but currently can not go there object in way
-				// return false;
-			}
-
 			// if it is an obstacle add obstacle and update map
 			if (rc.senseTerrainTile(next) != TerrainTile.NORMAL) {
 				/* commented out because of the new possible negative values */
@@ -117,7 +114,6 @@ public class MBugger {
 	}
 
 	public void reset() {
-		last_move = -1;
 		closest = null;
 		start = null;
 		finish = null;
@@ -153,9 +149,8 @@ public class MBugger {
 			moveCount++;
 			Point me = getCurrentPosn();
 			Point potential;
-			if (isOnLine(me) < 2
-					&& (closest == null || Point.manhattan(me, finish) <= Point
-							.manhattan(finish, closest))) {
+			if (isOnLine(me) < 3
+					&& (closest == null || me.distance(finish) <= finish.distance(closest))) {
 				// find the next spot that is on the line, return it.
 				if ((potential = followLine(me)) != null) {
 					return potential;
@@ -189,7 +184,6 @@ public class MBugger {
 			obs2 = moveTo(me, obs_d2);
 			if (isTraversable(temp.x, temp.y)
 					&& (isObstacle(obs1) || (d % 2 == 0 && isObstacle(obs2)))) {
-				last_move = d;
 				recursed = false;
 				return temp;
 			}
@@ -220,13 +214,11 @@ public class MBugger {
 			}
 			dis = isOnLine(potential);
 			if (dis < 2
-					&& Point.manhattan(finish, potential) < Point.manhattan(me,
-							finish)) {
+					&& finish.distance(potential) < me.distance(finish)) {
 				if (isTraversable(potential.x, potential.y)) {
 					if ((int) dis != 0) {
 						backup = potential;
 					} else {
-						last_move = i;
 						closest = potential;
 						return potential;
 					}
@@ -234,16 +226,6 @@ public class MBugger {
 			}
 		}
 		return backup;
-	}
-
-	private boolean isNextToObstacle(Point p) {
-		for (int i = 0; i < 8; i++) {
-			Point p2 = moveTo(p, i);
-			if (!isTraversable(p2.x, p2.y) && !isOOB(p2.x, p2.y)) {
-				return true;
-			}
-		}
-		return false;
 	}
 
 	private Point moveTo(Point p, int d) {

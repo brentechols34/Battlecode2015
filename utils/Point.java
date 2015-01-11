@@ -13,6 +13,7 @@ public class Point {
 
     public int x;
     public int y;
+    private static float sqrt2 = 1.4f;
 
     public Point(int x, int y) {
         this.x = x;
@@ -62,6 +63,12 @@ public class Point {
     
     public static int manhattan(Point p1, Point p2) {
         return Math.abs(p2.y - p1.y) + Math.abs(p2.x - p1.x);
+    }
+    
+    public float distance(Point p2) {
+        final float dx = Math.abs(x - p2.x);
+        final float dy = Math.abs(y - p2.y);
+        return dx > dy ? (dy * sqrt2 + (dx - dy)) : (dx * sqrt2 + (dy - dx));
     }
     
     public int serialize() {

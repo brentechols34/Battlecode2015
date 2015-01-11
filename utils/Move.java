@@ -98,6 +98,8 @@ public class Move {
 			}
 
 			// try using bugging system
+			MapLocation ml = rc.getLocation();
+			if (mb.start == null) mb.start = new Point(ml.x,ml.y);
 			Point p = mb.nextMove();
 			if (p == null) {
 				stored = true;
@@ -111,9 +113,13 @@ public class Move {
 					if (rc.isCoreReady() && rc.canMove(dir)) {
 						count = 0;
 						rc.move(dir);
+					} else {
+						mb.closest = null;
 					}
-				} else {
+				} 
+				else {
 					//robot in the way try moving around
+					mb.closest = null;
 					stored = true;
 					store = new MapLocation(p.x, p.y);
 					tryMove(rc.getLocation().directionTo(store));
