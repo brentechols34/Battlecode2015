@@ -21,6 +21,7 @@ public class Soldier {
     static int myRange;
     static Random rand;
     static Behavior mood; /* current behavior */
+
     static int range;
     static Team team;
     static int senseRange = 24;
@@ -35,13 +36,5 @@ public class Soldier {
 			e.printStackTrace();
 		}
 	}
-
-    // This method will attack an enemy in sight, if there is one
-    static void attackSomething() throws GameActionException {
-        RobotInfo[] enemies = rc.senseNearbyRobots(myRange, enemyTeam);
-        if (enemies.length > 0) {
-            rc.attackLocation(enemies[0].location);
-        }
-    }
-
 }
+
