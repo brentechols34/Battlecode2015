@@ -11,13 +11,15 @@ public class B_Turtle implements Behavior {
 	RobotInfo[] allies;
 	RobotInfo[] enemies;
 	MapLocation nearest;
+	MapLocation rally;
 	Random rand = new Random();
 
 	public void perception() {
 		try {
-		int x = rc.readBroadcast(67);
-		int y = rc.readBroadcast(68);
-		nearest = new MapLocation(x,y);
+		int x = rc.readBroadcast(50);
+		int y = rc.readBroadcast(51);
+		rally = new MapLocation(x,y);
+		nearest = rally;
 		} catch (Exception e) {
 			System.out.println("B_Turtle perception error");
 		}
@@ -42,18 +44,10 @@ public class B_Turtle implements Behavior {
 
 	public void action() {
 		try {
-			int x = rc.readBroadcast(67);
-			int y = rc.readBroadcast(68);
-			MapLocation attLoc = new MapLocation(x,y);
 			if (enemies.length > 0 && rc.isWeaponReady()) {
 				rc.attackLocation(enemies[0].location);
 			} else {
-				if (rand.nextBoolean()) {
-					Move.tryMove(attLoc);
-				} else {
-					/* move towards nearest */
-					Move.tryMove(nearest);
-				}
+				Move.tryMove(rally);
 			}
 		} catch (Exception e) {
 			System.out.println("Tank Tutle action Error");

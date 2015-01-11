@@ -16,7 +16,7 @@ public class MBugger {
 	public Point finish;
 	private int moveCount;
 	public Point closest;
-	private boolean reverse;
+	public boolean reverse;
 	private Random rand;
 
 	/**
@@ -82,12 +82,12 @@ public class MBugger {
 			if (isOOB(x, y)) {
 				return false;
 			}
+			
+			if (rc.senseRobotAtLocation(next)!=null) return false;
+			
 
 			// if it is an obstacle add obstacle and update map
 			if (rc.senseTerrainTile(next) != TerrainTile.NORMAL) {
-				/* commented out because of the new possible negative values */
-				// p.addObstacle(new Point(x, y));
-				// map[x][y] = false;
 				return false;
 			}
 

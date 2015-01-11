@@ -27,6 +27,7 @@ public class Beaver {
     static int myRange;
     static Random rand;
     static int lifetime = 0;
+    static boolean amSupplyBeaver = false;
 
     public static void run(RobotController rc) {
         Beaver.rc = rc;
@@ -38,10 +39,18 @@ public class Beaver {
         while (true) {
             try {
             	lifetime++;
+            	MapLocation myLoc = rc.getLocation();
             	if (rc.isWeaponReady()) {
             		attackSomething();
             	}
+            	int oreHere = (int) (rc.senseOre(myLoc) +.5);
+            	int bestFound = rc.readBroadcast(1000);
             	if (rc.isCoreReady()) {
+            		if (oreHere > bestFound) {
+            			rc.broadcast(1000, oreHere);
+            			rc.broadcast(1001, myLoc.x);
+            			rc.broadcast(1002, myLoc.y);
+            		}
             		if (!rc.getLocation().isAdjacentTo(rc.senseHQLocation())) {
             			int[] counts = new int[] {
             					rc.readBroadcast(3), //barracks
@@ -103,7 +112,8 @@ public class Beaver {
             				}
             			}
             		}
-                	defaultMove();
+        			defaultMove();
+        			rc.yield();
                 }
             } catch (Exception e) {
                 System.out.println("Beaver Exception");
@@ -116,7 +126,12 @@ public class Beaver {
 		Direction d = findSpot();
 		MapLocation myLoc = rc.getLocation();
 		if (rc.isCoreReady()) {
-            if (d != Direction.NONE && (rc.isCoreReady() && rc.canMove(d)) && (rand.nextDouble() > .8  || (rand.nextDouble() > .2 && rc.senseOre(myLoc) / 20  < 2))) { 
+        	int oreHere = (int) (rc.senseOre(myLoc) +.5);
+        	int bestFound = rc.readBroadcast(1000);
+        	if (bestFound > 1.75 * oreHere) {
+        		Move.tryMove(new MapLocation(rc.readBroadcast(1001),rc.readBroadcast(1002)));
+        	}
+            if (d != Direction.NONE && (rc.isCoreReady() && rc.canMove(d)) && (rand.nextDouble() > .8  || rc.senseOre(myLoc) < .2)) { 
             	rc.move(d);
             } else {
             	if (rc.isCoreReady() && rc.canMine()) rc.mine();

@@ -34,6 +34,7 @@ public class Move {
 		Move.rc = in;
 		curTarget = rc.senseHQLocation();
 		mb = new MBugger(rc, p);
+		mb.finish = new Point(curTarget.x, curTarget.y);
 	}
 
 	// This method will attempt to move in Direction d (or as close to it as
@@ -57,10 +58,10 @@ public class Move {
 		}
 	}
 
-	static public void randMove() {
-		tryMove(directions[rand.nextInt(8)]);
-		set = false;
-	}
+//	static public void randMove() {
+//		tryMove(directions[rand.nextInt(8)]);
+//		set = false;
+//	}
 
 	/**
 	 * Try moving using the bugger High of 2360 bytecode Low of 560 bytecode
@@ -79,55 +80,55 @@ public class Move {
 				mb.setTargetLocation(new Point(m.x, m.y));
 			}
 
-			// If ran into another robot or bugger returned null try just moving
-			if (stored) {
-				if ((count++) > 3) {
-					// stuck in a loop reset
-					stored = false;
-					mb.reset();
-					mb.setTargetLocation(new Point(m.x, m.y));
-				} else {
-					MapLocation cur = rc.getLocation();
-					if (cur.compareTo(store) != 0) {
-						tryMove(cur.directionTo(store));
-						return;
-					} else {
-						mb.reset();
-						mb.setTargetLocation(new Point(m.x, m.y));
-						stored = false;
-					}
-				}
-			}
+//			// If ran into another robot or bugger returned null try just moving
+//			if (stored) {
+//				if ((count++) > 3) {
+//					// stuck in a loop reset
+//					stored = false;
+//					boolean dir = mb.reverse;
+//					mb.reset();
+//					mb.reverse = !dir;
+//					mb.setTargetLocation(new Point(m.x, m.y));
+//					count = 0;
+//				} else {
+//					MapLocation cur = rc.getLocation();
+//					if (cur.compareTo(store) != 0) {
+//						tryMove(cur.directionTo(store));
+//						return;
+//					} else {
+//						mb.reset();
+//						mb.setTargetLocation(new Point(m.x, m.y));
+//						stored = false;
+//					}
+//				}
+//			}
 
 			// try using bugging system
 			MapLocation ml = rc.getLocation();
 			if (mb.start == null) mb.start = new Point(ml.x,ml.y);
 			Point p = mb.nextMove();
 			if (p == null) {
-				stored = true;
-				store = m;
-				tryMove(rc.getLocation().directionTo(store));
-			} else {
-				MapLocation loc = new MapLocation(p.x, p.y);
-				RobotInfo info = rc.senseRobotAtLocation(loc);
-				if (info == null) {
-					Direction dir = rc.getLocation().directionTo(loc);
-					if (rc.isCoreReady() && rc.canMove(dir)) {
-						count = 0;
-						rc.move(dir);
-					} else {
-						mb.closest = null;
-					}
-				} 
-				else {
-					//robot in the way try moving around
-					mb.closest = null;
-					stored = true;
-					store = new MapLocation(p.x, p.y);
-					tryMove(rc.getLocation().directionTo(store));
-				}
+				return;
 			}
-
+			MapLocation loc = new MapLocation(p.x, p.y);
+			RobotInfo info = rc.senseRobotAtLocation(loc);
+			if (info == null) {
+				Direction dir = rc.getLocation().directionTo(loc);
+				if (rc.isCoreReady() && rc.canMove(dir)) {
+					count = 0;
+					rc.move(dir);
+				} else {
+					mb.closest = null;
+				}
+			} 
+			else {
+				//robot in the way try moving around
+				mb.closest = null;
+				stored = true;
+				store = new MapLocation(p.x, p.y);
+				//mb.reverse = !mb.reverse;
+				tryMove(rc.getLocation().directionTo(store));
+			}
 		} catch (Exception e) {
 			System.out.println("Error attempting bugging");
 			e.printStackTrace();
