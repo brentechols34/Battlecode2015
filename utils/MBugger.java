@@ -28,9 +28,8 @@ public class MBugger {
 	RobotController rc;
 	int width;
 	int height;
-	Path p;
 
-	public MBugger(RobotController rc, Path p) {
+	public MBugger(RobotController rc) {
 		map = new boolean[120][120];
 		for (boolean[] i : map)
 			Arrays.fill(i, true);
@@ -39,7 +38,6 @@ public class MBugger {
 		reverse = true;
 		moveCount = 0;
 		this.rc = rc;
-		this.p = p;
 		this.width = 120;
 		this.height = 120;
 		rand = new Random(rc.getID());
@@ -204,7 +202,6 @@ public class MBugger {
 			return null;
 		}
 		recursed = true;
-		System.out.println("REVERSE DIRECTION!");
 		reverse = !reverse;
 		return bug(me);
 	}

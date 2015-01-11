@@ -20,7 +20,7 @@ public class Move {
 	static int persistance = 0;
 
 	/* instantiate movement utils */
-	static Path p = new Path(new boolean[120][120]);
+	
 	static MBugger mb;
 	static Random rand = new Random();
 
@@ -34,7 +34,7 @@ public class Move {
 	static public void setRc(RobotController in) {
 		Move.rc = in;
 		curTarget = rc.senseHQLocation();
-		mb = new MBugger(rc, p);
+		mb = new MBugger(rc);
 		mb.finish = new Point(curTarget.x, curTarget.y);
 	}
 

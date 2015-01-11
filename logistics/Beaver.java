@@ -10,6 +10,7 @@ import battlecode.common.*;
 import java.util.Random;
 
 import team163.utils.Move;
+import team163.utils.Path;
 import team163.utils.Point;
 
 /**
@@ -28,13 +29,13 @@ public class Beaver {
     static int myRange;
     static Random rand;
     static int lifetime = 0;
-    static boolean amSupplyBeaver = false;
     static MapLocation bestLoc;
     static int bestVal;
     static boolean wasBest = false;
     static int wasBest_count = 0;
     static MapLocation myLoc;
     static int oreHere;
+    static boolean amPathBeaver;
 
     public static void run(RobotController rc) {
         Beaver.rc = rc;
@@ -42,7 +43,15 @@ public class Beaver {
         myRange = rc.getType().attackRadiusSquared;
         myTeam = rc.getTeam();
         enemyTeam = myTeam.opponent();
-        
+        try {
+        	if (rc.readBroadcast(72)==1) {
+        		rc.broadcast(72, 0);
+        		amPathBeaver = true;
+        		doPathBeaverThings();
+        	}
+        } catch (Exception e) {
+        	System.out.println("Tried to be a path beaver, but I failed");
+        }
         while (true) {
             try {
             	lifetime++;
@@ -79,9 +88,10 @@ public class Beaver {
 			rc.broadcast(1000, (int) (rc.senseOre(myLoc)+.5));
 		}
 		if (rc.isCoreReady()) {
-        	if (rand.nextDouble() > .8) {
+        	if (rand.nextDouble() > .7) {
         		if (rc.canMove(d)) {
         			rc.move(d);
+        			return;
         		}
         	}
         	if ((oreHere / 20 < .2 || lifetime < 10)) Move.tryMove(bestLoc);
@@ -97,7 +107,7 @@ public class Beaver {
 			MapLocation potential = myLoc.add(d);
 			tempOre = rc.senseOre(potential);
 			RobotInfo atLoc = rc.senseRobotAtLocation(potential);
-			if (tempOre > bestFound && (atLoc == null) || (tempOre == bestFound && bestDir == Direction.NONE)) {
+			if (tempOre > bestFound && (atLoc == null) || (tempOre == bestFound && (rand.nextBoolean() || bestDir == Direction.NONE))) {
 				bestFound = tempOre;
 				bestDir = d;
 			}
@@ -235,6 +245,45 @@ public class Beaver {
             return true;
         }
         return false;
+    }
+    
+    static void doPathBeaverThings() {
+    	MapLocation hq=rc.senseHQLocation();
+    	MapLocation enemyhq = rc.senseEnemyHQLocation();
+    	Path p = new Path(new Point(hq.x,hq.y),new Point(enemyhq.x,enemyhq.y));
+    	MapLocation myLoc = rc.getLocation();
+    	try {
+        	rc.broadcast(187, myLoc.x);
+        	rc.broadcast(188,  myLoc.y);
+    		while (true) {
+    			int request = rc.readBroadcast(72);
+    			if (request==2) {
+    				int startx = rc.readBroadcast(73);
+    				int starty = rc.readBroadcast(74);
+    				int finishx = rc.readBroadcast(75);
+    				int finishy = rc.readBroadcast(76);
+    				Point start = new Point(startx,starty);
+    				Point finish = new Point(finishx, finishy);
+    				Point[] path = p.pathfind(start, finish); //ohhhhh boy
+    				int channel = 77;
+    				int len = path.length;
+    				rc.broadcast(channel++, len);
+    				for (Point pr : path) {
+    					rc.broadcast(channel++, pr.x);
+    					rc.broadcast(channel++, pr.y);
+    				}
+    				rc.broadcast(73, 0);
+    			}
+    			int minX = rc.readBroadcast(179); 
+    	        int maxX = rc.readBroadcast(180);
+    	        int minY = rc.readBroadcast(181);
+    	        int maxY = rc.readBroadcast(182);
+    	        p.setLimits(minX,maxX,minY,maxY);
+    		}
+    	} catch (Exception e) {
+    		System.out.println("PathBeaver Exception");
+    	}
+    	
     }
 
 }

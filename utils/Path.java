@@ -1,10 +1,11 @@
+package team163.utils;
+
 /*
  * To change this license header, choose License Headers in Project Properties.
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
 
-package team163.utils;
 
 import java.util.Arrays;
 
@@ -13,32 +14,80 @@ import java.util.Arrays;
  * @author Alex
  */
 public class Path {
+
     private final boolean[][] map;
     private final int width;
     private final int height;
-    private static final float sqrt2 = 1.414f;
-    private final int[][] prev;
-    private final float[][] cost;
-    private final boolean[][] closed_set;
-
-    private final Point[] q;
+    private int[][] prev;
     private final float[] costs;
+    private final Point[] q;
     private int index;
-
     private Point dest;
-    private static final float octile_constant = sqrt2 - 1;
     public static final int MAX_PATH_LENGTH = 100;
+    
+    final int dx;
+    final int dy;
+    
+    int minX = 0;
+    int maxX = 360;
+    int minY = 0;
+    int maxY = 360;
+    
+    Point myHQ;
+    Point enemyHQ;
+    Point offsetMyHQ;
+    Point offsetEnemyHQ;
 
-    public Path(boolean[][] map) {
-        this.map = map;
+    public Path(Point myHQ, Point enemyHQ) {
+        this.map = new boolean[360][360];
+        this.myHQ = myHQ;
+        this.enemyHQ = enemyHQ;
+        dx = enemyHQ.x - myHQ.x;
+        dy = enemyHQ.y - myHQ.y;
+        offsetMyHQ = new Point(120 - dx, 120 - dy);
+        offsetEnemyHQ = new Point(120 + dx, 120 + dx);
+        minX = 0; //>=
+        maxX = 360; //<
+        minY = 0; //>=
+        maxY = 360; //<
         width = map.length;
         height = map[0].length;
-        this.prev = new int[map.length][map[0].length];
-        this.closed_set = new boolean[map.length][map[0].length];
-        this.cost = new float[map.length][map[0].length];
-        this.q = new Point[5000];
-        this.costs = new float[5000];
+        prev = new int[map.length][map[0].length];
+        q = new Point[5000];
+        costs = new float[5000];
     }
+    
+    public void setLimits(int minX, int maxX, int minY, int maxY) {
+    	if (this.minX < minX) {
+    		this.minX = minX;
+    	}
+    	if (this.maxX > maxX) {
+    		this.maxX = maxX;
+    	}
+    	if (this.minY < minY) {
+    		this.minY = minY;
+    	}
+    	if (this.maxY > maxY) {
+    		this.maxY = maxY;
+    	}
+    }
+    
+    public void setMinX(int minX) {
+    	this.minX = minX - myHQ.x + offsetMyHQ.x;
+    }
+    
+    public void setMaxX(int maxX) {
+    	this.maxX = maxX - myHQ.x + offsetMyHQ.x;
+    }
+    
+    public void setMinY(int minY) {
+    	this.minY = minY - myHQ.x + offsetMyHQ.x;
+    }
+    
+    public void setMaxY(int maxY) {
+    	this.maxY = maxY - myHQ.x + offsetMyHQ.x;
+    }
+    
 
     /**
      * Finds a path from some start to some finish.
@@ -49,34 +98,34 @@ public class Path {
      * any obstacles.
      */
     public Point[] pathfind(Point start, Point finish) {
-        init();
+    	start = offsetPoint(start);
+    	finish = offsetPoint(finish);
+        prev = new int[map.length][map[0].length];
         index = 0;
         Point current;
         dest = start;
-        for (int i = 7; i != -1; i--) {
-            check(finish, i);
-        }
-        closed_set[finish.x][finish.y] = true;
         final int desx = dest.x;
         final int desy = dest.y;
+        for (int i = 8; i != 0; i--) check(finish, i);
+        int count = 0;
         while (index != 0) {
             current = q[--index];
             if (current.x == desx && current.y == desy) {
+                System.out.println(count);
                 return reconstruct();
             }
             expand(current);
+            count++;
         }
         return null;
     }
-
-    /**
-     * Initialize class variables for use in pathfinding
-     */
-    public void init() {
-        for (int i = 0; i < width; i++) {
-            Arrays.fill(prev[i],-1);
-            Arrays.fill(closed_set[i],false);
-        }
+    
+    public Point offsetPoint(Point p) {
+    	Point t = new Point(p.x - myHQ.x + offsetMyHQ.x, p.y- myHQ.y + offsetMyHQ.y);
+    	return t;
+    }
+    public Point unOffsetPoint(Point p) {
+    	return new Point(myHQ.x - offsetMyHQ.x + p.x, myHQ.y - offsetMyHQ.y + p.y);
     }
 
     /**
@@ -88,16 +137,16 @@ public class Path {
         Point current = dest;
         final Point[] path_temp = new Point[MAX_PATH_LENGTH];
         int count = 0;
-        int dir = -1;
+        int dir = 0;
         do {
-            int next = (prev[current.x][current.y] + 4) & 7;
-            if (dir == -1 || next != dir) {
-                path_temp[count++] = current;
+            int next = ((prev[current.x][current.y]+3)&7)+1;
+            if (dir == 0 || next != dir) {
+                path_temp[count++] = unOffsetPoint(current);
                 dir = next;
             }
-            current = moveTo(current, next);   
-        } while (prev[current.x][current.y] != -1);
-        path_temp[count++] = current;
+            current = moveTo(current, next);
+        } while (prev[current.x][current.y] != 0);
+        path_temp[count++] = unOffsetPoint(current);
         final Point[] path = new Point[count];
         System.arraycopy(path_temp, 0, path, 0, count);
         return path;
@@ -105,56 +154,39 @@ public class Path {
 
     private void expand(Point p) {
         final int dir = prev[p.x][p.y];
-        if ((dir & 1) == 1) {
-            check(p, (dir + 6) & 7);
-            check(p, (dir + 2) & 7);
+        if (dir == 0) return;
+        if ((dir & 1) == 0) { //is diagonal
+            check(p, ((dir + 5) & 7)+1);
+            check(p, ((dir + 1) & 7)+1);
         }
-        check(p, (dir + 7) & 7);
-        check(p, (dir + 1) & 7);
+        check(p, ((dir + 6) & 7)+1);
+        check(p, ((dir + 0) & 7)+1);
         check(p, dir);
     }
 
     private void check(Point parent, int dir) {
         final Point n = moveTo(parent, dir);
-        if (!validMove(n) || closed_set[n.x][n.y]) {
-            return;
-        }
-        final float potential_cost = cost[parent.x][parent.y] + distance(parent, n);
-        if (prev[n.x][n.y] == -1 || cost[n.x][n.y] > potential_cost) {
-            add(n, potential_cost + octile(n, dest) * 1.5f); 
-            prev[n.x][n.y] = dir;
-            cost[n.x][n.y] = potential_cost;
+        if (!validMove(n)) return;
+        final int nx = n.x;
+        final int ny = n.y;
+        if (prev[nx][ny] == 0) {
+            add(n, distance(n, dest));
+            prev[nx][ny] = dir;
         }
     }
 
     /**
-     * Get the practical distance between 2 points
-     *
-     * @param p1
-     * @param p2
-     * @return
+     * Get the distance between 2 points
      */
     private static float distance(Point p1, Point p2) {
         final float dx = abs(p1.x - p2.x);
         final float dy = abs(p1.y - p2.y);
-        return dx > dy ? (dy * sqrt2 + (dx - dy)) : (dx * sqrt2 + (dy - dx));
+        return dx > dy ? (dy * 20f / 70 + dx) : (dx * 20f / 70 + dy);
     }
 
     private static int abs(int x) {
         final int m = x >> 31;
         return x + m ^ m;
-    }
-
-    /**
-     * heuristic for use with A
-     * @param p1
-     * @param p2
-     * @return
-     */
-    private static float octile(Point p1, Point p2) {
-        int dx = abs(p2.x - p1.x);
-        int dy = abs(p2.y - p1.y);
-        return dx > dy ? (dx + octile_constant * dy) : (dy + octile_constant * dx);
     }
 
     /**
@@ -166,19 +198,19 @@ public class Path {
      */
     private static Point moveTo(Point p, int d) {
         switch (d) {
-            case 0:
-                return new Point(p.x, p.y - 1);
             case 1:
-                return new Point(p.x + 1, p.y - 1);
+                return new Point(p.x, p.y - 1);
             case 2:
-                return new Point(p.x + 1, p.y);
+                return new Point(p.x + 1, p.y - 1);
             case 3:
-                return new Point(p.x + 1, p.y + 1);
+                return new Point(p.x + 1, p.y);
             case 4:
-                return new Point(p.x, p.y + 1);
+                return new Point(p.x + 1, p.y + 1);
             case 5:
-                return new Point(p.x - 1, p.y + 1);
+                return new Point(p.x, p.y + 1);
             case 6:
+                return new Point(p.x - 1, p.y + 1);
+            case 7:
                 return new Point(p.x - 1, p.y);
             default:
                 return new Point(p.x - 1, p.y - 1);
@@ -186,11 +218,7 @@ public class Path {
     }
 
     private boolean validMove(Point p) {
-        return valid(p) && !map[p.x][p.y];
-    }
-
-    private boolean valid(Point p) {
-        return (p.x >= 0 && p.x < width && p.y >= 0 && p.y < height);
+        return (p.x >= minX && p.x < maxX && p.y >= minY && p.y < maxY) && !map[p.x][p.y];
     }
 
     /**
@@ -199,24 +227,14 @@ public class Path {
      * @param p The position of the obstacle.
      */
     public void addObstacle(Point p) {
-        map[p.x][p.y] = true;
-    }
-    
-    public void removeObstacle(Point p) {
-        map[p.x][p.y] = false;
+    	Point p2 = offsetPoint(p);
+        map[p2.x][p2.y] = true;
     }
 
-    public int[] pathAndSerialize(Point start, Point dest) {
-        final Point[] path = pathfind(start, dest);
-        if (path == null) {
-            return null;
-        }
-        final int[] sd = new int[path.length];
-        for (int i = 0; i < path.length; i++) {
-            sd[i] = path[i].serialize();
-        }
-        return sd;
-    }
+//    public void removeObstacle(Point p) {
+//   
+//        map[p.x][p.y] = false;
+//    }
 
     private void add(Point p, float c) {
         int i = index;
@@ -228,5 +246,4 @@ public class Path {
         q[i] = p;
         index++;
     }
-    
 }

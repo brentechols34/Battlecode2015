@@ -28,6 +28,12 @@ public class HQ {
     static RobotInfo[] myRobots;
     static int[] counts;
     static Team myTeam;
+    
+    static boolean[] walls_found; //NORTH, EAST, SOUTH, WEST is the order
+    static int minX;
+    static int minY;
+    static int maxX;
+    static int maxY;
 
     public static void run(RobotController rc) {
         Spawn.rc = rc;
@@ -41,6 +47,13 @@ public class HQ {
         } catch (Exception e) {
         	System.out.println("Broke setting rally location");
         }
+        try {
+        rc.broadcast(72, 1);
+        rc.broadcast(179, 0); //init vals
+        rc.broadcast(180, Integer.MAX_VALUE);
+        rc.broadcast(181, 0);
+        rc.broadcast(182, Integer.MAX_VALUE);
+        } catch (Exception e) {System.out.println("Couldn't request path beaver");};
         while (true) {
             try {
             	//Channel 1-21 for unit counts
@@ -53,6 +66,18 @@ public class HQ {
             	//Channel 1001 for ore-best.y
             	//Channel 30, 31 for x, y offsets
             	//Channel 32, 33 for map width, height
+            	//Channel 34,35,36,37 booleans for asking for explorer beavers
+            	//Channel 72 for path planning beaver request
+            	//Channel 73,74 for start x,y
+            	//Channel 75,76 for finish x,y
+            	//channel 77 for path length
+            	//Channel 78-178 for path
+            	//Channel 179 for minX
+            	//Channel 180 for maxX 
+            	//Channel 181 for minY
+            	//channel 182 for maxY
+            	//Channel 187,188 for supply beaver loc
+            
             	eachTurn();
             	performUnitCount();
             	decrees();
@@ -65,6 +90,10 @@ public class HQ {
                 if (rc.isCoreReady() && rc.getTeamOre() >= 100 && counts[8] < 20) { //counts[7] == beaverCount
                     team163.utils.Spawn.trySpawn(directions[rand.nextInt(8)], RobotType.BEAVER);
                 }
+                int pbX = rc.readBroadcast(187);
+                int pbY = rc.readBroadcast(188);
+                MapLocation pathBeaverLoc = new MapLocation(pbX,pbY);
+                if (pathBeaverLoc.distanceSquaredTo(rc.getLocation()) < 15) rc.transferSupplies((int) rc.getSupplyLevel(), pathBeaverLoc); //give pathbeaver everything               
                 rc.yield();
             } catch (Exception e) {
                 System.out.println("HQ Exception");

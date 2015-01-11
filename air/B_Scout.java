@@ -85,7 +85,7 @@ public class B_Scout implements Behavior {
                 }
             } else {
                 if (rc.isCoreReady()) {
-                    Move.randMove();
+                    //Move.randMove();
                 }
             }
         } catch (Exception e) {
