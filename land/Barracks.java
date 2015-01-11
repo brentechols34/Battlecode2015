@@ -29,20 +29,18 @@ public class Barracks {
         Spawn.rc = rc;
         while (true) {
             try {
-                int fate = rand.nextInt(10000);
-
-                // get information broadcasted by the HQ
-                int numBeavers = rc.readBroadcast(0);
-                int numSoldiers = rc.readBroadcast(1);
-                int numBashers = rc.readBroadcast(2);
-
-                if (rc.isCoreReady()
-                        && rc.getTeamOre() >= 60
-                        && numSoldiers < 1) {
-                    //&& fate < Math.pow(1.2, 15 - numSoldiers
-                    //		- numBashers + numBeavers) * 10000) {
-                    Spawn.trySpawn(directions[rand.nextInt(8)], RobotType.SOLDIER);
-                }
+//                int fate = rand.nextInt(10000);
+//
+//                // get information broadcasted by the HQ
+//                int numSoldiers = rc.readBroadcast(1);
+//
+//                if (rc.isCoreReady()
+//                        && rc.getTeamOre() >= 60
+//                        && numSoldiers < 20) {
+//                    //&& fate < Math.pow(1.2, 15 - numSoldiers
+//                    //		- numBashers + numBeavers) * 10000) {
+//                    Spawn.trySpawn(directions[rand.nextInt(8)], RobotType.SOLDIER);
+//                }
             } catch (Exception e) {
                 System.out.println("Barracks Exception");
                 e.printStackTrace();

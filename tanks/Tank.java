@@ -7,7 +7,7 @@ public class Tank {
 	static RobotController rc;
 	static Behavior mood; /* current behavior */
 	static int range;
-        static int senseRange = 24;
+    static int senseRange = 24;
 	static Team team;
 
 	static Direction[] directions = { Direction.NORTH, Direction.NORTH_EAST,
@@ -50,15 +50,10 @@ public class Tank {
 	 */
 	private static Behavior chooseB() {
 		try {
-			/* if more than 10 tanks trigger aggresive behavior */
-			if (rc.readBroadcast(4) > 10 || rc.readBroadcast(66) == 1) {
+			/* if more than 10 tanks trigger aggressive behavior */
+			if (rc.readBroadcast(66) == 1) {
 				mood = new B_Attack();
-			}
-
-			/* if less than 5 tanks trigger turtling */
-			if (rc.readBroadcast(4) < 5) {
-				mood = new B_Turtle();
-			}
+			} else mood = new B_Turtle();
 
 			/* if mood has not been altered than current mood is kept */
 			return mood;

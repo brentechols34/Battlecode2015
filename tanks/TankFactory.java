@@ -15,9 +15,9 @@ public class TankFactory {
 			Random rand = new Random();
 			while (true) {
 				// get information broadcasted by the HQ
-				int numTanks = rc.readBroadcast(4);
+				int numTanks = rc.readBroadcast(5);
 
-				if (rc.isCoreReady() && rc.getTeamOre() >= 250 && numTanks < 15) {
+				if (rc.isCoreReady() && rc.getTeamOre() >= 250) {
 					trySpawn(directions[rand.nextInt(8)], RobotType.TANK);
 				}
 				

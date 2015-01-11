@@ -72,9 +72,9 @@ public class B_Scout implements Behavior {
      */
     public void action() {
         try {
-            for (int i = 0; i < index; i++) {
-                rc.broadcast(((chan++) % 100), toBrodcast[i]);
-            }
+//            for (int i = 0; i < index; i++) {
+//                rc.broadcast(((chan++) % 100), toBrodcast[i]);
+//            }
             
             if (enemies.length > 1) {
                 if (rc.isWeaponReady()) {

@@ -8,10 +8,13 @@ import team163.tanks.TankFactory;
 import team163.utils.Move;
 
 import java.util.*;
+
 import team163.land.Barracks;
 import team163.land.Basher;
 import team163.land.Soldier;
 import team163.logistics.Beaver;
+import team163.logistics.Miner;
+import team163.logistics.MinerFactory;
 
 public class RobotPlayer {
 
@@ -59,6 +62,12 @@ public class RobotPlayer {
                 case BARRACKS:
                     Barracks.run(tomatojuice);
                     break;
+                
+                case MINERFACTORY:
+                	MinerFactory.run(tomatojuice);
+                	
+                case MINER:
+                	Miner.run(tomatojuice);
 
                 default:
                     System.out.println("Unhandeled robot type");

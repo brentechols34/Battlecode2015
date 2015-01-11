@@ -7,13 +7,19 @@ public class B_Attack implements Behavior {
 
 	RobotController rc = Tank.rc;
 	MapLocation nearest; /* nearest enemy */
-
+	MapLocation goal;
 	RobotInfo[] enemies;
 
 
 	public void perception() {
 		/* for now simply look for nearest enemy */
-		nearest = rc.senseEnemyHQLocation();
+		try {
+		int x = rc.readBroadcast(67);
+		int y = rc.readBroadcast(68);
+		nearest = new MapLocation(x,y);
+		} catch (Exception e) {
+			System.out.println("B_Attack perception error");
+		}
 		enemies = rc.senseNearbyRobots(Tank.range, Tank.team.opponent());
 
 	}
@@ -29,6 +35,15 @@ public class B_Attack implements Behavior {
 					max = dis;
 					nearest = ri.location;
 				}
+				if (ri.type == RobotType.TOWER) {
+					MapLocation towerLoc = ri.location;
+					try {
+						rc.broadcast(67,towerLoc.x);
+						rc.broadcast(68, towerLoc.y);
+					} catch (Exception e) {
+						System.out.println("Issue in B_attack, broadcasting");
+					}
+				}
 			}
 		}
 
@@ -36,6 +51,19 @@ public class B_Attack implements Behavior {
 
 	public void action() {
 		try {
+			int x = rc.readBroadcast(67);
+			int y = rc.readBroadcast(68);
+			MapLocation tempLoc = new MapLocation(x,y);
+			if (!tempLoc.equals(goal)) {
+				goal = tempLoc;
+			}
+			RobotInfo ri;
+			if (rc.canSenseLocation(goal) && ((ri=rc.senseRobotAtLocation(goal))==null || ri.type != RobotType.TOWER)) {
+				MapLocation enemyHQ = rc.senseEnemyHQLocation();
+				rc.broadcast(67, enemyHQ.x);
+				rc.broadcast(68, enemyHQ.y);
+				goal = enemyHQ;
+			}
 			/* try to attack the nearest if unable than move towards it */
 			if (rc.isWeaponReady()) {
 				if (rc.canAttackLocation(nearest)) {
@@ -45,7 +73,7 @@ public class B_Attack implements Behavior {
 					Move.tryMove(nearest);
 				}
 			} else {
-				if (nearest != rc.senseEnemyHQLocation()) {
+				if (!nearest.equals(goal)) {
 					/* if weapon is not ready run from enemy */
 					Direction away = rc.getLocation().directionTo(nearest)
 							.opposite();

@@ -6,7 +6,10 @@
 package team163;
 
 import battlecode.common.*;
+
 import java.util.Random;
+
+import team163.utils.Point;
 import team163.utils.Spawn;
 
 /**
@@ -35,40 +38,46 @@ public class HQ {
             try {
                 int fate = rand.nextInt(10000);
                 myRobots = rc.senseNearbyRobots(999999, myTeam);
-                int numSoldiers = 0;
-                int numBashers = 0;
-                int numBeavers = 0;
-                int numBarracks = 0;
-                int numDrones = 0;
-                int numTanks = 0;
+                int[] counts = new int[21];
                 for (RobotInfo r : myRobots) {
                     RobotType type = r.type;
-                    if (type == RobotType.SOLDIER) {
-                        numSoldiers++;
-                    } else if (type == RobotType.BASHER) {
-                        numBashers++;
-                    } else if (type == RobotType.BEAVER) {
-                        numBeavers++;
-                    } else if (type == RobotType.BARRACKS) {
-                        numBarracks++;
-                    } else if (type == RobotType.DRONE) {
-                        numDrones++;
-                    } else if (type == RobotType.TANK) {
-                        numTanks++;
+                    switch (type) { //HUEHUEHUE
+                    case SOLDIER: counts[0]++; break; //1
+                    case BASHER: counts[1]++; break; //2
+                    case BARRACKS: counts[2]++; break; //3
+                    case DRONE: counts[3]++; break; //4
+                    case TANK: counts[4]++; break; //5
+                    case HELIPAD: counts[5]++; break; //6
+                    case AEROSPACELAB: counts[6]++; break;
+                    case BEAVER: counts[7]++; break;
+                    case COMMANDER: counts[8]++; break;
+                    case COMPUTER: counts[9]++; break;
+                    case HANDWASHSTATION: counts[10]++; break;
+                    case HQ: counts[11]++; break;
+                    case LAUNCHER: counts[12]++; break;
+                    case MINER: counts[13]++; break;
+                    case MINERFACTORY: counts[14]++; break;
+                    case MISSILE: counts[15]++; break;
+                    case SUPPLYDEPOT: counts[16]++; break;
+                    case TANKFACTORY: counts[17]++; break;
+                    case TECHNOLOGYINSTITUTE: counts[18]++; break;
+                    case TOWER: counts[19]++; break;
+                    case TRAININGFIELD: counts[20]++; break;
                     }
+
                 }
-                rc.broadcast(0, numBeavers);
-                rc.broadcast(1, numSoldiers);
-                rc.broadcast(2, numBashers);
-                rc.broadcast(3, numDrones);
-                rc.broadcast(4, numTanks);
-                rc.broadcast(100, numBarracks);
+                for (int i = 1; i < 22; i++) {
+                	rc.broadcast(i, counts[i-1]);
+                }
 
                 /* if more than 60 units execute order 66 (full out attack) */
-                if ((numSoldiers + numDrones + numTanks) > 66) {
+                if ((counts[0] + counts[3] + counts[4]) > 20 && rc.readBroadcast(66) == 0) { //soldier + drone + tanks
                     rc.broadcast(66, 1);
+                    MapLocation enemyHQ = rc.senseEnemyHQLocation();
+                    rc.broadcast(67,enemyHQ.x);
+                    rc.broadcast(68, enemyHQ.y);
                 }
-                if ((numSoldiers + numDrones + numTanks) < 30) {
+                if ((counts[0] + counts[3] + counts[4]) < 5) {
                     rc.broadcast(66, 0);
                 }
 
@@ -77,7 +86,7 @@ public class HQ {
                 }
 
                 if (rc.isCoreReady() && rc.getTeamOre() >= 100
-                        && fate < Math.pow(1.2, 12 - numBeavers) * 10000) {
+                        && fate < Math.pow(1.2, 12 - counts[7]) * 10000) { //counts[7] == beaverCount
                     team163.utils.Spawn.trySpawn(directions[rand.nextInt(8)], RobotType.BEAVER);
                 }
             } catch (Exception e) {

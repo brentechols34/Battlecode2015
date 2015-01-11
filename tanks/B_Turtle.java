@@ -14,7 +14,13 @@ public class B_Turtle implements Behavior {
 	Random rand = new Random();
 
 	public void perception() {
-		nearest = rc.senseHQLocation();
+		try {
+		int x = rc.readBroadcast(67);
+		int y = rc.readBroadcast(68);
+		nearest = new MapLocation(x,y);
+		} catch (Exception e) {
+			System.out.println("B_Turtle perception error");
+		}
 		allies = rc.senseNearbyRobots(Tank.senseRange, Tank.team);
 		enemies = rc.senseNearbyRobots(Tank.range, Tank.team.opponent());
 
@@ -36,11 +42,14 @@ public class B_Turtle implements Behavior {
 
 	public void action() {
 		try {
+			int x = rc.readBroadcast(67);
+			int y = rc.readBroadcast(68);
+			MapLocation attLoc = new MapLocation(x,y);
 			if (enemies.length > 0 && rc.isWeaponReady()) {
 				rc.attackLocation(enemies[0].location);
 			} else {
 				if (rand.nextBoolean()) {
-					Move.tryMove(rc.senseHQLocation());
+					Move.tryMove(attLoc);
 				} else {
 					/* move towards nearest */
 					Move.tryMove(nearest);

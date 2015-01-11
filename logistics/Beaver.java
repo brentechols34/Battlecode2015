@@ -6,7 +6,9 @@
 package team163.logistics;
 
 import battlecode.common.*;
+
 import java.util.Random;
+
 import team163.utils.Move;
 
 /**
@@ -24,6 +26,7 @@ public class Beaver {
     static Team enemyTeam;
     static int myRange;
     static Random rand;
+    static int lifetime = 0;
 
     public static void run(RobotController rc) {
         Beaver.rc = rc;
@@ -31,47 +34,123 @@ public class Beaver {
         myRange = rc.getType().attackRadiusSquared;
         myTeam = rc.getTeam();
         enemyTeam = myTeam.opponent();
-
+        
         while (true) {
             try {
-                if (rc.isWeaponReady()) {
-                    attackSomething();
-                }
-                if (rc.isCoreReady()) {
-                    int fate = rand.nextInt(1000);
+            	lifetime++;
+            	if (rc.isWeaponReady()) {
+            		attackSomething();
+            	}
+            	if (rc.isCoreReady()) {
+            		if (!rc.getLocation().isAdjacentTo(rc.senseHQLocation())) {
+            			int[] counts = new int[] {
+            					rc.readBroadcast(3), //barracks
+            					rc.readBroadcast(6), //helipad
+            					rc.readBroadcast(15), //minerfactory
+            					rc.readBroadcast(18) //tank factory
+            			};
+            			int[] maxCounts = new int[] {
+            					1,0,0,5
+            			};
+            			int[] priorityOffsets = new int[] {
+            					1,1,2,(counts[0] > 0)?1:-1000
+            			};
+            			boolean oneGood = false;
+            			for (int i = 0; i < priorityOffsets.length; i++) {
+            				if (counts[i] >= maxCounts[i]) {
+            					priorityOffsets[i] = -1000;
+            				} else {
+            					oneGood = true;
+            				}
+            			}
+            			if (oneGood) {
+            				int[] oreCosts = new int[] {300,300,500,500};
+            				double oreCount = rc.getTeamOre();
+            				for (int i = 0; i < counts.length; i++) {
+            					counts[i] -= priorityOffsets[i];
+            				}
+            				int toMake = mindex(counts);
+            				if (counts[toMake]+priorityOffsets[toMake] < maxCounts[toMake] && oreCount >= oreCosts[toMake]) {
+            					switch(toMake) {
+            					case 0: {
+            						if (tryBuild(directions[rand.nextInt(8)],RobotType.BARRACKS)) {
+            							rc.broadcast(3, counts[toMake]+1);
+            							break;
+            						}
+            					}
 
-                    /*
-                     * @TODO for testing build tanks factories after first
-                     * barracks
-                     */
-                    if (rc.readBroadcast(100) > 0) {
-                        if (fate < 8 && rc.getTeamOre() > 500) {
-                            tryBuild(directions[rand.nextInt(8)],
-                                    RobotType.TANKFACTORY);
-                        }
-                    }
+            					case 1: {
+            						if (tryBuild(directions[rand.nextInt(8)],RobotType.HELIPAD)) {
+            							rc.broadcast(6, counts[toMake]+1);
+            							break;
+            						}
+            					}
 
-                    if (fate < 100 && rc.getTeamOre() >= 300
-                            && rc.readBroadcast(100) < 1) {
-                        tryBuild(directions[rand.nextInt(8)],
-                                RobotType.BARRACKS);
-                    } else if (fate < 600 && rc.isCoreReady()) {
-                        rc.mine();
-                    } else if (fate < 900) {
-                        Move.tryMove(directions[rand.nextInt(8)]);
-                    } else if (fate < 900 && rc.getTeamOre() >= 300) {
-                        tryBuild(directions[rand.nextInt(8)],
-                                RobotType.HELIPAD);
-                    } else {
-                        Move.tryMove(rc.senseHQLocation().directionTo(
-                                rc.getLocation()));
-                    }
+            					case 2: {
+            						if (tryBuild(directions[rand.nextInt(8)],RobotType.MINERFACTORY)) {
+            							rc.broadcast(15, rc.readBroadcast(15)+1);
+            							break;
+            						}
+            					}
+
+            					case 3: {
+            						if (tryBuild(directions[rand.nextInt(8)],RobotType.TANKFACTORY)) {
+            							rc.broadcast(18, counts[toMake]+1);
+            							break;
+            						}
+            					}
+            					}
+            				}
+            			}
+            		}
+                	defaultMove();
                 }
             } catch (Exception e) {
                 System.out.println("Beaver Exception");
                 e.printStackTrace();
             }
         }
+    }
+
+	static void defaultMove() throws GameActionException {
+		Direction d = findSpot();
+		MapLocation myLoc = rc.getLocation();
+		if (rc.isCoreReady()) {
+            if (d != Direction.NONE && (rc.isCoreReady() && rc.canMove(d)) && (rand.nextDouble() > .8  || (rand.nextDouble() > .2 && rc.senseOre(myLoc) / 20  < 2))) { 
+            	rc.move(d);
+            } else {
+            	if (rc.isCoreReady() && rc.canMine()) rc.mine();
+            }
+		}
+	}
+	
+	public static Direction findSpot() throws GameActionException {
+		MapLocation myLoc = rc.getLocation();
+		double bestFound = rc.senseOre(myLoc);
+		Direction bestDir = Direction.NONE;
+		double tempOre;
+		for (Direction d : directions) {
+			MapLocation potential = myLoc.add(d);
+			tempOre = rc.senseOre(potential);
+			RobotInfo atLoc = rc.senseRobotAtLocation(potential);
+			if (tempOre > bestFound && (atLoc == null) || (tempOre == bestFound && bestDir == Direction.NONE)) {
+				bestFound = tempOre;
+				bestDir = d;
+			}
+		}
+		return bestDir;
+	}
+    
+    static int mindex(int[] options) {
+    	int dex = 0;
+    	int min = options[0];
+    	for (int i = 1; i < options.length; i++) {
+    		if (options[i] < min) {
+    			min = options[i];
+    			dex = i;
+    		}
+    	}
+    	return dex;
     }
 
     static int directionToInt(Direction d) {
@@ -107,7 +186,7 @@ public class Beaver {
 
     // This method will attempt to build in the given direction (or as close to
     // it as possible)
-    static void tryBuild(Direction d, RobotType type)
+    static boolean tryBuild(Direction d, RobotType type)
             throws GameActionException {
         int offsetIndex = 0;
         int[] offsets = {0, 1, -1, 2, -2, 3, -3, 4};
@@ -119,7 +198,9 @@ public class Beaver {
         }
         if (offsetIndex < 8 && rc.isCoreReady()) {
             rc.build(directions[(dirint + offsets[offsetIndex] + 8) % 8], type);
+            return true;
         }
+        return false;
     }
 
 }

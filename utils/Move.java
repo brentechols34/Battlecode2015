@@ -40,6 +40,7 @@ public class Move {
 	// possible)
 	static public void tryMove(Direction d) {
 		try {
+			set = false;
 			int offsetIndex = 0;
 			int[] offsets = { 0, 1, -1, 2, -2 };
 			int dirint = directionToInt(d);
@@ -58,6 +59,7 @@ public class Move {
 
 	static public void randMove() {
 		tryMove(directions[rand.nextInt(8)]);
+		set = false;
 	}
 
 	/**
