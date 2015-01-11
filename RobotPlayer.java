@@ -62,12 +62,14 @@ public class RobotPlayer {
                 case BARRACKS:
                     Barracks.run(tomatojuice);
                     break;
-                
+
                 case MINERFACTORY:
-                	MinerFactory.run(tomatojuice);
-                	
+                    MinerFactory.run(tomatojuice);
+                    break;
+
                 case MINER:
-                	Miner.run(tomatojuice);
+                    Miner.run(tomatojuice);
+                    break;
 
                 default:
                     System.out.println("Unhandeled robot type");
