@@ -10,6 +10,7 @@ import battlecode.common.*;
 import java.util.Random;
 
 import team163.utils.Move;
+import team163.utils.Point;
 
 /**
  *
@@ -28,6 +29,12 @@ public class Beaver {
     static Random rand;
     static int lifetime = 0;
     static boolean amSupplyBeaver = false;
+    static MapLocation bestLoc;
+    static int bestVal;
+    static boolean wasBest = false;
+    static int wasBest_count = 0;
+    static MapLocation myLoc;
+    static int oreHere;
 
     public static void run(RobotController rc) {
         Beaver.rc = rc;
@@ -39,79 +46,20 @@ public class Beaver {
         while (true) {
             try {
             	lifetime++;
-            	MapLocation myLoc = rc.getLocation();
+            	myLoc = rc.getLocation();
             	if (rc.isWeaponReady()) {
             		attackSomething();
             	}
-            	int oreHere = (int) (rc.senseOre(myLoc) +.5);
-            	int bestFound = rc.readBroadcast(1000);
+            	oreHere = (int) (rc.senseOre(myLoc) +.5);
+            	bestVal = rc.readBroadcast(1000);
+            	bestLoc = new MapLocation(rc.readBroadcast(1001), rc.readBroadcast(1002));
             	if (rc.isCoreReady()) {
-            		if (oreHere > bestFound) {
+            		if (oreHere > bestVal) {
             			rc.broadcast(1000, oreHere);
             			rc.broadcast(1001, myLoc.x);
             			rc.broadcast(1002, myLoc.y);
             		}
-            		if (!rc.getLocation().isAdjacentTo(rc.senseHQLocation())) {
-            			int[] counts = new int[] {
-            					rc.readBroadcast(3), //barracks
-            					rc.readBroadcast(6), //helipad
-            					rc.readBroadcast(15), //minerfactory
-            					rc.readBroadcast(18) //tank factory
-            			};
-            			int[] maxCounts = new int[] {
-            					1,0,0,5
-            			};
-            			int[] priorityOffsets = new int[] {
-            					1,1,2,(counts[0] > 0)?1:-1000
-            			};
-            			boolean oneGood = false;
-            			for (int i = 0; i < priorityOffsets.length; i++) {
-            				if (counts[i] >= maxCounts[i]) {
-            					priorityOffsets[i] = -1000;
-            				} else {
-            					oneGood = true;
-            				}
-            			}
-            			if (oneGood) {
-            				int[] oreCosts = new int[] {300,300,500,500};
-            				double oreCount = rc.getTeamOre();
-            				for (int i = 0; i < counts.length; i++) {
-            					counts[i] -= priorityOffsets[i];
-            				}
-            				int toMake = mindex(counts);
-            				if (counts[toMake]+priorityOffsets[toMake] < maxCounts[toMake] && oreCount >= oreCosts[toMake]) {
-            					switch(toMake) {
-            					case 0: {
-            						if (tryBuild(directions[rand.nextInt(8)],RobotType.BARRACKS)) {
-            							rc.broadcast(3, counts[toMake]+1);
-            							break;
-            						}
-            					}
-
-            					case 1: {
-            						if (tryBuild(directions[rand.nextInt(8)],RobotType.HELIPAD)) {
-            							rc.broadcast(6, counts[toMake]+1);
-            							break;
-            						}
-            					}
-
-            					case 2: {
-            						if (tryBuild(directions[rand.nextInt(8)],RobotType.MINERFACTORY)) {
-            							rc.broadcast(15, rc.readBroadcast(15)+1);
-            							break;
-            						}
-            					}
-
-            					case 3: {
-            						if (tryBuild(directions[rand.nextInt(8)],RobotType.TANKFACTORY)) {
-            							rc.broadcast(18, counts[toMake]+1);
-            							break;
-            						}
-            					}
-            					}
-            				}
-            			}
-            		}
+            		buildStuff();
         			defaultMove();
         			rc.yield();
                 }
@@ -121,26 +69,27 @@ public class Beaver {
             }
         }
     }
+	static boolean isStationary(RobotType rt) {
+		return (rt!=null && rt == RobotType.AEROSPACELAB || rt == RobotType.BARRACKS || rt == RobotType.HELIPAD || rt == RobotType.HQ ||  rt == RobotType.MINERFACTORY || rt == RobotType.SUPPLYDEPOT || rt == RobotType.TANKFACTORY || rt == RobotType.TECHNOLOGYINSTITUTE || rt == RobotType.TOWER || rt == RobotType.TRAININGFIELD);
+	}
 
 	static void defaultMove() throws GameActionException {
 		Direction d = findSpot();
-		MapLocation myLoc = rc.getLocation();
+		if (myLoc.x == rc.readBroadcast(1001) && myLoc.y == rc.readBroadcast(1002)) {
+			rc.broadcast(1000, (int) (rc.senseOre(myLoc)+.5));
+		}
 		if (rc.isCoreReady()) {
-        	int oreHere = (int) (rc.senseOre(myLoc) +.5);
-        	int bestFound = rc.readBroadcast(1000);
-        	if (bestFound > 1.75 * oreHere) {
-        		Move.tryMove(new MapLocation(rc.readBroadcast(1001),rc.readBroadcast(1002)));
+        	if (rand.nextDouble() > .8) {
+        		if (rc.canMove(d)) {
+        			rc.move(d);
+        		}
         	}
-            if (d != Direction.NONE && (rc.isCoreReady() && rc.canMove(d)) && (rand.nextDouble() > .8  || rc.senseOre(myLoc) < .2)) { 
-            	rc.move(d);
-            } else {
-            	if (rc.isCoreReady() && rc.canMine()) rc.mine();
-            }
+        	if ((oreHere / 20 < .2 || lifetime < 10)) Move.tryMove(bestLoc);
+        	if (rc.isCoreReady() && rc.canMine()) rc.mine();
 		}
 	}
 	
 	public static Direction findSpot() throws GameActionException {
-		MapLocation myLoc = rc.getLocation();
 		double bestFound = rc.senseOre(myLoc);
 		Direction bestDir = Direction.NONE;
 		double tempOre;
@@ -154,6 +103,76 @@ public class Beaver {
 			}
 		}
 		return bestDir;
+	}
+	
+	static void buildStuff() throws GameActionException {
+		int adj_count = 0;
+		for (Direction d : directions) {
+			MapLocation ml = myLoc.add(d);
+			RobotInfo ri = rc.senseRobotAtLocation(ml);
+			if (rc.senseTerrainTile(ml) == TerrainTile.NORMAL && (ri == null || !isStationary(ri.type))) adj_count++;
+		}
+		if (!rc.getLocation().isAdjacentTo(rc.senseHQLocation()) && adj_count > 5) {
+			int[] counts = new int[] {
+					rc.readBroadcast(3), //barracks
+					rc.readBroadcast(6), //helipad
+					rc.readBroadcast(15), //minerfactory
+					rc.readBroadcast(18) //tank factory
+			};
+			int[] maxCounts = new int[] {
+					1,0,0,5
+			};
+			int[] priorityOffsets = new int[] {
+					1,1,2,(counts[0] > 0)?1:-1000
+			};
+			boolean oneGood = false;
+			for (int i = 0; i < priorityOffsets.length; i++) {
+				if (counts[i] >= maxCounts[i]) {
+					priorityOffsets[i] = -1000;
+				} else {
+					oneGood = true;
+				}
+			}
+			if (oneGood) {
+				int[] oreCosts = new int[] {300,300,500,500};
+				double oreCount = rc.getTeamOre();
+				for (int i = 0; i < counts.length; i++) {
+					counts[i] -= priorityOffsets[i];
+				}
+				int toMake = mindex(counts);
+				if (counts[toMake]+priorityOffsets[toMake] < maxCounts[toMake] && oreCount >= oreCosts[toMake]) {
+					switch(toMake) {
+					case 0: {
+						if (tryBuild(directions[rand.nextInt(8)],RobotType.BARRACKS)) {
+							rc.broadcast(3, counts[toMake]+1);
+							break;
+						}
+					}
+
+					case 1: {
+						if (tryBuild(directions[rand.nextInt(8)],RobotType.HELIPAD)) {
+							rc.broadcast(6, counts[toMake]+1);
+							break;
+						}
+					}
+
+					case 2: {
+						if (tryBuild(directions[rand.nextInt(8)],RobotType.MINERFACTORY)) {
+							rc.broadcast(15, rc.readBroadcast(15)+1);
+							break;
+						}
+					}
+
+					case 3: {
+						if (tryBuild(directions[rand.nextInt(8)],RobotType.TANKFACTORY)) {
+							rc.broadcast(18, counts[toMake]+1);
+							break;
+						}
+					}
+					}
+				}
+			}
+		}
 	}
     
     static int mindex(int[] options) {

@@ -66,6 +66,8 @@ public class MBugger {
 		}
 		return null;
 	}
+	
+
 
 	/**
 	 * 
@@ -83,7 +85,10 @@ public class MBugger {
 				return false;
 			}
 			
-			if (rc.senseRobotAtLocation(next)!=null) return false;
+			RobotInfo ri = rc.senseRobotAtLocation(next);
+			if (ri!=null&& (rand.nextDouble() > .8 || isStationary(ri.type))) {
+				return false;
+			}
 			
 
 			// if it is an obstacle add obstacle and update map
@@ -96,6 +101,10 @@ public class MBugger {
 			System.out.println("Error in isTraversable()" + e);
 		}
 		return false;
+	}
+	
+	static boolean isStationary(RobotType rt) {
+		return (rt == RobotType.AEROSPACELAB || rt == RobotType.BARRACKS || rt == RobotType.HELIPAD || rt == RobotType.HQ ||  rt == RobotType.MINERFACTORY || rt == RobotType.SUPPLYDEPOT || rt == RobotType.TANKFACTORY || rt == RobotType.TECHNOLOGYINSTITUTE || rt == RobotType.TOWER || rt == RobotType.TRAININGFIELD);
 	}
 
 	private boolean isOOB(int x, int y) {
@@ -165,7 +174,9 @@ public class MBugger {
 		}
 		// if it gets here, there are major problems.
 		// just in case, we'll modify the move count.
+		reverse = !reverse;
 		moveCount--;
+		closest=null;
 		return null;
 	}
 

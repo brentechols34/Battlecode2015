@@ -17,6 +17,7 @@ public class Move {
 	static MapLocation store;
 	static boolean stored = false;
 	static boolean set = false;
+	static int persistance = 0;
 
 	/* instantiate movement utils */
 	static Path p = new Path(new boolean[120][120]);
@@ -79,35 +80,34 @@ public class Move {
 				mb.reset();
 				mb.setTargetLocation(new Point(m.x, m.y));
 			}
-
-//			// If ran into another robot or bugger returned null try just moving
-//			if (stored) {
-//				if ((count++) > 3) {
-//					// stuck in a loop reset
-//					stored = false;
-//					boolean dir = mb.reverse;
-//					mb.reset();
-//					mb.reverse = !dir;
-//					mb.setTargetLocation(new Point(m.x, m.y));
-//					count = 0;
-//				} else {
-//					MapLocation cur = rc.getLocation();
-//					if (cur.compareTo(store) != 0) {
-//						tryMove(cur.directionTo(store));
-//						return;
-//					} else {
-//						mb.reset();
-//						mb.setTargetLocation(new Point(m.x, m.y));
-//						stored = false;
-//					}
-//				}
-//			}
+			// If ran into another robot or bugger returned null try just moving
+			if (stored) {
+				mb.closest = null;
+				mb.start = null;
+				if ((count++) > rand.nextInt(2)+2) {
+					// stuck in a loop reset
+					stored = false;
+					mb.reset();
+					mb.setTargetLocation(new Point(m.x, m.y));
+					count = 0;
+				} else {
+					MapLocation cur = rc.getLocation();
+					if (cur.compareTo(store) != 0) {
+						tryMove(cur.directionTo(store));
+						return;
+					} else {
+						mb.reset();
+						mb.setTargetLocation(new Point(m.x, m.y));
+						stored = false;
+					}
+				}
+			}
 
 			// try using bugging system
 			MapLocation ml = rc.getLocation();
 			if (mb.start == null) mb.start = new Point(ml.x,ml.y);
 			Point p = mb.nextMove();
-			if (p == null) {
+			if (p == null) { //idk really how this happens, but whatever
 				return;
 			}
 			MapLocation loc = new MapLocation(p.x, p.y);
@@ -120,13 +120,11 @@ public class Move {
 				} else {
 					mb.closest = null;
 				}
-			} 
-			else {
-				//robot in the way try moving around
+			} else {
 				mb.closest = null;
+				mb.start = null;
 				stored = true;
-				store = new MapLocation(p.x, p.y);
-				//mb.reverse = !mb.reverse;
+				store = loc;
 				tryMove(rc.getLocation().directionTo(store));
 			}
 		} catch (Exception e) {
@@ -134,6 +132,8 @@ public class Move {
 			e.printStackTrace();
 		}
 	}
+	
+
 
 	static int directionToInt(Direction d) {
 		switch (d) {

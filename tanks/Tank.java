@@ -52,9 +52,6 @@ public class Tank {
 		try {
 			/* if more than 10 tanks trigger aggressive behavior */
 			if (rc.readBroadcast(66) == 1) {
-				if (!(mood instanceof B_Attack)) {
-					Move.setRc(rc);
-				}
 				mood = new B_Attack();
 			} else {
 				mood = new B_Turtle();
