@@ -3,6 +3,7 @@ package team163;
 import team163.air.Drone;
 import team163.air.Helipad;
 import battlecode.common.*;
+import team163.logistics.SupplyDepot;
 import team163.tanks.Tank;
 import team163.tanks.TankFactory;
 import team163.utils.Move;
@@ -69,6 +70,10 @@ public class RobotPlayer {
 
                 case MINER:
                     Miner.run(tomatojuice);
+                    break;
+
+                case SUPPLYDEPOT:
+                    SupplyDepot.run(tomatojuice);
                     break;
 
                 default:

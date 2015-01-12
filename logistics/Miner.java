@@ -7,14 +7,8 @@ package team163.logistics;
 
 import java.util.Random;
 
+import battlecode.common.*;
 import team163.utils.Move;
-import battlecode.common.Direction;
-import battlecode.common.GameActionException;
-import battlecode.common.MapLocation;
-import battlecode.common.RobotController;
-import battlecode.common.RobotInfo;
-import battlecode.common.RobotType;
-import battlecode.common.Team;
 
 /**
  *
@@ -36,6 +30,11 @@ public class Miner {
     static int bestVal;
     static MapLocation bestLoc;
     static int lifetime = 0;
+
+    static final boolean TESTING_MINING = false;
+    static final int ORE_CHANNEL = 10000;
+    static final int SUPPLY_THRESHOLD = 500;
+    static final boolean IS_SUPPLYING = false;
 	
 	public static void run(RobotController rc) {
         Miner.rc = rc;
@@ -61,7 +60,13 @@ public class Miner {
         			defaultMove();
         			rc.yield();
                 }
-                
+
+                if (TESTING_MINING && Clock.getRoundNum() == 1000) {
+                    System.out.println("Ore Extracted: " + rc.readBroadcast(ORE_CHANNEL));
+                }
+                if (TESTING_MINING && Clock.getRoundNum() == 1999) {
+                    System.out.println("Ore Extracted: " + rc.readBroadcast(ORE_CHANNEL));
+                }
             } catch (Exception e) {
                 System.out.println("Miner Exception");
                 e.printStackTrace();
@@ -75,14 +80,45 @@ public class Miner {
 			rc.broadcast(1000, (int) (rc.senseOre(myLoc)+.5));
 		}
 		if (rc.isCoreReady()) {
+            if (rc.getSupplyLevel() < 500 && IS_SUPPLYING) {
+                goSupply();
+            }
         	if (oreHere < 3 && bestVal > 3) Move.tryMove(bestLoc);
-        	if (rc.isCoreReady() && rc.canMine() && oreHere > 3) rc.mine();
+        	if (rc.isCoreReady() && rc.canMine() && oreHere > 3) {
+                if (TESTING_MINING) {
+                    int extracted = (int)(Math.max(Math.min(3, oreHere/4),0.2) * 10);
+                    rc.broadcast(ORE_CHANNEL, rc.readBroadcast(ORE_CHANNEL) + extracted);
+                }
+
+                rc.mine();
+            }
         	else if (rc.isCoreReady() && rc.canMove(d)) {
     			rc.move(d);
     			return;
     		}
 		}
 	}
+
+    static void goSupply() throws GameActionException {
+        if(myLoc.distanceSquaredTo(rc.senseHQLocation()) < 15) {
+            if (rc.canMine() && oreHere > 0) {
+                if (TESTING_MINING) {
+                    int extracted = (int)(Math.max(Math.min(3, oreHere/4),0.2) * 10);
+                    rc.broadcast(ORE_CHANNEL, rc.readBroadcast(ORE_CHANNEL) + extracted);
+                }
+
+                rc.mine();
+            }
+
+            return;
+        }
+
+        Direction d = myLoc.directionTo(rc.senseHQLocation());
+        if (rc.canMove(d)) {
+            Move.tryMove(d);
+            return;
+        }
+    }
 	
 	public static Direction findSpot() throws GameActionException {
 		double bestFound = rc.senseOre(myLoc);
