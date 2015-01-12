@@ -31,6 +31,11 @@ public class Miner {
     static Team enemyTeam;
     static int myRange;
     static Random rand;
+    static MapLocation myLoc;
+    static int oreHere;
+    static int bestVal;
+    static MapLocation bestLoc;
+    static int lifetime = 0;
 	
 	public static void run(RobotController rc) {
         Miner.rc = rc;
@@ -38,16 +43,23 @@ public class Miner {
         myRange = rc.getType().attackRadiusSquared;
         myTeam = rc.getTeam();
         enemyTeam = myTeam.opponent();
+        //rc.yield();
+        //rc.yield();
         while (true) {
             try {
-            	MapLocation myLoc = rc.getLocation();
-                Direction d = findSpot();
-              //if the spot I found is better than here, and skipping a turn to move there is worthwhile
-                
-                if (rc.isCoreReady() && rc.canMove(d) && (rand.nextDouble() > .8 || rc.senseOre(myLoc) / 20  < 5)) { 
-                	rc.move(d);
-                } else {
-                	if (rc.isCoreReady() && rc.canMine()) rc.mine();
+            	lifetime++;
+            	myLoc = rc.getLocation();
+                oreHere = (int) (rc.senseOre(myLoc) +.5);
+            	bestVal = rc.readBroadcast(1000);
+            	bestLoc = new MapLocation(rc.readBroadcast(1001), rc.readBroadcast(1002));
+            	if (rc.isCoreReady()) {
+            		if (oreHere > bestVal) {
+            			rc.broadcast(1000, oreHere);
+            			rc.broadcast(1001, myLoc.x);
+            			rc.broadcast(1002, myLoc.y);
+            		}
+        			defaultMove();
+        			rc.yield();
                 }
                 
             } catch (Exception e) {
@@ -57,8 +69,22 @@ public class Miner {
         }
     }
 	
+	static void defaultMove() throws GameActionException {
+		Direction d = findSpot();
+		if (myLoc.x == rc.readBroadcast(1001) && myLoc.y == rc.readBroadcast(1002)) {
+			rc.broadcast(1000, (int) (rc.senseOre(myLoc)+.5));
+		}
+		if (rc.isCoreReady()) {
+        	if (oreHere < 3 && bestVal > 3) Move.tryMove(bestLoc);
+        	if (rc.isCoreReady() && rc.canMine() && oreHere > 3) rc.mine();
+        	else if (rc.isCoreReady() && rc.canMove(d)) {
+    			rc.move(d);
+    			return;
+    		}
+		}
+	}
+	
 	public static Direction findSpot() throws GameActionException {
-		MapLocation myLoc = rc.getLocation();
 		double bestFound = rc.senseOre(myLoc);
 		Direction bestDir = Direction.NONE;
 		double tempOre;
@@ -66,7 +92,7 @@ public class Miner {
 			MapLocation potential = myLoc.add(d);
 			tempOre = rc.senseOre(potential);
 			RobotInfo atLoc = rc.senseRobotAtLocation(potential);
-			if (tempOre > bestFound && (atLoc == null)) {
+			if (tempOre > bestFound && (atLoc == null) || (tempOre == bestFound && (rand.nextBoolean() || bestDir == Direction.NONE))) {
 				bestFound = tempOre;
 				bestDir = d;
 			}

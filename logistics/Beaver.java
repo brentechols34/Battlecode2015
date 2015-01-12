@@ -130,7 +130,7 @@ public class Beaver {
 					rc.readBroadcast(18) //tank factory
 			};
 			int[] maxCounts = new int[] {
-					1,0,0,5
+					2,0,1,5
 			};
 			int[] priorityOffsets = new int[] {
 					1,1,2,(counts[0] > 0)?1:-1000
@@ -253,9 +253,9 @@ public class Beaver {
     	Path p = new Path(new Point(hq.x,hq.y),new Point(enemyhq.x,enemyhq.y));
     	MapLocation myLoc = rc.getLocation();
     	try {
-        	rc.broadcast(187, myLoc.x);
-        	rc.broadcast(188,  myLoc.y);
     		while (true) {
+    			rc.broadcast(187, myLoc.x);
+            	rc.broadcast(188,  myLoc.y);
     			int request = rc.readBroadcast(72);
     			if (request==2) {
     				int startx = rc.readBroadcast(73);
@@ -264,7 +264,8 @@ public class Beaver {
     				int finishy = rc.readBroadcast(76);
     				Point start = new Point(startx,starty);
     				Point finish = new Point(finishx, finishy);
-    				Point[] path = p.pathfind(start, finish); //ohhhhh boy
+    				Point[] path = p.pathfind(start, finish); //ohhhhh boy this might take a bit
+    				System.out.println("I DID IT.");
     				int channel = 77;
     				int len = path.length;
     				rc.broadcast(channel++, len);
@@ -282,6 +283,7 @@ public class Beaver {
     		}
     	} catch (Exception e) {
     		System.out.println("PathBeaver Exception");
+    		e.printStackTrace();
     	}
     	
     }

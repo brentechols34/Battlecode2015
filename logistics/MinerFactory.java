@@ -10,7 +10,9 @@ import java.util.Random;
 import battlecode.common.Direction;
 import battlecode.common.GameActionException;
 import battlecode.common.RobotController;
+import battlecode.common.RobotInfo;
 import battlecode.common.RobotType;
+import battlecode.common.Team;
 
 /**
  *
@@ -27,13 +29,20 @@ public class MinerFactory {
 		try {
 			rc = minerFactoryRC;
 			Random rand = new Random();
+			Team myTeam = rc.getTeam();
 			while (true) {
 				// get information broadcasted by the HQ
 				int numMiners = rc.readBroadcast(14);
 				//System.out.println(numMiners);
-				if (rc.isCoreReady() && rc.getTeamOre() >= 250 && numMiners < 7) {
+				if (rc.isCoreReady() && rc.getTeamOre() >= 250 && numMiners < 10) {
 					trySpawn(directions[rand.nextInt(8)], RobotType.MINER);
 				}
+				RobotInfo[] bots = rc.senseNearbyRobots(15, myTeam);
+//				for (RobotInfo ri : bots) {
+//					if (ri.type == RobotType.MINER) {
+//						rc.transferSupplies(100, ri.location);
+//					}
+//				}
 				
 				rc.yield();
 			}

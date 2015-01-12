@@ -34,7 +34,8 @@ public class HQ {
     static int minY;
     static int maxX;
     static int maxY;
-
+    static int rallyX;
+    static int rallyY;
     public static void run(RobotController rc) {
         Spawn.rc = rc;
         HQ.rc = rc;
@@ -81,19 +82,20 @@ public class HQ {
             	eachTurn();
             	performUnitCount();
             	decrees();
-            	
 
                 if (rc.isWeaponReady()) {
                     attackSomething();
                 }
 
-                if (rc.isCoreReady() && rc.getTeamOre() >= 100 && counts[8] < 20) { //counts[7] == beaverCount
+                if (rc.isCoreReady() && rc.getTeamOre() >= 100 && counts[7] < 2) { //counts[7] == beaverCount
                     team163.utils.Spawn.trySpawn(directions[rand.nextInt(8)], RobotType.BEAVER);
                 }
                 int pbX = rc.readBroadcast(187);
                 int pbY = rc.readBroadcast(188);
                 MapLocation pathBeaverLoc = new MapLocation(pbX,pbY);
-                if (pathBeaverLoc.distanceSquaredTo(rc.getLocation()) < 15) rc.transferSupplies((int) rc.getSupplyLevel(), pathBeaverLoc); //give pathbeaver everything               
+                RobotInfo ri;
+                if (pathBeaverLoc.distanceSquaredTo(rc.getLocation()) < 15 && (ri = rc.senseRobotAtLocation(pathBeaverLoc)) != null && ri.supplyLevel < 2000) rc.transferSupplies((int) rc.getSupplyLevel(), pathBeaverLoc); //give pathbeaver everything               
+                
                 rc.yield();
             } catch (Exception e) {
                 System.out.println("HQ Exception");
@@ -121,7 +123,7 @@ public class HQ {
             case DRONE: counts[3]++; break; //4
             case TANK: counts[4]++; break; //5
             case HELIPAD: counts[5]++; break; //6
-            case AEROSPACELAB: counts[6]++; break;
+            case AEROSPACELAB: counts[6]++; break; //7
             case BEAVER: counts[7]++; break; //8
             case COMMANDER: counts[8]++; break;
             case COMPUTER: counts[9]++; break;
@@ -129,7 +131,10 @@ public class HQ {
             case HQ: counts[11]++; break;
             case LAUNCHER: counts[12]++; break;
             case MINER: counts[13]++; break;
-            case MINERFACTORY: counts[14]++; break;
+            case MINERFACTORY: {
+            	if (rc.getSupplyLevel()>0) rc.transferSupplies(100, r.location);
+            	counts[14]++; break;
+            }
             case MISSILE: counts[15]++; break;
             case SUPPLYDEPOT: counts[16]++; break;
             case TANKFACTORY: counts[17]++; break;
@@ -146,11 +151,26 @@ public class HQ {
     
     static void decrees() throws GameActionException {
         /* if more than 60 units execute order 66 (full out attack) */
+    	
+    	//lets pre-plan a path if we think we'll have enough agents soon
+    	if ((counts[0] + counts[3] + counts[4]) > 6 && rc.readBroadcast(66) == 0) {
+    		rc.broadcast(72, 2); //broadcast a 2 onto channel 72 to activate pathbeaver
+    		//start positions will be rally point
+    		rc.broadcast(73,rallyX);
+    		rc.broadcast(74,rallyY);
+    		//enemy HQ will be finish
+    		MapLocation enemyHQ = rc.senseEnemyHQLocation();
+    		rc.broadcast(75,enemyHQ.x);
+    		rc.broadcast(76,enemyHQ.y);
+    		//channel 72 will be zero when pathbeaver is done.
+    		
+    	}
         if ((counts[0] + counts[3] + counts[4]) > 10 && rc.readBroadcast(66) == 0) { //soldier + drone + tanks
             rc.broadcast(66, 1);
             MapLocation enemyHQ = rc.senseEnemyHQLocation();
             rc.broadcast(67,enemyHQ.x);
             rc.broadcast(68, enemyHQ.y);
+            
         }
         
         if ((counts[0] + counts[3] + counts[4]) < 5) {
@@ -171,10 +191,11 @@ public class HQ {
     	MapLocation enemy = rc.senseEnemyHQLocation();
     	MapLocation me = rc.senseHQLocation();
     	//this is a simple way that should tend to work, hopefully
-    	int x = me.x - (me.x - enemy.x)/5;
-    	int y =  me.y - (me.y - enemy.y)/5;
-    	System.out.println(x + " " + y);
-    	rc.broadcast(50,x);
-    	rc.broadcast(51,y);
+    	rallyX = me.x - (me.x - enemy.x)/5;
+    	rallyY =  me.y - (me.y - enemy.y)/5;
+    	
+    	
+    	rc.broadcast(50,rallyX);
+    	rc.broadcast(51,rallyY);
     }
 }
