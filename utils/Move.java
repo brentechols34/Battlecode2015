@@ -59,10 +59,10 @@ public class Move {
 		}
 	}
 
-//	static public void randMove() {
-//		tryMove(directions[rand.nextInt(8)]);
-//		set = false;
-//	}
+	static public void randMove() {
+		tryMove(directions[rand.nextInt(8)]);
+		set = false;
+	}
 
 	/**
 	 * Try moving using the bugger High of 2360 bytecode Low of 560 bytecode

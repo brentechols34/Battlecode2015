@@ -5,6 +5,7 @@ import battlecode.common.*;
 public interface Behavior {
 	
 	/* general concepts of an agent */
+	void setRc(RobotController rc);
 	void perception();
 	void calculation();
 	void action();

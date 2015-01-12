@@ -128,13 +128,14 @@ public class Beaver {
 					rc.readBroadcast(6), //helipad
 					rc.readBroadcast(15), //minerfactory
 					rc.readBroadcast(18), //tank factory
-                    rc.readBroadcast(17) //Supply depot
+					rc.readBroadcast(17), //Supply depot
+					rc.readBroadcast(7)   //Aerospacelab
 			};
 			int[] maxCounts = new int[] {
-					2,0,1,5,5
+					2,0,1,5,5,0
 			};
 			int[] priorityOffsets = new int[] {
-					1,1,2,(counts[0] > 0)?1:-1000,3
+					1,1,2,(counts[0] > 0)?1:-1000,3,(counts[1] > 0)?1:-1000
 			};
 			boolean oneGood = false;
 			for (int i = 0; i < priorityOffsets.length; i++) {
@@ -145,7 +146,7 @@ public class Beaver {
 				}
 			}
 			if (oneGood) {
-				int[] oreCosts = new int[] {300,300,500,500,100};
+				int[] oreCosts = new int[] {300,300,500,500,100,500};
 				double oreCount = rc.getTeamOre();
 				for (int i = 0; i < counts.length; i++) {
 					counts[i] -= priorityOffsets[i];
@@ -186,6 +187,12 @@ public class Beaver {
                             break;
                         }
                     }
+					case 5: {
+						if (tryBuild(directions[rand.nextInt(8)],RobotType.AEROSPACELAB)) {
+							rc.broadcast(7, counts[toMake]+1);
+							break;
+						}
+					}
 					}
 				}
 			}

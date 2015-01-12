@@ -1,7 +1,9 @@
 package team163;
 
+import team163.air.Aerospace;
 import team163.air.Drone;
 import team163.air.Helipad;
+import team163.air.Launcher;
 import battlecode.common.*;
 import team163.logistics.SupplyDepot;
 import team163.tanks.Tank;
@@ -36,10 +38,18 @@ public class RobotPlayer {
                     Helipad.run(tomatojuice);
                     break;
 
+                case AEROSPACELAB:
+                    Aerospace.run(tomatojuice);
+                    break;
+
                 case DRONE:
                     Drone.run(tomatojuice);
                     break;
-
+                    
+                case LAUNCHER:
+                    Launcher.run(tomatojuice);
+                    break;
+                    
                 case TANK:
                     Tank.run(tomatojuice);
                     break;
