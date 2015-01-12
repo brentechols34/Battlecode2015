@@ -58,6 +58,8 @@ public class Tank {
 			} else {
 				mood.attacking = false;
 			}
+
+//            requestSupply();
 		} catch (Exception e) {
 			System.out.println("Error caught in choosing tank behavior");
 		}
@@ -65,12 +67,14 @@ public class Tank {
 
     static void requestSupply () throws GameActionException {
         if (rc.getSupplyLevel() < 250) {
-            if (resupplyChannel == 0) {
-                // Find the next beaver supply channel
-                resupplyChannel = rc.readBroadcast(197);
-            }
-
             resupplyChannel = SupplyBeaver.requestResupply(rc, rc.getLocation(), resupplyChannel);
+
+            int head = rc.readBroadcast(196);
+            MapLocation beaverLoc = new MapLocation(rc.readBroadcast(198), rc.readBroadcast(199));
+            if (head == resupplyChannel && beaverLoc.distanceSquaredTo(rc.getLocation()) < 20) {
+                System.out.println("waiting for refuel");
+                Tank.rc.yield();
+            }
         } else {
             resupplyChannel = 0;
         }

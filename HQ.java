@@ -94,9 +94,6 @@ public class HQ {
                 //Channel 198,199 for supply beaver loc
                 //Channel 200 - 299 for supply beaver requests
 
-            	//Channel 578-778 for path
-            	//Channel 179 for path count
-
                 //Channel 10000 for ore mined count
             
             	eachTurn();
@@ -107,7 +104,7 @@ public class HQ {
                     attackSomething();
                 }
 
-                if (rc.isCoreReady() && rc.getTeamOre() >= 100 && counts[7] < 4) { //counts[7] == beaverCount
+                if (rc.isCoreReady() && rc.getTeamOre() >= 100 && counts[7] < 3) { //counts[7] == beaverCount
                     team163.utils.Spawn.trySpawn(directions[rand.nextInt(8)], RobotType.BEAVER);
                 }
                 int pbX = rc.readBroadcast(187);

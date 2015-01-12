@@ -66,8 +66,9 @@ public class Beaver {
                 SupplyBeaver.run(rc);
             }
 		} catch (Exception e) {
-			System.out.println("Tried to be a path beaver, but I failed");
-		}
+            System.out.println("Tried to be a path beaver, but I failed");
+        }
+
 		while (true) {
 			try {
 				lifetime++;
@@ -319,7 +320,7 @@ public class Beaver {
     				if (path != null) {
     					int channel = 578;
     					int len = path.length;
-    					System.out.println("Path length: " + len);
+//    					System.out.println("Path length: " + len);
     					rc.broadcast(77, len);
     					for (Point pr : path) {
     						rc.broadcast(channel, pr.x);

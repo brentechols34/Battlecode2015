@@ -33,22 +33,30 @@ public class SupplyBeaver {
     static Random rand;
     static MapLocation myLoc;
 
-    public static void run(RobotController rc) {
-        SupplyBeaver.rc = rc;
+    public static void run(RobotController con) {
+        rc = con;
+        rc.setIndicatorString(0, "I am supply beaver");
         rand = new Random(rc.getID());
         myRange = rc.getType().attackRadiusSquared;
         myTeam = rc.getTeam();
         enemyTeam = myTeam.opponent();
-
+        System.out.println("new supply beaver!");
 
         while (true) {
             try {
                 myLoc = rc.getLocation();
+
+                //broadcast our updated position
+                rc.broadcast(198, myLoc.x);
+                rc.broadcast(199, myLoc.y);
+
                 if (rc.isCoreReady()) {
                     double supply = rc.getSupplyLevel();
                     if (supply > 1000) {
+                        System.out.println("Supplying people!");
                         goSupplyPeople();
                     } else {
+                        System.out.println("Going back to base!");
                         goToBase();
                     }
                 }
@@ -68,47 +76,55 @@ public class SupplyBeaver {
             channel = requester.readBroadcast(197);
 
             // Adjust the tail pointer for new requests
-            channel = channel == 298 ? 200 : channel + 2;
+            channel = (channel == 300) ? 200 : channel;
             requester.broadcast(197, channel + 2);
         }
 
         // Write out the supply request to the radio
         requester.broadcast(channel, loc.x);
-        requester.broadcast(channel, loc.y);
+        requester.broadcast(channel + 1, loc.y);
 
         return channel;
     }
 
-    static void finishResupply () throws GameActionException {
-        // Adjust the head of the resupply requests
-        int head = rc.readBroadcast(196);
-        head = head == 300 ? 200 : head + 2;
-        rc.broadcast(196, head);
-    }
-
     static void goToBase () {
-        if(myLoc.distanceSquaredTo(rc.senseHQLocation()) < 15) {
+        if(myLoc.distanceSquaredTo(rc.senseHQLocation()) < 10) {
+            System.out.println("Resupplying myself!");
             return;
         }
 
         Direction d = myLoc.directionTo(rc.senseHQLocation());
         if (rc.canMove(d)) {
             Move.tryMove(d);
-            return;
         }
     }
 
     static void goSupplyPeople () throws GameActionException {
-        int head = rc.readBroadcast(197);
-        MapLocation dest = new MapLocation(rc.readBroadcast(head), rc.readBroadcast(head + 1));
+        int head = rc.readBroadcast(196);
+        int tail = rc.readBroadcast(197);
 
-        Direction d = myLoc.directionTo(dest);
-        if (rc.canMove(d)) {
-            Move.tryMove(d);
+        // If there is no one to supply, go collect more supplies
+        if (head == tail) {
+            System.out.println("Queue is empty, no work to do!");
+            goToBase();
         }
 
+        MapLocation dest = new MapLocation(rc.readBroadcast(head), rc.readBroadcast(head + 1));
         if (myLoc.distanceSquaredTo(dest) < GameConstants.SUPPLY_TRANSFER_RADIUS_SQUARED) {
-            Supply.supplySomething(rc, myTeam);
+            RobotInfo info = rc.senseRobotAtLocation(dest);
+            if (info == null) {
+                System.out.println("Supply request invalid, moving on");
+                rc.broadcast(196, (head == 298) ? 200 : (head + 2));
+            }
+
+            System.out.println("Supplied someone! head now at " + ((head == 298) ? 200 : (head + 2)) + " and tail at " + rc.readBroadcast(197));
+            rc.transferSupplies((int) Math.min(rc.getSupplyLevel() - 500, 2000), dest);
+
+            rc.broadcast(196, (head == 298) ? 200 : (head + 2));
+        }
+
+        if (rc.isCoreReady()) {
+            Move.tryMove(myLoc.directionTo(dest));
         }
     }
 }
