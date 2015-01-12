@@ -36,6 +36,8 @@ public class Beaver {
     static MapLocation myLoc;
     static int oreHere;
     static boolean amPathBeaver;
+    static boolean amSupplyBeaver;
+
 
     public static void run(RobotController rc) {
         Beaver.rc = rc;
@@ -48,7 +50,9 @@ public class Beaver {
         		rc.broadcast(72, 0);
         		amPathBeaver = true;
         		doPathBeaverThings();
-        	}
+        	} else if (rc.readBroadcast(8) > 2) {
+                SupplyBeaver.run(rc);
+            }
         } catch (Exception e) {
         	System.out.println("Tried to be a path beaver, but I failed");
         }

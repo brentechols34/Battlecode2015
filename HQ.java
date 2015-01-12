@@ -11,7 +11,7 @@ import java.util.Random;
 
 import team163.utils.Point;
 import team163.utils.Spawn;
-
+import team163.utils.Supply;
 /**
  *
  * @author sweetness
@@ -54,12 +54,12 @@ public class HQ {
         rc.broadcast(180, Integer.MAX_VALUE);
         rc.broadcast(181, 0);
         rc.broadcast(182, Integer.MAX_VALUE);
+        rc.broadcast(196, 200);
+        rc.broadcast(197, 200);
         } catch (Exception e) {System.out.println("Couldn't request path beaver");};
         while (true) {
             try {
             	//Channel 1-21 for unit counts
-                //Channel 200 for supply beavers
-                //Channel 201 for supply beaver requests
             	//Channel 666 for move-bitch strat
             	//667 for timeout for 666
             	//Channel 1000 for ore-best
@@ -77,7 +77,12 @@ public class HQ {
             	//Channel 180 for maxX 
             	//Channel 181 for minY
             	//channel 182 for maxY
-            	//Channel 187,188 for supply beaver loc
+
+                //Channel 196 for list head index
+                //Channel 197 for list tail index
+                //Channel 198,199 for supply beaver loc
+                //Channel 200 - 299 for supply beaver requests
+
 
                 //Channel 10000 for ore mined count
             
@@ -89,7 +94,7 @@ public class HQ {
                     attackSomething();
                 }
 
-                if (rc.isCoreReady() && rc.getTeamOre() >= 100 && counts[7] < 2) { //counts[7] == beaverCount
+                if (rc.isCoreReady() && rc.getTeamOre() >= 100 && counts[7] < 4) { //counts[7] == beaverCount
                     team163.utils.Spawn.trySpawn(directions[rand.nextInt(8)], RobotType.BEAVER);
                 }
                 int pbX = rc.readBroadcast(187);
@@ -99,7 +104,7 @@ public class HQ {
                 if (pathBeaverLoc.distanceSquaredTo(rc.getLocation()) < 15 && (ri = rc.senseRobotAtLocation(pathBeaverLoc)) != null && ri.supplyLevel < 2000) rc.transferSupplies((int) rc.getSupplyLevel(), pathBeaverLoc); //give pathbeaver everything               
 
                 if (Clock.getBytecodesLeft() > 500) {
-                    supplySomething();
+                    Supply.supplySomething(rc, myTeam);
                 }
 
                 rc.yield();
@@ -196,44 +201,6 @@ public class HQ {
         RobotInfo[] enemies = rc.senseNearbyRobots(myRange, enemyTeam);
         if (enemies.length > 0) {
             rc.attackLocation(enemies[0].location);
-        }
-    }
-
-    static void supplySomething() throws GameActionException {
-        RobotInfo[] friends = rc.senseNearbyRobots(GameConstants.SUPPLY_TRANSFER_RADIUS_SQUARED, myTeam);
-        int friendLength = friends.length;
-
-        if (friendLength == 0) {
-            return;
-        }
-
-        double min = friends[0].supplyLevel;
-        RobotInfo supplied = friends[0];
-
-        for (int i = friendLength - 1; i >= 0; i--) {
-            switch (friends[i].type) {
-                case SUPPLYDEPOT:
-                case MINERFACTORY:
-                case TECHNOLOGYINSTITUTE:
-                case BARRACKS:
-                case HELIPAD:
-                case TRAININGFIELD:
-                case TANKFACTORY:
-                case AEROSPACELAB:
-                case HANDWASHSTATION:
-                    continue;
-            }
-
-
-            if (friends[i].supplyLevel < min) {
-                min = friends[i].supplyLevel;
-                supplied = friends[i];
-            }
-        }
-
-        if (min < 20000) {
-            int supply = (int)rc.getSupplyLevel();
-            rc.transferSupplies((int)Math.min(supply < 20000 ? supply / 2 : supply, 20000), supplied.location);
         }
     }
     

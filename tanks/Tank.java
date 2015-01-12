@@ -1,5 +1,6 @@
 package team163.tanks;
 
+import team163.logistics.SupplyBeaver;
 import team163.utils.Move;
 import battlecode.common.*;
 
@@ -9,6 +10,7 @@ public class Tank {
 	static int range;
     static int senseRange = 24;
 	static Team team;
+    static int resupplyChannel = 0;
 
 	static Direction[] directions = { Direction.NORTH, Direction.NORTH_EAST,
 			Direction.EAST, Direction.SOUTH_EAST, Direction.SOUTH,
@@ -64,4 +66,17 @@ public class Tank {
 		}
 		return mood; /* if error happens use current mood */
 	}
+
+    static void requestSupply () throws GameActionException {
+        if (rc.getSupplyLevel() < 250) {
+            if (resupplyChannel == 0) {
+                // Find the next beaver supply channel
+                resupplyChannel = rc.readBroadcast(197);
+            }
+
+            resupplyChannel = SupplyBeaver.requestResupply(rc, rc.getLocation(), resupplyChannel);
+        } else {
+            resupplyChannel = 0;
+        }
+    }
 }
