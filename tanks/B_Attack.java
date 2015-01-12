@@ -9,7 +9,7 @@ public class B_Attack implements Behavior {
 	MapLocation nearest; /* nearest enemy */
 	MapLocation goal;
 	RobotInfo[] enemies;
-
+	static int currentCount = 0;
 
 	public void perception() {
 		/* for now simply look for nearest enemy */
@@ -42,6 +42,7 @@ public class B_Attack implements Behavior {
 
 	public void action() {
 		try {
+			MapLocation myLoc = rc.getLocation();
 			int x = rc.readBroadcast(67);
 			int y = rc.readBroadcast(68);
 			MapLocation tempLoc = new MapLocation(x,y);
@@ -64,7 +65,7 @@ public class B_Attack implements Behavior {
 	            }
 			}
 			/* try to attack the nearest if unable than move towards it */
-			if (rc.isWeaponReady()) {
+			if (rc.isWeaponReady() && enemies.length > 0) {
 				if (rc.canAttackLocation(nearest)) {
 					rc.attackLocation(nearest);
 				} else {
@@ -78,7 +79,32 @@ public class B_Attack implements Behavior {
 							.opposite();
 					Move.tryMove(away);
 				} else {
-					Move.tryMove(nearest);
+					Move.tryMove(goal);
+//					if (currentCount < rc.readBroadcast(77)*2) {
+//						int gx = rc.readBroadcast(78 + currentCount);
+//						int gy = rc.readBroadcast(79 + currentCount);
+//						MapLocation waypoint = new MapLocation(gx, gy);
+//						//System.out.println(gx + " " + gy + " " + myLoc.distanceSquaredTo(waypoint) + " " + currentCount);
+//						if (myLoc.isAdjacentTo(waypoint)) {
+//							System.out.println("yay");
+//							currentCount+=2;
+//							gx = rc.readBroadcast(78 + currentCount);
+//							gy = rc.readBroadcast(79 + currentCount);
+//							waypoint = new MapLocation(gx, gy);
+//						}
+//						Move.tryMove(myLoc.directionTo(waypoint));
+//					} else {
+//						RobotInfo[] allies = rc.senseNearbyRobots(50, rc.getTeam());
+//						int tx = 0;
+//						int ty = 0;
+//						for (RobotInfo rbt : allies) {
+//							tx += rbt.location.x;
+//							ty += rbt.location.y;
+//						}
+//						tx/=allies.length;
+//						ty/=allies.length;
+//						Move.tryMove(myLoc.directionTo(new MapLocation(tx,ty)).opposite());
+//					}
 				}
 			}
 		} catch (Exception e) {

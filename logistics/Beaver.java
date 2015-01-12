@@ -248,32 +248,77 @@ public class Beaver {
     }
     
     static void doPathBeaverThings() {
+    	rc.setIndicatorString(0, "I am the path beaver");
     	MapLocation hq=rc.senseHQLocation();
     	MapLocation enemyhq = rc.senseEnemyHQLocation();
     	Path p = new Path(new Point(hq.x,hq.y),new Point(enemyhq.x,enemyhq.y));
     	MapLocation myLoc = rc.getLocation();
+    	int dis = 1;
+    	int lastDis = 2;
+		//start positions will be rally point
+
+		//channel 72 will be zero when pathbeaver is done.
     	try {
     		while (true) {
     			rc.broadcast(187, myLoc.x);
             	rc.broadcast(188,  myLoc.y);
-    			int request = rc.readBroadcast(72);
-    			if (request==2) {
-    				int startx = rc.readBroadcast(73);
-    				int starty = rc.readBroadcast(74);
-    				int finishx = rc.readBroadcast(75);
-    				int finishy = rc.readBroadcast(76);
-    				Point start = new Point(startx,starty);
-    				Point finish = new Point(finishx, finishy);
+    			if (dis > 4 + lastDis) {
+    				int startx = hq.x;
+    				int starty = hq.y;
+    				MapLocation finishML = rc.senseEnemyHQLocation();
+    				int finishx = finishML.x;
+    				int finishy = finishML.y;
+    				Point start = new Point(rc.readBroadcast(73),rc.readBroadcast(74));
+    				Point finish = new Point(rc.readBroadcast(75),rc.readBroadcast(76));
+    				System.out.println("Pathing from: " + start + " to " + finish);
     				Point[] path = p.pathfind(start, finish); //ohhhhh boy this might take a bit
-    				System.out.println("I DID IT.");
-    				int channel = 77;
-    				int len = path.length;
-    				rc.broadcast(channel++, len);
-    				for (Point pr : path) {
-    					rc.broadcast(channel++, pr.x);
-    					rc.broadcast(channel++, pr.y);
+    				if (path != null) {
+    					lastDis = dis;
+    					int channel = 78;
+    					int len = path.length;
+    					System.out.println("Path length: " + len);
+    					rc.broadcast(77, len);
+    					for (Point pr : path) {
+    						rc.broadcast(channel++, pr.x);
+    						rc.broadcast(channel++, pr.y);
+    						System.out.println(pr.x + " " + pr.y);
+    					}
+    					rc.broadcast(72, 0);
     				}
-    				rc.broadcast(73, 0);
+    			} else {
+    				boolean stop = false;
+    				for (int i = -1 * dis; i <= dis; i++) {
+    					TerrainTile tt = rc.senseTerrainTile(new MapLocation(myLoc.x + i, myLoc.y - dis));
+    					if (tt == TerrainTile.UNKNOWN) stop = true;
+    					else if (tt != TerrainTile.NORMAL) {
+    						p.addObstacle(new Point(myLoc.x+i,myLoc.y-dis));
+    					}
+    				}
+    				for (int i = -1 * dis; i <= dis; i++) {
+    					TerrainTile tt = rc.senseTerrainTile(new MapLocation(myLoc.x - i, myLoc.y - dis));
+    					if (tt == TerrainTile.UNKNOWN) stop = true;
+    					else if (tt != TerrainTile.NORMAL) {
+    						p.addObstacle(new Point(myLoc.x-i,myLoc.y-dis));
+    					}
+    				}
+    				for (int i = -1 * dis; i <= dis; i++) {
+    					TerrainTile tt = rc.senseTerrainTile(new MapLocation(myLoc.x - dis, myLoc.y + i));
+    					if (tt == TerrainTile.UNKNOWN) stop = true;
+    					else if (tt != TerrainTile.NORMAL) {
+    						p.addObstacle(new Point(myLoc.x - dis, myLoc.y + i));
+    					}
+    				}
+    				for (int i = -1 * dis; i <= dis; i++) {
+    					TerrainTile tt = rc.senseTerrainTile(new MapLocation(myLoc.x + dis, myLoc.y + i));
+    					if (tt == TerrainTile.UNKNOWN) stop = true;
+    					else if (tt != TerrainTile.NORMAL) {
+    						p.addObstacle(new Point(myLoc.x + dis, myLoc.y + i));
+    					}
+    				}
+    				if (!stop) {
+    					//System.out.println("Fully explored: " + dis + " away.");
+    					dis++;
+    				}
     			}
     			int minX = rc.readBroadcast(179); 
     	        int maxX = rc.readBroadcast(180);
