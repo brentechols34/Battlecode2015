@@ -138,7 +138,7 @@ public class HQ {
             case LAUNCHER: counts[12]++; break;
             case MINER: counts[13]++; break;
             case MINERFACTORY: {
-            	if (rc.getSupplyLevel()>0) rc.transferSupplies(100, r.location);
+            	//if (rc.getSupplyLevel()>0) rc.transferSupplies(100, r.location);
             	counts[14]++; break;
             }
             case MISSILE: counts[15]++; break;
@@ -159,27 +159,33 @@ public class HQ {
         /* if more than 60 units execute order 66 (full out attack) */
     	
     	//lets pre-plan a path if we think we'll have enough agents soon
-    	if ((counts[0] + counts[3] + counts[4]) > 6 && rc.readBroadcast(66) == 0) {
-    		rc.broadcast(72, 2); //broadcast a 2 onto channel 72 to activate pathbeaver
-    		//start positions will be rally point
-    		rc.broadcast(73,rallyX);
-    		rc.broadcast(74,rallyY);
-    		//enemy HQ will be finish
-    		MapLocation enemyHQ = rc.senseEnemyHQLocation();
-    		rc.broadcast(75,enemyHQ.x);
-    		rc.broadcast(76,enemyHQ.y);
-    		//channel 72 will be zero when pathbeaver is done.
-    		
-    	}
+//    	if ((counts[0] + counts[3] + counts[4]) > 6 && rc.readBroadcast(66) == 0) {
+//    		rc.broadcast(72, 2); //broadcast a 2 onto channel 72 to activate pathbeaver
+//    		//start positions will be rally point
+//    		rc.broadcast(73,rallyX);
+//    		rc.broadcast(74,rallyY);
+//    		//enemy HQ will be finish
+//    		MapLocation enemyHQ = rc.senseEnemyHQLocation();
+//    		rc.broadcast(75,enemyHQ.x);
+//    		rc.broadcast(76,enemyHQ.y);
+//    		//channel 72 will be zero when pathbeaver is done.
+//    		
+//    	}
         if ((counts[0] + counts[3] + counts[4]) > 30 && rc.readBroadcast(66) == 0) { //soldier + drone + tanks
             rc.broadcast(66, 1);
-            MapLocation enemyHQ = rc.senseEnemyHQLocation();
-            rc.broadcast(67,enemyHQ.x);
-            rc.broadcast(68, enemyHQ.y);
-            
+            MapLocation[] towers = rc.senseEnemyTowerLocations();
+            if (towers.length == 0) {
+            	MapLocation enHQ = rc.senseEnemyHQLocation();
+            	rc.broadcast(67,enHQ.x);
+	            rc.broadcast(68,enHQ.y);
+            } else {
+            	int closest =  findClosestToHQ(towers);
+            	rc.broadcast(67,towers[closest].x);
+            	rc.broadcast(68,towers[closest].y);
+            }
         }
         
-        if ((counts[0] + counts[3] + counts[4]) < 5) {
+        if ((counts[0] + counts[3] + counts[4]) < 20) {
             rc.broadcast(66, 0);
         }
     }
@@ -217,14 +223,43 @@ public class HQ {
     }
     
     static void setRallyLocation() throws GameActionException {
-    	MapLocation enemy = rc.senseEnemyHQLocation();
-    	MapLocation me = rc.senseHQLocation();
-    	//this is a simple way that should tend to work, hopefully
-    	rallyX = me.x - (me.x - enemy.x)/5;
-    	rallyY =  me.y - (me.y - enemy.y)/5;
-    	
+    	MapLocation[] towers = rc.senseTowerLocations();
+    	int rallyX = 0;
+    	int rallyY = 0;
+    	MapLocation enemyHQ = rc.senseEnemyHQLocation();
+    	if (towers.length > 0) {
+    		int mindex = 0;
+    		int minDis = enemyHQ.distanceSquaredTo(towers[0]);
+    		int t_dis;
+    		for (int i = 1; i < towers.length; i++) {
+    			if ((t_dis=enemyHQ.distanceSquaredTo(towers[i])) < minDis) {
+    				mindex = i;
+    				minDis = t_dis;
+    			}
+    		}
+    		rallyX = towers[mindex].x;
+    		rallyY = towers[mindex].y;
+    	} else {
+    		MapLocation myLoc = rc.getLocation();
+    		rallyX = myLoc.x + (enemyHQ.x - myLoc.x)/5;
+    		rallyY =  myLoc.y + (enemyHQ.y - myLoc.y)/5;
+    	}
     	
     	rc.broadcast(50,rallyX);
     	rc.broadcast(51,rallyY);
     }
+    
+	public static int findClosestToHQ(MapLocation[] locs) {
+		int mindex = 0;
+		MapLocation hq = rc.senseHQLocation();
+		int minDis = hq.distanceSquaredTo(locs[0]);
+		for (int i = 1; i < locs.length; i++) {
+			int dis = hq.distanceSquaredTo(locs[i]);
+			if (locs[i] != null && dis < minDis) {
+				mindex=i;
+				minDis = dis;
+			}
+		}
+		return mindex;		
+	}
 }
