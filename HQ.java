@@ -165,7 +165,7 @@ public class HQ {
     		//channel 72 will be zero when pathbeaver is done.
     		
     	}
-        if ((counts[0] + counts[3] + counts[4]) > 10 && rc.readBroadcast(66) == 0) { //soldier + drone + tanks
+        if ((counts[0] + counts[3] + counts[4]) > 30 && rc.readBroadcast(66) == 0) { //soldier + drone + tanks
             rc.broadcast(66, 1);
             MapLocation enemyHQ = rc.senseEnemyHQLocation();
             rc.broadcast(67,enemyHQ.x);
