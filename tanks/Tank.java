@@ -6,7 +6,7 @@ import battlecode.common.*;
 
 public class Tank {
 	static RobotController rc;
-	static Behavior mood; /* current behavior */
+	static B_Turtle mood; /* current behavior */
 	static int range;
     static int senseRange = 24;
 	static Team team;
@@ -28,7 +28,7 @@ public class Tank {
 			while (true) {
 
 				/* get behavior */
-				mood = chooseB();
+				update();
 
 				/* perform round */
 				mood.perception();
@@ -50,21 +50,17 @@ public class Tank {
 	 * 
 	 * @return Behavior interface
 	 */
-	private static Behavior chooseB() {
+	private static void update() {
 		try {
 			/* if more than 10 tanks trigger aggressive behavior */
 			if (rc.readBroadcast(66) == 1) {
-				mood = new B_Attack();
+				mood.attacking = true;
 			} else {
-				mood = new B_Turtle();
+				mood.attacking = false;
 			}
-
-			/* if mood has not been altered than current mood is kept */
-			return mood;
 		} catch (Exception e) {
 			System.out.println("Error caught in choosing tank behavior");
 		}
-		return mood; /* if error happens use current mood */
 	}
 
     static void requestSupply () throws GameActionException {

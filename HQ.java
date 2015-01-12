@@ -42,6 +42,7 @@ public class HQ {
         myTeam = rc.getTeam();
         myRange = rc.getType().attackRadiusSquared;
         enemyTeam = myTeam.opponent();
+        MapLocation myLoc = rc.getLocation();
         rand = new Random(rc.getID());
         try {
         	setRallyLocation();
@@ -54,8 +55,17 @@ public class HQ {
         rc.broadcast(180, Integer.MAX_VALUE);
         rc.broadcast(181, 0);
         rc.broadcast(182, Integer.MAX_VALUE);
+
+        // SUPPLY INIT
         rc.broadcast(196, 200);
         rc.broadcast(197, 200);
+
+        rc.broadcast(73,myLoc.x);
+        rc.broadcast(74,myLoc.y);
+        System.out.println(rallyX + " " + rallyY);
+        rc.broadcast(75,rallyX);
+        rc.broadcast(76,rallyY);
+
         } catch (Exception e) {System.out.println("Couldn't request path beaver");};
         while (true) {
             try {
@@ -72,6 +82,7 @@ public class HQ {
             	//Channel 73,74 for start x,y
             	//Channel 75,76 for finish x,y
             	//channel 77 for path length
+
             	//Channel 78-178 for path
             	//Channel 179 for minX
             	//Channel 180 for maxX 
@@ -83,6 +94,8 @@ public class HQ {
                 //Channel 198,199 for supply beaver loc
                 //Channel 200 - 299 for supply beaver requests
 
+            	//Channel 578-778 for path
+            	//Channel 179 for path count
 
                 //Channel 10000 for ore mined count
             
@@ -99,6 +112,7 @@ public class HQ {
                 }
                 int pbX = rc.readBroadcast(187);
                 int pbY = rc.readBroadcast(188);
+                
                 MapLocation pathBeaverLoc = new MapLocation(pbX,pbY);
                 RobotInfo ri;
                 if (pathBeaverLoc.distanceSquaredTo(rc.getLocation()) < 15 && (ri = rc.senseRobotAtLocation(pathBeaverLoc)) != null && ri.supplyLevel < 2000) rc.transferSupplies((int) rc.getSupplyLevel(), pathBeaverLoc); //give pathbeaver everything               
@@ -162,32 +176,23 @@ public class HQ {
     
     static void decrees() throws GameActionException {
         /* if more than 60 units execute order 66 (full out attack) */
-    	
-    	//lets pre-plan a path if we think we'll have enough agents soon
-//    	if ((counts[0] + counts[3] + counts[4]) > 6 && rc.readBroadcast(66) == 0) {
-//    		rc.broadcast(72, 2); //broadcast a 2 onto channel 72 to activate pathbeaver
-//    		//start positions will be rally point
-//    		rc.broadcast(73,rallyX);
-//    		rc.broadcast(74,rallyY);
-//    		//enemy HQ will be finish
-//    		MapLocation enemyHQ = rc.senseEnemyHQLocation();
-//    		rc.broadcast(75,enemyHQ.x);
-//    		rc.broadcast(76,enemyHQ.y);
-//    		//channel 72 will be zero when pathbeaver is done.
-//    		
-//    	}
+    	MapLocation[] towers = rc.senseEnemyTowerLocations();
+        if (towers.length == 0) {
+        	MapLocation enHQ = rc.senseEnemyHQLocation();
+        	rc.broadcast(67,enHQ.x);
+            rc.broadcast(68,enHQ.y);
+        } else {
+        	int closest =  findClosestToHQ(towers);
+        	rc.broadcast(67,towers[closest].x);
+        	rc.broadcast(68,towers[closest].y);
+        }
         if ((counts[0] + counts[3] + counts[4]) > 30 && rc.readBroadcast(66) == 0) { //soldier + drone + tanks
             rc.broadcast(66, 1);
-            MapLocation[] towers = rc.senseEnemyTowerLocations();
-            if (towers.length == 0) {
-            	MapLocation enHQ = rc.senseEnemyHQLocation();
-            	rc.broadcast(67,enHQ.x);
-	            rc.broadcast(68,enHQ.y);
-            } else {
-            	int closest =  findClosestToHQ(towers);
-            	rc.broadcast(67,towers[closest].x);
-            	rc.broadcast(68,towers[closest].y);
-            }
+            
+//            rc.broadcast(73, rallyX);
+//            rc.broadcast(74, rallyY);
+//            rc.broadcast(75,rc.readBroadcast(67));
+//            rc.broadcast(76,rc.readBroadcast(68));
         }
         
         if ((counts[0] + counts[3] + counts[4]) < 20) {
@@ -206,8 +211,8 @@ public class HQ {
     
     static void setRallyLocation() throws GameActionException {
     	MapLocation[] towers = rc.senseTowerLocations();
-    	int rallyX = 0;
-    	int rallyY = 0;
+    	rallyX = 0;
+    	rallyY = 0;
     	MapLocation enemyHQ = rc.senseEnemyHQLocation();
     	if (towers.length > 0) {
     		int mindex = 0;
@@ -226,7 +231,6 @@ public class HQ {
     		rallyX = myLoc.x + (enemyHQ.x - myLoc.x)/5;
     		rallyY =  myLoc.y + (enemyHQ.y - myLoc.y)/5;
     	}
-    	
     	rc.broadcast(50,rallyX);
     	rc.broadcast(51,rallyY);
     }

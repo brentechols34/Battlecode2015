@@ -9,14 +9,22 @@ public class B_Attack implements Behavior {
 	MapLocation nearest; /* nearest enemy */
 	MapLocation goal;
 	RobotInfo[] enemies;
-
-
+	static int currentCount = 0;
+	public static boolean madeItToRally = false;
+	boolean pathSet = false;
+	int pathCount = 0;
+	MapLocation rally;
 	public void perception() {
 		/* for now simply look for nearest enemy */
 		try {
+			if (!pathSet) {
+				pathSet = true;
+				pathCount = rc.readBroadcast(179);
+			}
 		int x = rc.readBroadcast(67);
 		int y = rc.readBroadcast(68);
 		nearest = new MapLocation(x,y);
+		rally = nearest;
 		} catch (Exception e) {
 			System.out.println("B_Attack perception error");
 		}
@@ -42,6 +50,7 @@ public class B_Attack implements Behavior {
 
 	public void action() {
 		try {
+			MapLocation myLoc = rc.getLocation();
 			int x = rc.readBroadcast(67);
 			int y = rc.readBroadcast(68);
 			MapLocation tempLoc = new MapLocation(x,y);
@@ -64,7 +73,7 @@ public class B_Attack implements Behavior {
 	            }
 			}
 			/* try to attack the nearest if unable than move towards it */
-			if (rc.isWeaponReady()) {
+			if (rc.isWeaponReady() && enemies.length > 0) {
 				if (rc.canAttackLocation(nearest)) {
 					rc.attackLocation(nearest);
 				} else {
@@ -78,7 +87,38 @@ public class B_Attack implements Behavior {
 							.opposite();
 					Move.tryMove(away);
 				} else {
-					Move.tryMove(nearest);
+					if (!madeItToRally) {
+						if (rc.readBroadcast(179) != pathCount) {
+							pathCount = rc.readBroadcast(179);
+							currentCount = 0;
+						}
+						if (currentCount < rc.readBroadcast(77)-3) {
+							int gx = rc.readBroadcast(578 + currentCount*2);
+							int gy = rc.readBroadcast(579 + currentCount*2);
+							MapLocation waypoint = new MapLocation(gx, gy);
+							for (int i = currentCount; i < rc.readBroadcast(77); i++) {
+								int gx2 = rc.readBroadcast(578 + currentCount*2);
+								int gy2 = rc.readBroadcast(579 + currentCount*2);
+								MapLocation waypoint2 = new MapLocation(gx2, gy2);
+								if (myLoc.distanceSquaredTo(waypoint2) < myLoc.distanceSquaredTo(waypoint)) {
+									currentCount = i;
+									gx = rc.readBroadcast(578 + currentCount*2);
+									gy = rc.readBroadcast(579 + currentCount*2);
+									waypoint = waypoint2;
+								}
+							}
+
+							//System.out.println(gx + " " + gy + " " + myLoc.distanceSquaredTo(waypoint) + " " + currentCount);
+							if (myLoc.isAdjacentTo(waypoint)) {
+								currentCount+=1;
+							}
+							//System.out.println("Trying to get to " + waypoint);
+							Move.tryMove(waypoint);
+						} else {
+							madeItToRally = true;
+							Move.tryMove(rally);
+						}
+					} else Move.tryMove(goal);
 				}
 			}
 		} catch (Exception e) {

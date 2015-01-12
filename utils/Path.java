@@ -111,7 +111,7 @@ public class Path {
         while (index != 0) {
             current = q[--index];
             if (current.x == desx && current.y == desy) {
-                System.out.println(count);
+                //System.out.println(count);
                 return reconstruct();
             }
             expand(current);
@@ -140,10 +140,10 @@ public class Path {
         int dir = 0;
         do {
             int next = ((prev[current.x][current.y]+3)&7)+1;
-            if (dir == 0 || next != dir) {
+            //if (dir == 0 || next != dir) {
                 path_temp[count++] = unOffsetPoint(current);
-                dir = next;
-            }
+            //    dir = next;
+            //}
             current = moveTo(current, next);
         } while (prev[current.x][current.y] != 0);
         path_temp[count++] = unOffsetPoint(current);
@@ -226,9 +226,11 @@ public class Path {
      *
      * @param p The position of the obstacle.
      */
-    public void addObstacle(Point p) {
+    public boolean addObstacle(Point p) {
     	Point p2 = offsetPoint(p);
+    	boolean oldVal =  map[p2.x][p2.y];
         map[p2.x][p2.y] = true;
+    	return !oldVal;
     }
 
 //    public void removeObstacle(Point p) {
