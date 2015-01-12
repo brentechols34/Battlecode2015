@@ -218,7 +218,8 @@ public class HQ {
         }
 
         if (min < 250) {
-            rc.transferSupplies((int)Math.min(rc.getSupplyLevel(), 5000), supplied.location);
+            int supply = (int)rc.getSupplyLevel();
+            rc.transferSupplies((int)Math.min(supply < 20000 ? supply / 2 : supply, 20000), supplied.location);
         }
     }
     

@@ -31,9 +31,10 @@ public class Miner {
     static MapLocation bestLoc;
     static int lifetime = 0;
 
-    static final boolean TESTING_MINING = true;
+    static final boolean TESTING_MINING = false;
     static final int ORE_CHANNEL = 10000;
-    static final boolean IS_SUPPLYING = true;
+    static final int SUPPLY_THRESHOLD = 500;
+    static final boolean IS_SUPPLYING = false;
 	
 	public static void run(RobotController rc) {
         Miner.rc = rc;
@@ -79,7 +80,7 @@ public class Miner {
 			rc.broadcast(1000, (int) (rc.senseOre(myLoc)+.5));
 		}
 		if (rc.isCoreReady()) {
-            if (rc.getSupplyLevel() < 50 && IS_SUPPLYING) {
+            if (rc.getSupplyLevel() < 500 && IS_SUPPLYING) {
                 goSupply();
             }
         	if (oreHere < 3 && bestVal > 3) Move.tryMove(bestLoc);
