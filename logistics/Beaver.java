@@ -267,73 +267,61 @@ public class Beaver {
     	MapLocation enemyhq = rc.senseEnemyHQLocation();
     	Path p = new Path(new Point(hq.x,hq.y),new Point(enemyhq.x,enemyhq.y));
     	MapLocation myLoc = rc.getLocation();
-    	int dis = 2;
-    	int lastDis = 2;
+    	int path_count = 0;
+    	
 		//start positions will be rally point
 
 		//channel 72 will be zero when pathbeaver is done.
     	try {
+    		rc.broadcast(179, path_count);
+    		boolean changed = false;
     		while (true) {
     			rc.broadcast(187, myLoc.x);
             	rc.broadcast(188,  myLoc.y);
-    			if (dis > 4 + lastDis) {
-    				int startx = hq.x;
-    				int starty = hq.y;
-    				MapLocation finishML = rc.senseEnemyHQLocation();
-    				int finishx = finishML.x;
-    				int finishy = finishML.y;
+    			if (changed) {
     				Point start = new Point(rc.readBroadcast(73),rc.readBroadcast(74));
     				Point finish = new Point(rc.readBroadcast(75),rc.readBroadcast(76));
-    				System.out.println("Pathing from: " + start + " to " + finish);
-    				Point[] path = p.pathfind(start, finish); //ohhhhh boy this might take a bit
+    				//System.out.println("Pathing from: " + start + " to " + finish);
+    				Point[] path = p.pathfind(start, finish); //this might take a bit
     				if (path != null) {
-    					lastDis = dis;
-    					int channel = 78;
+    					int channel = 578;
     					int len = path.length;
     					System.out.println("Path length: " + len);
     					rc.broadcast(77, len);
     					for (Point pr : path) {
-    						rc.broadcast(channel++, pr.x);
-    						rc.broadcast(channel++, pr.y);
-    						System.out.println(pr.x + " " + pr.y);
+    						rc.broadcast(channel, pr.x);
+    						rc.broadcast(channel+1, pr.y);
+    						channel+=2;
+    						//System.out.println(pr.x + " " + pr.y);
     					}
     					rc.broadcast(72, 0);
+    					changed = false;
+    					rc.broadcast(179, ++path_count);
+    				} else {
+    					System.out.println("Null path");
     				}
     			} else {
-    				boolean stop = false;
-    				for (int i = -1 * dis; i <= dis; i++) {
-    					TerrainTile tt = rc.senseTerrainTile(new MapLocation(myLoc.x + i, myLoc.y - dis));
-    					if (tt == TerrainTile.UNKNOWN) stop = true;
-    					else if (tt != TerrainTile.NORMAL) {
-    						p.addObstacle(new Point(myLoc.x+i,myLoc.y-dis));
+    				changed = false;
+    				RobotInfo[] allies = rc.senseNearbyRobots(9999999, rc.getTeam());
+    				for (RobotInfo r : allies) {
+    					if (!isStationary(r.type)) {
+    						for (int i = -3; i <= 3; i++) {
+    							for (int j = -3; j <= 3; j++) {
+    								MapLocation ml = new MapLocation(r.location.x + i, r.location.y + j);
+    								TerrainTile tt = rc.senseTerrainTile(ml);
+    								RobotInfo sensed = null;
+    								if (rc.canSenseLocation(ml)) {
+    									sensed = rc.senseRobotAtLocation(ml);
+    								}
+    								if ((tt != TerrainTile.NORMAL && tt!=TerrainTile.UNKNOWN) || (sensed!=null&&isStationary(sensed.type)&&sensed.type!=RobotType.HQ)) {
+    									if (p.addObstacle(new Point(ml.x,ml.y))) changed = true;;
+    								}
+    							}
+    						}
     					}
-    				}
-    				for (int i = -1 * dis; i <= dis; i++) {
-    					TerrainTile tt = rc.senseTerrainTile(new MapLocation(myLoc.x - i, myLoc.y - dis));
-    					if (tt == TerrainTile.UNKNOWN) stop = true;
-    					else if (tt != TerrainTile.NORMAL) {
-    						p.addObstacle(new Point(myLoc.x-i,myLoc.y-dis));
-    					}
-    				}
-    				for (int i = -1 * dis; i <= dis; i++) {
-    					TerrainTile tt = rc.senseTerrainTile(new MapLocation(myLoc.x - dis, myLoc.y + i));
-    					if (tt == TerrainTile.UNKNOWN) stop = true;
-    					else if (tt != TerrainTile.NORMAL) {
-    						p.addObstacle(new Point(myLoc.x - dis, myLoc.y + i));
-    					}
-    				}
-    				for (int i = -1 * dis; i <= dis; i++) {
-    					TerrainTile tt = rc.senseTerrainTile(new MapLocation(myLoc.x + dis, myLoc.y + i));
-    					if (tt == TerrainTile.UNKNOWN) stop = true;
-    					else if (tt != TerrainTile.NORMAL) {
-    						p.addObstacle(new Point(myLoc.x + dis, myLoc.y + i));
-    					}
-    				}
-    				if (!stop) {
-    					System.out.println("Fully explored: " + dis + " away.");
-    					dis++;
     				}
     			}
+    			
     			int minX = rc.readBroadcast(179); 
     	        int maxX = rc.readBroadcast(180);
     	        int minY = rc.readBroadcast(181);

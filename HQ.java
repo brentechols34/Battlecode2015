@@ -78,13 +78,10 @@ public class HQ {
             	//Channel 73,74 for start x,y
             	//Channel 75,76 for finish x,y
             	//channel 77 for path length
-            	//Channel 78-178 for path
-            	//Channel 179 for minX
-            	//Channel 180 for maxX 
-            	//Channel 181 for minY
-            	//channel 182 for maxY
+            	//Channel 578-778 for path
+            	//Channel 179 for path count
             	//Channel 187,188 for supply beaver loc
-
+            	
                 //Channel 10000 for ore mined count
             
             	eachTurn();
@@ -164,19 +161,19 @@ public class HQ {
     
     static void decrees() throws GameActionException {
         /* if more than 60 units execute order 66 (full out attack) */
+    	MapLocation[] towers = rc.senseEnemyTowerLocations();
+        if (towers.length == 0) {
+        	MapLocation enHQ = rc.senseEnemyHQLocation();
+        	rc.broadcast(67,enHQ.x);
+            rc.broadcast(68,enHQ.y);
+        } else {
+        	int closest =  findClosestToHQ(towers);
+        	rc.broadcast(67,towers[closest].x);
+        	rc.broadcast(68,towers[closest].y);
+        }
         if ((counts[0] + counts[3] + counts[4]) > 30 && rc.readBroadcast(66) == 0) { //soldier + drone + tanks
             rc.broadcast(66, 1);
-            MapLocation[] towers = rc.senseEnemyTowerLocations();
-            if (towers.length == 0) {
-            	MapLocation enHQ = rc.senseEnemyHQLocation();
-            	rc.broadcast(67,enHQ.x);
-	            rc.broadcast(68,enHQ.y);
-	            
-            } else {
-            	int closest =  findClosestToHQ(towers);
-            	rc.broadcast(67,towers[closest].x);
-            	rc.broadcast(68,towers[closest].y);
-            }
+            
 //            rc.broadcast(73, rallyX);
 //            rc.broadcast(74, rallyY);
 //            rc.broadcast(75,rc.readBroadcast(67));
