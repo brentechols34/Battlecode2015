@@ -19,6 +19,7 @@ public class B_Turtle implements Behavior {
 	int pathCount = 0;
 	boolean madeItToRally = false;
 	public boolean attacking;
+	boolean offPath = false;
 	public void perception() {
 		try {
 			if (!pathSet) {
@@ -95,13 +96,14 @@ public class B_Turtle implements Behavior {
 						}
 					}
 				} else {
-					if (rc.readBroadcast(179) != pathCount && rc.readBroadcast(77) > 0) {
+					int len = rc.readBroadcast(77);
+					if ((rc.readBroadcast(179) != pathCount || offPath) && len > 0) {
 						pathCount = rc.readBroadcast(179);
 						currentCount = 0;
 						int gx = rc.readBroadcast(578 + currentCount*2);
 						int gy = rc.readBroadcast(579 + currentCount*2);
 						MapLocation waypoint = new MapLocation(gx, gy);
-						for (int i = 1; i < rc.readBroadcast(77); i++) {
+						for (int i = 0; i <len; i++) {
 							int gx2 = rc.readBroadcast(578 + i*2);
 							int gy2 = rc.readBroadcast(579 + i*2);
 							MapLocation waypoint2 = new MapLocation(gx2, gy2);
@@ -112,8 +114,22 @@ public class B_Turtle implements Behavior {
 								waypoint = waypoint2;
 							}
 						}
+						int count = 0;
+						
+						while (isObsInBetween(myLoc, waypoint)&&count < len) {
+							currentCount=(currentCount+1) % len;
+							gx = rc.readBroadcast(578 + currentCount*2);
+							gy = rc.readBroadcast(579 + currentCount*2);
+							waypoint = new MapLocation(gx, gy);
+						}
+						if (count==len && isObsInBetween(myLoc, waypoint)) {
+							//done fucked up now.
+							//just bug until we hit a point I guess
+							currentCount = 0;
+							offPath=true;
+						}
 					}
-					if (currentCount < rc.readBroadcast(77) - 5) {
+					if (!offPath && currentCount < rc.readBroadcast(77)) {
 						int gx = rc.readBroadcast(578 + currentCount*2);
 						int gy = rc.readBroadcast(579 + currentCount*2);
 						MapLocation waypoint = new MapLocation(gx, gy);
@@ -124,8 +140,13 @@ public class B_Turtle implements Behavior {
 							Move.tryMove(myLoc.directionTo(waypoint));
 						}
 					} else {
-						madeItToRally = true;
-						Move.tryMove(rally);
+						if (currentCount >= rc.readBroadcast(77)) {
+							madeItToRally = true;
+							Move.tryMove(rally);
+						} else {
+							Move.tryMove(rc.senseHQLocation());
+						}
+						
 					}
 				}
 			}
@@ -133,6 +154,49 @@ public class B_Turtle implements Behavior {
 			System.out.println("Tank Tutle action Error");
 		}
 
+	}
+	
+	public boolean isObsInBetween(MapLocation myLoc, MapLocation dest) {
+		Point p1 = new Point(myLoc.x,myLoc.y);
+		Point p2 = new Point(dest.x,dest.y);
+		if (p1.distance(p2) < 2) {
+			return false;
+		}
+		int x1 = p1.x;
+		int y1 = p1.y;
+		int x2 = p2.x;
+		int y2 = p2.y;
+		int dx = Math.abs(x2 - x1);
+		int dy = Math.abs(y2 - y1);
+		int sx = (x1 < x2) ? 1 : -1;
+		int sy = (y1 < y2) ? 1 : -1;
+		int err = dx - dy;
+		while (true) {
+			int e2 = err << 1;
+			if (e2 > -dy) {
+				err = err - dy;
+				x1 = x1 + sx;
+			}
+			if (x1 == x2 && y1 == y2) {
+				break;
+			}
+			if (rc.senseTerrainTile(new MapLocation(x1,y1))==TerrainTile.VOID) {
+				return true;
+			}
+
+			if (e2 < dx) {
+				err = err + dx;
+				y1 = y1 + sy;
+			}
+			if (x1 == x2 && y1 == y2) {
+				break;
+			}
+			if (rc.senseTerrainTile(new MapLocation(x1,y1))==TerrainTile.VOID) {
+				return true;
+			}
+
+		}
+		return false;
 	}
 
 
