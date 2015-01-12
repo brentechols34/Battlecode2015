@@ -5,7 +5,7 @@ import battlecode.common.*;
 
 public class B_Attack implements Behavior {
 
-	RobotController rc = Tank.rc;
+	static RobotController rc = Tank.rc;
 	MapLocation nearest; /* nearest enemy */
 	MapLocation goal;
 	RobotInfo[] enemies;
@@ -35,15 +35,6 @@ public class B_Attack implements Behavior {
 					max = dis;
 					nearest = ri.location;
 				}
-				if (ri.type == RobotType.TOWER) {
-					MapLocation towerLoc = ri.location;
-					try {
-						rc.broadcast(67,towerLoc.x);
-						rc.broadcast(68, towerLoc.y);
-					} catch (Exception e) {
-						System.out.println("Issue in B_attack, broadcasting");
-					}
-				}
 			}
 		}
 
@@ -59,10 +50,18 @@ public class B_Attack implements Behavior {
 			}
 			RobotInfo ri;
 			if (rc.canSenseLocation(goal) && ((ri=rc.senseRobotAtLocation(goal))==null || ri.type != RobotType.TOWER)) {
-				MapLocation enemyHQ = rc.senseEnemyHQLocation();
-				rc.broadcast(67, enemyHQ.x);
-				rc.broadcast(68, enemyHQ.y);
-				goal = enemyHQ;
+	            MapLocation[] towers = rc.senseEnemyTowerLocations();
+	            if (towers.length == 0) {
+	            	MapLocation enHQ = rc.senseEnemyHQLocation();
+	            	rc.broadcast(67,enHQ.x);
+		            rc.broadcast(68,enHQ.y);
+		            goal = enHQ;
+	            } else {
+	            	int closest =  findClosestToHQ(towers);
+	            	rc.broadcast(67,towers[closest].x);
+	            	rc.broadcast(68,towers[closest].y);
+	            	goal = towers[closest];
+	            }
 			}
 			/* try to attack the nearest if unable than move towards it */
 			if (rc.isWeaponReady()) {
@@ -86,6 +85,20 @@ public class B_Attack implements Behavior {
 			System.out.println("Error in Tank Attack behavior action");
 			e.printStackTrace();
 		}
+	}
+	
+	public static int findClosestToHQ(MapLocation[] locs) {
+		int mindex = 0;
+		MapLocation hq = rc.senseHQLocation();
+		int minDis = hq.distanceSquaredTo(locs[0]);
+		for (int i = 1; i < locs.length; i++) {
+			int dis = hq.distanceSquaredTo(locs[i]);
+			if (locs[i] != null && dis < minDis) {
+				mindex=i;
+				minDis = dis;
+			}
+		}
+		return mindex;		
 	}
 
 	public void panicAlert(MapLocation m) {
