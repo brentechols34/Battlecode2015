@@ -211,6 +211,20 @@ public class HQ {
         RobotInfo supplied = friends[0];
 
         for (int i = friendLength - 1; i >= 0; i--) {
+            switch (friends[i].type) {
+                case SUPPLYDEPOT:
+                case MINERFACTORY:
+                case TECHNOLOGYINSTITUTE:
+                case BARRACKS:
+                case HELIPAD:
+                case TRAININGFIELD:
+                case TANKFACTORY:
+                case AEROSPACELAB:
+                case HANDWASHSTATION:
+                    continue;
+            }
+
+
             if (friends[i].supplyLevel < min) {
                 min = friends[i].supplyLevel;
                 supplied = friends[i];
