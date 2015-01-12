@@ -78,6 +78,8 @@ public class HQ {
             	//Channel 181 for minY
             	//channel 182 for maxY
             	//Channel 187,188 for supply beaver loc
+
+                //Channel 10000 for ore mined count
             
             	eachTurn();
             	performUnitCount();
@@ -95,7 +97,11 @@ public class HQ {
                 MapLocation pathBeaverLoc = new MapLocation(pbX,pbY);
                 RobotInfo ri;
                 if (pathBeaverLoc.distanceSquaredTo(rc.getLocation()) < 15 && (ri = rc.senseRobotAtLocation(pathBeaverLoc)) != null && ri.supplyLevel < 2000) rc.transferSupplies((int) rc.getSupplyLevel(), pathBeaverLoc); //give pathbeaver everything               
-                
+
+                if (Clock.getBytecodesLeft() > 500) {
+                    supplySomething();
+                }
+
                 rc.yield();
             } catch (Exception e) {
                 System.out.println("HQ Exception");
@@ -184,6 +190,29 @@ public class HQ {
         RobotInfo[] enemies = rc.senseNearbyRobots(myRange, enemyTeam);
         if (enemies.length > 0) {
             rc.attackLocation(enemies[0].location);
+        }
+    }
+
+    static void supplySomething() throws GameActionException {
+        RobotInfo[] friends = rc.senseNearbyRobots(GameConstants.SUPPLY_TRANSFER_RADIUS_SQUARED, myTeam);
+        int friendLength = friends.length;
+
+        if (friendLength == 0) {
+            return;
+        }
+
+        double min = friends[0].supplyLevel;
+        RobotInfo supplied = friends[0];
+
+        for (int i = friendLength - 1; i >= 0; i--) {
+            if (friends[i].supplyLevel < min) {
+                min = friends[i].supplyLevel;
+                supplied = friends[i];
+            }
+        }
+
+        if (min < 250) {
+            rc.transferSupplies((int)Math.min(rc.getSupplyLevel(), 5000), supplied.location);
         }
     }
     
