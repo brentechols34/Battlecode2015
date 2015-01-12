@@ -260,7 +260,7 @@ public class Beaver {
     	MapLocation enemyhq = rc.senseEnemyHQLocation();
     	Path p = new Path(new Point(hq.x,hq.y),new Point(enemyhq.x,enemyhq.y));
     	MapLocation myLoc = rc.getLocation();
-    	int dis = 1;
+    	int dis = 2;
     	int lastDis = 2;
 		//start positions will be rally point
 
@@ -323,7 +323,7 @@ public class Beaver {
     					}
     				}
     				if (!stop) {
-    					//System.out.println("Fully explored: " + dis + " away.");
+    					System.out.println("Fully explored: " + dis + " away.");
     					dis++;
     				}
     			}

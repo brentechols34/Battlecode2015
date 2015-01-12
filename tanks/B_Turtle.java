@@ -49,19 +49,19 @@ public class B_Turtle implements Behavior {
 				rc.attackLocation(enemies[0].location);
 			} else {
 				//next waypoint
-				if (currentCount < rc.readBroadcast(77)*2) {
-					int gx = rc.readBroadcast(78 + currentCount);
-					int gy = rc.readBroadcast(79 + currentCount);
-					MapLocation waypoint = new MapLocation(gx, gy);
-					System.out.println(gx + " " + gy + " " + myLoc.distanceSquaredTo(waypoint) + " " + currentCount);
-					if (myLoc.isAdjacentTo(waypoint)) {
-						System.out.println("yay");
-						currentCount+=2;
-					}
-					Move.tryMove(myLoc.directionTo(waypoint));
-				} else {
-					return;
-				}
+				Move.tryMove(rally);
+//				if (currentCount < rc.readBroadcast(77)) {
+//					int gx = rc.readBroadcast(78 + currentCount*2);
+//					int gy = rc.readBroadcast(79 + currentCount*2);
+//					MapLocation waypoint = new MapLocation(gx, gy);
+//					//System.out.println(gx + " " + gy + " " + myLoc.distanceSquaredTo(waypoint) + " " + currentCount);
+//					if (myLoc.isAdjacentTo(waypoint)) {
+//						currentCount+=1;
+//					}
+//					Move.tryMove(myLoc.directionTo(waypoint));
+//				} else {
+//					return;
+//				}
 			}
 		} catch (Exception e) {
 			System.out.println("Tank Tutle action Error");

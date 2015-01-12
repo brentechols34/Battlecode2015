@@ -80,31 +80,6 @@ public class B_Attack implements Behavior {
 					Move.tryMove(away);
 				} else {
 					Move.tryMove(goal);
-//					if (currentCount < rc.readBroadcast(77)*2) {
-//						int gx = rc.readBroadcast(78 + currentCount);
-//						int gy = rc.readBroadcast(79 + currentCount);
-//						MapLocation waypoint = new MapLocation(gx, gy);
-//						//System.out.println(gx + " " + gy + " " + myLoc.distanceSquaredTo(waypoint) + " " + currentCount);
-//						if (myLoc.isAdjacentTo(waypoint)) {
-//							System.out.println("yay");
-//							currentCount+=2;
-//							gx = rc.readBroadcast(78 + currentCount);
-//							gy = rc.readBroadcast(79 + currentCount);
-//							waypoint = new MapLocation(gx, gy);
-//						}
-//						Move.tryMove(myLoc.directionTo(waypoint));
-//					} else {
-//						RobotInfo[] allies = rc.senseNearbyRobots(50, rc.getTeam());
-//						int tx = 0;
-//						int ty = 0;
-//						for (RobotInfo rbt : allies) {
-//							tx += rbt.location.x;
-//							ty += rbt.location.y;
-//						}
-//						tx/=allies.length;
-//						ty/=allies.length;
-//						Move.tryMove(myLoc.directionTo(new MapLocation(tx,ty)).opposite());
-//					}
 				}
 			}
 		} catch (Exception e) {

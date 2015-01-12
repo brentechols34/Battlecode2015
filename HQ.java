@@ -177,10 +177,10 @@ public class HQ {
             	rc.broadcast(67,towers[closest].x);
             	rc.broadcast(68,towers[closest].y);
             }
-            rc.broadcast(73, rallyX);
-            rc.broadcast(74, rallyY);
-            rc.broadcast(75,rc.readBroadcast(67));
-            rc.broadcast(76,rc.readBroadcast(68));
+//            rc.broadcast(73, rallyX);
+//            rc.broadcast(74, rallyY);
+//            rc.broadcast(75,rc.readBroadcast(67));
+//            rc.broadcast(76,rc.readBroadcast(68));
         }
         
         if ((counts[0] + counts[3] + counts[4]) < 20) {
