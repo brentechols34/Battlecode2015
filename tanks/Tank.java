@@ -1,5 +1,6 @@
 package team163.tanks;
 
+import team163.logistics.SupplyBeaver;
 import team163.utils.Move;
 import battlecode.common.*;
 
@@ -9,6 +10,7 @@ public class Tank {
 	static int range;
     static int senseRange = 24;
 	static Team team;
+    static int resupplyChannel = 0;
 
 	static Direction[] directions = { Direction.NORTH, Direction.NORTH_EAST,
 			Direction.EAST, Direction.SOUTH_EAST, Direction.SOUTH,
@@ -56,8 +58,25 @@ public class Tank {
 			} else {
 				mood.attacking = false;
 			}
+
+//            requestSupply();
 		} catch (Exception e) {
 			System.out.println("Error caught in choosing tank behavior");
 		}
 	}
+
+    static void requestSupply () throws GameActionException {
+        if (rc.getSupplyLevel() < 250) {
+            resupplyChannel = SupplyBeaver.requestResupply(rc, rc.getLocation(), resupplyChannel);
+
+            int head = rc.readBroadcast(196);
+            MapLocation beaverLoc = new MapLocation(rc.readBroadcast(198), rc.readBroadcast(199));
+            if (head == resupplyChannel && beaverLoc.distanceSquaredTo(rc.getLocation()) < 20) {
+                System.out.println("waiting for refuel");
+                Tank.rc.yield();
+            }
+        } else {
+            resupplyChannel = 0;
+        }
+    }
 }

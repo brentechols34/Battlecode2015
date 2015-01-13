@@ -31,10 +31,12 @@ public class Miner {
     static MapLocation bestLoc;
     static int lifetime = 0;
 
+    static int resupplyChannel = 0;
+
     static final boolean TESTING_MINING = false;
     static final int ORE_CHANNEL = 10000;
     static final int SUPPLY_THRESHOLD = 500;
-    static final boolean IS_SUPPLYING = false;
+    static final boolean IS_SUPPLYING = true;
 	
 	public static void run(RobotController rc) {
         Miner.rc = rc;
@@ -42,8 +44,7 @@ public class Miner {
         myRange = rc.getType().attackRadiusSquared;
         myTeam = rc.getTeam();
         enemyTeam = myTeam.opponent();
-        //rc.yield();
-        //rc.yield();
+
         while (true) {
             try {
             	lifetime++;
@@ -51,6 +52,9 @@ public class Miner {
                 oreHere = (int) (rc.senseOre(myLoc) +.5);
             	bestVal = rc.readBroadcast(1000);
             	bestLoc = new MapLocation(rc.readBroadcast(1001), rc.readBroadcast(1002));
+
+                requestSupply();
+
             	if (rc.isCoreReady()) {
             		if (oreHere > bestVal) {
             			rc.broadcast(1000, oreHere);
@@ -80,9 +84,6 @@ public class Miner {
 			rc.broadcast(1000, (int) (rc.senseOre(myLoc)+.5));
 		}
 		if (rc.isCoreReady()) {
-            if (rc.getSupplyLevel() < 500 && IS_SUPPLYING) {
-                goSupply();
-            }
         	if (oreHere < 3 && bestVal > 3) Move.tryMove(bestLoc);
         	if (rc.isCoreReady() && rc.canMine() && oreHere > 3) {
                 if (TESTING_MINING) {
@@ -136,5 +137,30 @@ public class Miner {
 		return bestDir;
 	}
 
-    
+    static void requestSupply () throws GameActionException {
+        if (rc.getSupplyLevel() < SUPPLY_THRESHOLD && IS_SUPPLYING) {
+            resupplyChannel = SupplyBeaver.requestResupply(rc, rc.getLocation(), resupplyChannel);
+
+            int head = rc.readBroadcast(196);
+            MapLocation beaverLoc = new MapLocation(rc.readBroadcast(198), rc.readBroadcast(199));
+            if (head == resupplyChannel && beaverLoc.distanceSquaredTo(rc.getLocation()) < 20) {
+                System.out.println("waiting for refuel");
+                while (rc.getSupplyLevel() < SUPPLY_THRESHOLD) {
+                    oreHere = (int) (rc.senseOre(myLoc) +.5);
+                    if (rc.isCoreReady() && rc.canMine() && oreHere > 0) {
+                        if (TESTING_MINING) {
+                            int extracted = (int)(Math.max(Math.min(3, oreHere/4),0.2) * 10);
+                            rc.broadcast(ORE_CHANNEL, rc.readBroadcast(ORE_CHANNEL) + extracted);
+                        }
+
+                        rc.mine();
+                    }
+
+                    rc.yield();
+                }
+            }
+        } else {
+            resupplyChannel = 0;
+        }
+    }
 }

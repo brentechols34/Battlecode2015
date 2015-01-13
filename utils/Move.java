@@ -94,6 +94,7 @@ public class Move {
 					MapLocation cur = rc.getLocation();
 					if (cur.compareTo(store) != 0) {
 						tryMove(cur.directionTo(store));
+						stored = false;
 						return;
 					} else {
 						mb.reset();
@@ -101,6 +102,7 @@ public class Move {
 						stored = false;
 					}
 				}
+				return;
 			}
 
 			// try using bugging system

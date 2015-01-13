@@ -38,7 +38,7 @@ public class Beaver {
 	static boolean amPathBeaver;
 	
 	// max counts of buildings
-	static int maxBarracks = 2;
+	static int maxBarracks = 1;
 	static int maxHelipad = 0;
 	static int maxMinerfactory = 1;
 	static int maxTankfactory = 5;
@@ -62,10 +62,13 @@ public class Beaver {
 				rc.broadcast(72, 0);
 				amPathBeaver = true;
 				doPathBeaverThings();
-			}
+			} else if (rc.readBroadcast(8) > 2) {
+                SupplyBeaver.run(rc);
+            }
 		} catch (Exception e) {
-			System.out.println("Tried to be a path beaver, but I failed");
-		}
+            System.out.println("Tried to be a path beaver, but I failed");
+        }
+
 		while (true) {
 			try {
 				lifetime++;

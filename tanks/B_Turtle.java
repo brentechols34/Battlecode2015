@@ -31,10 +31,6 @@ public class B_Turtle implements Behavior {
 			rally = new MapLocation(x,y);
 			x = rc.readBroadcast(67);
 			y = rc.readBroadcast(68);
-			if (attacking && rc.readBroadcast(66) != 1) {
-				attacking = false;
-				madeItToRally = false;
-			}
 			goal = new MapLocation(x,y);
 			RobotInfo ri;
 			if (rc.canSenseLocation(goal) && ((ri=rc.senseRobotAtLocation(goal))==null || ri.type != RobotType.TOWER)) {
@@ -136,39 +132,35 @@ public class B_Turtle implements Behavior {
 	public void rallyMove() throws GameActionException {
 		MapLocation myLoc= rc.getLocation();
 		int len = rc.readBroadcast(77);
-		if ((rc.readBroadcast(179) != pathCount || offPath) && len > 0 && !madeItToRally) {
+		if (madeItToRally) {
+			Move.tryMove(myLoc.directionTo(rally));
+			return;
+		}
+		
+		if ((rc.readBroadcast(179) != pathCount || offPath) && len > 0) {
 			pathCount = rc.readBroadcast(179);
-			currentCount = 0;
+			currentCount = len;
 			int gx = rc.readBroadcast(578 + currentCount*2);
 			int gy = rc.readBroadcast(579 + currentCount*2);
 			MapLocation waypoint = new MapLocation(gx, gy);
-			for (int i = 0; i <len; i++) {
-				int gx2 = rc.readBroadcast(578 + i*2);
-				int gy2 = rc.readBroadcast(579 + i*2);
-				MapLocation waypoint2 = new MapLocation(gx2, gy2);
-				if (myLoc.distanceSquaredTo(waypoint) > myLoc.distanceSquaredTo(waypoint2)) {
+			for (int i = len-2; i >= 0; i--) {
+				gx = rc.readBroadcast(578 + i*2);
+				gy = rc.readBroadcast(579 + i*2);
+				waypoint = new MapLocation(gx, gy);
+				if (!isObsInBetween(myLoc, waypoint)) {
 					currentCount = i;
-					gx=gx2;
-					gy=gy2;
-					waypoint = waypoint2;
+					break;
 				}
 			}
-			int count = 0;
-			
-			while (isObsInBetween(myLoc, waypoint)&&count < len) {
-				currentCount=(currentCount+1) % len;
-				gx = rc.readBroadcast(578 + currentCount*2);
-				gy = rc.readBroadcast(579 + currentCount*2);
-				waypoint = new MapLocation(gx, gy);
-			}
-			if (count==len && isObsInBetween(myLoc, waypoint)) {
+			if (isObsInBetween(myLoc, waypoint)) {
 				//done fucked up now.
 				//just bug until we hit a point I guess
+				System.out.println("Oops");
 				currentCount = 0;
 				offPath=true;
 			}
 		}
-		if (!offPath && currentCount < rc.readBroadcast(77)) {
+		if (!offPath && currentCount < len) {
 			int gx = rc.readBroadcast(578 + currentCount*2);
 			int gy = rc.readBroadcast(579 + currentCount*2);
 			MapLocation waypoint = new MapLocation(gx, gy);
@@ -179,10 +171,10 @@ public class B_Turtle implements Behavior {
 				Move.tryMove(myLoc.directionTo(waypoint));
 			}
 		} else {
-			if (currentCount >= rc.readBroadcast(77) && !madeItToRally) {
+			if (currentCount >= len-3) {
 				madeItToRally = true;
 				Move.tryMove(rally);
-				currentCount = 0;
+				//currentCount = 0;
 			} else {
 				Move.tryMove(rally);
 			}
