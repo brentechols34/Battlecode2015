@@ -89,49 +89,6 @@ public class B_Turtle implements Behavior {
 		rc.yield();
 	}
 
-	//    public boolean isObsInBetween(MapLocation myLoc, MapLocation dest) {
-	//        Point p1 = new Point(myLoc.x, myLoc.y);
-	//        Point p2 = new Point(dest.x, dest.y);
-	//        if (p1.distance(p2) < 2) {
-	//            return false;
-	//        }
-	//        int x1 = p1.x;
-	//        int y1 = p1.y;
-	//        int x2 = p2.x;
-	//        int y2 = p2.y;
-	//        int dx = Math.abs(x2 - x1);
-	//        int dy = Math.abs(y2 - y1);
-	//        int sx = (x1 < x2) ? 1 : -1;
-	//        int sy = (y1 < y2) ? 1 : -1;
-	//        int err = dx - dy;
-	//        while (true) {
-	//            int e2 = err << 1;
-	//            if (e2 > -dy) {
-	//                err = err - dy;
-	//                x1 = x1 + sx;
-	//            }
-	//            if (x1 == x2 && y1 == y2) {
-	//                break;
-	//            }
-	//            if (rc.senseTerrainTile(new MapLocation(x1, y1)) == TerrainTile.VOID) {
-	//                return true;
-	//            }
-	//
-	//            if (e2 < dx) {
-	//                err = err + dx;
-	//                y1 = y1 + sy;
-	//            }
-	//            if (x1 == x2 && y1 == y2) {
-	//                break;
-	//            }
-	//            if (rc.senseTerrainTile(new MapLocation(x1, y1)) == TerrainTile.VOID) {
-	//                return true;
-	//            }
-	//
-	//        }
-	//        return false;
-	//    }
-
 	public void rallyMove() throws GameActionException {
 		//Constants, should abstract to some constant class TODO
 		int rallyBaseChannel = 578;
@@ -151,35 +108,33 @@ public class B_Turtle implements Behavior {
 				return;
 			}	
 
-
 			int currentVersion = rc.readBroadcast(rallyVersionChannel);
-			if (currentVersion > pathCount || panther == null) {
+			if (currentVersion > pathCount || panther == null) { //if the path has been updated
 				pathCount = currentVersion;
 				panther = new PathMove(rc, rallyBaseChannel, rallyLength, (panther==null)?0:panther.getCount());
 			}
-			panther.attemptMove();
-			if (panther.finished) madeItToRally = true;
+			if (panther.amAFailure) { //if I cannot path effectively, try to bug to the rally
+				Move.tryMove(rally);
+			} else {
+				panther.attemptMove(); //attempt to move
+			}
+			if (panther.finished) madeItToRally = true; //check if I made it to the goal
 		}
 	}
 
 	public void attackMove() throws GameActionException {
-		/* try to attack the nearest if unable than move towards it */
-		if (rc.isWeaponReady() && enemies.length > 0) {
-			if (rc.canAttackLocation(nearest)) {
+		MapLocation myLoc = rc.getLocation();
+		if (enemies.length > 0) {
+			if (rc.isWeaponReady()) {
 				rc.attackLocation(nearest);
-			} else {
-				/* move towards nearest */
-				Move.tryMove(nearest);
+				return;
+			} else if (rc.canMove(myLoc.directionTo(nearest))) {
+				rc.move(myLoc.directionTo(nearest));
+				return;
 			}
+			return;
 		} else {
-			if (!nearest.equals(goal)) {
-				/* if weapon is not ready run from enemy */
-				Direction away = rc.getLocation().directionTo(nearest)
-						.opposite();
-				Move.tryMove(away);
-			} else {
-				Move.tryMove(goal);
-			}
+			Move.tryMove(goal);
 		}
 	}
 
