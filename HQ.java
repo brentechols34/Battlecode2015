@@ -188,7 +188,7 @@ public class HQ {
 			rc.broadcast(67,towers[closest].x);
 			rc.broadcast(68,towers[closest].y);
 		}
-		if ((counts[0] + counts[3] + counts[4]) > 20 && rc.readBroadcast(66) == 0) { //soldier + drone + tanks
+		if ((counts[0] + counts[3] + counts[4]) > 30 && rc.readBroadcast(66) == 0) { //soldier + drone + tanks
 			rc.broadcast(66, 1);
 
 			//            rc.broadcast(73, rallyX);
@@ -197,7 +197,7 @@ public class HQ {
 			//            rc.broadcast(76,rc.readBroadcast(68));
 		}
 
-		if ((counts[0] + counts[3] + counts[4]) < 10) {
+		if ((counts[0] + counts[3] + counts[4]) < 15) {
 			rc.broadcast(66, 0);
 		}
 	}
