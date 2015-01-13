@@ -84,7 +84,7 @@ public class MBugger {
 			}
 			
 			RobotInfo ri = rc.senseRobotAtLocation(next);
-			if (ri!=null&& (isStationary(ri.type))) {
+			if (ri!=null&& (rand.nextDouble() > .25 || isStationary(ri.type))) {
 				return false;
 			}
 			

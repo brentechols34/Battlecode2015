@@ -80,54 +80,24 @@ public class Move {
 				mb.reset();
 				mb.setTargetLocation(new Point(m.x, m.y));
 			}
-			// If ran into another robot or bugger returned null try just moving
-			if (stored) {
-				mb.closest = null;
-				mb.start = null;
-				if ((count++) > rand.nextInt(2)+2) {
-					// stuck in a loop reset
-					stored = false;
-					mb.reset();
-					mb.setTargetLocation(new Point(m.x, m.y));
-					count = 0;
-				} else {
-					MapLocation cur = rc.getLocation();
-					if (cur.compareTo(store) != 0) {
-						tryMove(cur.directionTo(store));
-						stored = false;
-						return;
-					} else {
-						mb.reset();
-						mb.setTargetLocation(new Point(m.x, m.y));
-						stored = false;
-					}
-				}
-				return;
-			}
-
 			// try using bugging system
 			MapLocation ml = rc.getLocation();
-			if (mb.start == null) mb.start = new Point(ml.x,ml.y);
 			Point p = mb.nextMove();
-			if (p == null) { //idk really how this happens, but whatever
-				return;
-			}
-			MapLocation loc = new MapLocation(p.x, p.y);
-			RobotInfo info = rc.senseRobotAtLocation(loc);
-			if (info == null) {
+			if (p!=null) {
+				MapLocation loc = new MapLocation(p.x, p.y);
 				Direction dir = rc.getLocation().directionTo(loc);
 				if (rc.isCoreReady() && rc.canMove(dir)) {
 					count = 0;
 					rc.move(dir);
 				} else {
-					mb.closest = null;
+					mb.reset();
+					mb.start = new Point(ml.x,ml.y);
+					mb.setTargetLocation(new Point(m.x, m.y));
 				}
 			} else {
-				mb.closest = null;
-				mb.start = null;
-				stored = true;
-				store = loc;
-				tryMove(rc.getLocation().directionTo(store));
+				mb.reset();
+				mb.start = new Point(ml.x,ml.y);
+				mb.setTargetLocation(new Point(m.x, m.y));
 			}
 		} catch (Exception e) {
 			System.out.println("Error attempting bugging");
