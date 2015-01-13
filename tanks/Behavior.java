@@ -10,6 +10,6 @@ public interface Behavior {
 	void action();
 	
 	/* in case of a global panic response */
-	void panicAlert(MapLocation m);
+	void panicAlert();
 
 }

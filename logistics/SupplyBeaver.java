@@ -40,7 +40,7 @@ public class SupplyBeaver {
         myRange = rc.getType().attackRadiusSquared;
         myTeam = rc.getTeam();
         enemyTeam = myTeam.opponent();
-        System.out.println("new supply beaver!");
+        //System.out.println("new supply beaver!");
 
         while (true) {
             try {
@@ -53,10 +53,10 @@ public class SupplyBeaver {
                 if (rc.isCoreReady()) {
                     double supply = rc.getSupplyLevel();
                     if (supply > 1000) {
-                        System.out.println("Supplying people!");
+                        //System.out.println("Supplying people!");
                         goSupplyPeople();
                     } else {
-                        System.out.println("Going back to base!");
+                        //System.out.println("Going back to base!");
                         goToBase();
                     }
                 }
@@ -89,7 +89,7 @@ public class SupplyBeaver {
 
     static void goToBase () {
         if(myLoc.distanceSquaredTo(rc.senseHQLocation()) < 10) {
-            System.out.println("Resupplying myself!");
+            //System.out.println("Resupplying myself!");
             return;
         }
 
@@ -105,7 +105,7 @@ public class SupplyBeaver {
 
         // If there is no one to supply, go collect more supplies
         if (head == tail) {
-            System.out.println("Queue is empty, no work to do!");
+            //System.out.println("Queue is empty, no work to do!");
             goToBase();
         }
 
@@ -113,11 +113,11 @@ public class SupplyBeaver {
         if (myLoc.distanceSquaredTo(dest) < GameConstants.SUPPLY_TRANSFER_RADIUS_SQUARED) {
             RobotInfo info = rc.senseRobotAtLocation(dest);
             if (info == null) {
-                System.out.println("Supply request invalid, moving on");
+                //System.out.println("Supply request invalid, moving on");
                 rc.broadcast(196, (head == 298) ? 200 : (head + 2));
             }
 
-            System.out.println("Supplied someone! head now at " + ((head == 298) ? 200 : (head + 2)) + " and tail at " + rc.readBroadcast(197));
+            //System.out.println("Supplied someone! head now at " + ((head == 298) ? 200 : (head + 2)) + " and tail at " + rc.readBroadcast(197));
             rc.transferSupplies((int) Math.min(rc.getSupplyLevel() - 500, 2000), dest);
 
             rc.broadcast(196, (head == 298) ? 200 : (head + 2));

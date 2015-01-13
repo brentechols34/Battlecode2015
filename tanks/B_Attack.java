@@ -141,7 +141,7 @@ public class B_Attack implements Behavior {
 		return mindex;		
 	}
 
-	public void panicAlert(MapLocation m) {
+	public void panicAlert() {
 		// TODO Auto-generated method stub
 
 	}

@@ -30,6 +30,8 @@ public class Miner {
     static int bestVal;
     static MapLocation bestLoc;
     static int lifetime = 0;
+    static double myHealth;
+    static RobotInfo[] enemies;
 
     static int resupplyChannel = 0;
 
@@ -44,6 +46,7 @@ public class Miner {
         myRange = rc.getType().attackRadiusSquared;
         myTeam = rc.getTeam();
         enemyTeam = myTeam.opponent();
+        myHealth = rc.getHealth();
 
         while (true) {
             try {
@@ -53,6 +56,23 @@ public class Miner {
             	bestVal = rc.readBroadcast(1000);
             	bestLoc = new MapLocation(rc.readBroadcast(1001), rc.readBroadcast(1002));
 
+                 //send panic on being attacked
+                enemies = rc.senseNearbyRobots(24, enemyTeam);
+                double curHealth = rc.getHealth();
+                if (curHealth < myHealth) {
+                    myHealth = curHealth;
+                    rc.broadcast(911, myLoc.x);
+                    rc.broadcast(912, myLoc.y);
+                    Move.tryMove(rc.senseHQLocation());
+                    continue;
+                }
+                
+                //run from enemies
+                if (enemies.length > 0) {
+                    Move.tryMove(rc.senseHQLocation());
+                    continue;
+                }
+                
                 requestSupply();
 
             	if (rc.isCoreReady()) {
@@ -144,7 +164,7 @@ public class Miner {
             int head = rc.readBroadcast(196);
             MapLocation beaverLoc = new MapLocation(rc.readBroadcast(198), rc.readBroadcast(199));
             if (head == resupplyChannel && beaverLoc.distanceSquaredTo(rc.getLocation()) < 20) {
-                System.out.println("waiting for refuel");
+                //System.out.println("waiting for refuel");
                 while (rc.getSupplyLevel() < SUPPLY_THRESHOLD) {
                     oreHere = (int) (rc.senseOre(myLoc) +.5);
                     if (rc.isCoreReady() && rc.canMine() && oreHere > 0) {
