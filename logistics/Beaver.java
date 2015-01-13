@@ -310,14 +310,13 @@ public class Beaver {
     			rc.broadcast(187, myLoc.x);
             	rc.broadcast(188,  myLoc.y);
     			if (changed) {
-    				Point start = new Point(rc.readBroadcast(73),rc.readBroadcast(74));
-    				Point finish = new Point(rc.readBroadcast(75),rc.readBroadcast(76));
+    				Point start = new Point(rc.readBroadcast(73),rc.readBroadcast(74)); //HQ
+    				Point finish = new Point(rc.readBroadcast(75),rc.readBroadcast(76)); //RALLY
     				//System.out.println("Pathing from: " + start + " to " + finish);
     				Point[] path = p.pathfind(start, finish); //this might take a bit
     				if (path != null) {
     					int channel = 578;
     					int len = path.length;
-    					System.out.println("Path length: " + len);
     					rc.broadcast(77, len);
     					for (Point pr : path) {
     						rc.broadcast(channel, pr.x);
@@ -331,6 +330,25 @@ public class Beaver {
     				} else {
     					System.out.println("Null path");
     				}
+    				Point goal = new Point(rc.readBroadcast(67),rc.readBroadcast(68));
+    				Point[] path2 = p.pathfind(finish,goal);
+    				if (path2 != null) {
+    					int channel = 778;
+    					int len = path.length;
+    					rc.broadcast(77, len);
+    					for (Point pr : path) {
+    						rc.broadcast(channel, pr.x);
+    						rc.broadcast(channel+1, pr.y);
+    						channel+=2;
+    						//System.out.println(pr.x + " " + pr.y);
+    					}
+    					rc.broadcast(72, 0);
+    					changed = false;
+    					rc.broadcast(979, ++path_count);
+    				} else {
+    					System.out.println("Null path2");
+    				}
+
     			} else {
     				changed = false;
     				RobotInfo[] allies = rc.senseNearbyRobots(9999999, rc.getTeam());

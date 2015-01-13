@@ -78,7 +78,8 @@ public class HQ {
             	//Channel 73,74 for start x,y
             	//Channel 75,76 for finish x,y
             	//channel 77 for path length
-            	//Channel 578-778 for path
+            	//Channel 578-778 for path1
+            	//Channel 779-979 for path2
             	//Channel 179 for path count
             	//Channel 187,188 for supply beaver loc
             	

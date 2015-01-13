@@ -31,6 +31,10 @@ public class B_Turtle implements Behavior {
 			rally = new MapLocation(x,y);
 			x = rc.readBroadcast(67);
 			y = rc.readBroadcast(68);
+			if (attacking && rc.readBroadcast(66) != 1) {
+				attacking = false;
+				madeItToRally = false;
+			}
 			goal = new MapLocation(x,y);
 			RobotInfo ri;
 			if (rc.canSenseLocation(goal) && ((ri=rc.senseRobotAtLocation(goal))==null || ri.type != RobotType.TOWER)) {
@@ -72,88 +76,18 @@ public class B_Turtle implements Behavior {
 
 	public void action() {
 		try {
-			MapLocation myLoc= rc.getLocation();
 			if (enemies.length > 0 && rc.isWeaponReady()) {
 				rc.attackLocation(nearest);
 			} else {
 				if (attacking && madeItToRally) {
-					/* try to attack the nearest if unable than move towards it */
-					if (rc.isWeaponReady() && enemies.length > 0) {
-						if (rc.canAttackLocation(nearest)) {
-							rc.attackLocation(nearest);
-						} else {
-							/* move towards nearest */
-							Move.tryMove(nearest);
-						}
-					} else {
-						if (!nearest.equals(goal)) {
-							/* if weapon is not ready run from enemy */
-							Direction away = rc.getLocation().directionTo(nearest)
-									.opposite();
-							Move.tryMove(away);
-						} else {
-							Move.tryMove(goal);
-						}
-					}
+					attackMove();
 				} else {
-					int len = rc.readBroadcast(77);
-					if ((rc.readBroadcast(179) != pathCount || offPath) && len > 0) {
-						pathCount = rc.readBroadcast(179);
-						currentCount = 0;
-						int gx = rc.readBroadcast(578 + currentCount*2);
-						int gy = rc.readBroadcast(579 + currentCount*2);
-						MapLocation waypoint = new MapLocation(gx, gy);
-						for (int i = 0; i <len; i++) {
-							int gx2 = rc.readBroadcast(578 + i*2);
-							int gy2 = rc.readBroadcast(579 + i*2);
-							MapLocation waypoint2 = new MapLocation(gx2, gy2);
-							if (myLoc.distanceSquaredTo(waypoint) > myLoc.distanceSquaredTo(waypoint2)) {
-								currentCount = i;
-								gx=gx2;
-								gy=gy2;
-								waypoint = waypoint2;
-							}
-						}
-						int count = 0;
-						
-						while (isObsInBetween(myLoc, waypoint)&&count < len) {
-							currentCount=(currentCount+1) % len;
-							gx = rc.readBroadcast(578 + currentCount*2);
-							gy = rc.readBroadcast(579 + currentCount*2);
-							waypoint = new MapLocation(gx, gy);
-						}
-						if (count==len && isObsInBetween(myLoc, waypoint)) {
-							//done fucked up now.
-							//just bug until we hit a point I guess
-							currentCount = 0;
-							offPath=true;
-						}
-					}
-					if (!offPath && currentCount < rc.readBroadcast(77)) {
-						int gx = rc.readBroadcast(578 + currentCount*2);
-						int gy = rc.readBroadcast(579 + currentCount*2);
-						MapLocation waypoint = new MapLocation(gx, gy);
-						if (myLoc.isAdjacentTo(waypoint) || myLoc.equals(waypoint)) {
-							currentCount+=1;
-							Move.tryMove(myLoc.directionTo(waypoint));
-						} else {
-							Move.tryMove(myLoc.directionTo(waypoint));
-						}
-					} else {
-						if (currentCount >= rc.readBroadcast(77)) {
-							madeItToRally = true;
-							Move.tryMove(rally);
-						} else {
-							Move.tryMove(rc.senseHQLocation());
-						}
-						
-					}
+					rallyMove();
 				}
 			}
 		} catch (Exception e) {
 			System.out.println("Tank Tutle action Error");
 		}
-
 	}
 	
 	public boolean isObsInBetween(MapLocation myLoc, MapLocation dest) {
@@ -197,6 +131,83 @@ public class B_Turtle implements Behavior {
 
 		}
 		return false;
+	}
+	
+	public void rallyMove() throws GameActionException {
+		MapLocation myLoc= rc.getLocation();
+		int len = rc.readBroadcast(77);
+		if ((rc.readBroadcast(179) != pathCount || offPath) && len > 0 && !madeItToRally) {
+			pathCount = rc.readBroadcast(179);
+			currentCount = 0;
+			int gx = rc.readBroadcast(578 + currentCount*2);
+			int gy = rc.readBroadcast(579 + currentCount*2);
+			MapLocation waypoint = new MapLocation(gx, gy);
+			for (int i = 0; i <len; i++) {
+				int gx2 = rc.readBroadcast(578 + i*2);
+				int gy2 = rc.readBroadcast(579 + i*2);
+				MapLocation waypoint2 = new MapLocation(gx2, gy2);
+				if (myLoc.distanceSquaredTo(waypoint) > myLoc.distanceSquaredTo(waypoint2)) {
+					currentCount = i;
+					gx=gx2;
+					gy=gy2;
+					waypoint = waypoint2;
+				}
+			}
+			int count = 0;
+			
+			while (isObsInBetween(myLoc, waypoint)&&count < len) {
+				currentCount=(currentCount+1) % len;
+				gx = rc.readBroadcast(578 + currentCount*2);
+				gy = rc.readBroadcast(579 + currentCount*2);
+				waypoint = new MapLocation(gx, gy);
+			}
+			if (count==len && isObsInBetween(myLoc, waypoint)) {
+				//done fucked up now.
+				//just bug until we hit a point I guess
+				currentCount = 0;
+				offPath=true;
+			}
+		}
+		if (!offPath && currentCount < rc.readBroadcast(77)) {
+			int gx = rc.readBroadcast(578 + currentCount*2);
+			int gy = rc.readBroadcast(579 + currentCount*2);
+			MapLocation waypoint = new MapLocation(gx, gy);
+			if (myLoc.isAdjacentTo(waypoint) || myLoc.equals(waypoint)) {
+				currentCount+=1;
+				Move.tryMove(myLoc.directionTo(waypoint));
+			} else {
+				Move.tryMove(myLoc.directionTo(waypoint));
+			}
+		} else {
+			if (currentCount >= rc.readBroadcast(77) && !madeItToRally) {
+				madeItToRally = true;
+				Move.tryMove(rally);
+				currentCount = 0;
+			} else {
+				Move.tryMove(rally);
+			}
+		}
+	}
+	
+	public void attackMove() throws GameActionException {
+		/* try to attack the nearest if unable than move towards it */
+		if (rc.isWeaponReady() && enemies.length > 0) {
+			if (rc.canAttackLocation(nearest)) {
+				rc.attackLocation(nearest);
+			} else {
+				/* move towards nearest */
+				Move.tryMove(nearest);
+			}
+		} else {
+			if (!nearest.equals(goal)) {
+				/* if weapon is not ready run from enemy */
+				Direction away = rc.getLocation().directionTo(nearest)
+						.opposite();
+				Move.tryMove(away);
+			} else {
+				Move.tryMove(goal);
+			}
+		}
 	}
 
 
