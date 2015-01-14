@@ -5,7 +5,6 @@
  */
 package team163.air;
 
-import sun.awt.X11.XAtom;
 import battlecode.common.*;
 
 /**
@@ -28,7 +27,7 @@ public class B_Kite implements Behavior {
 
 			// read tower locations
 			for (int i = 0; i < 6; i++) {
-				int chan = (2 * i) + 550;
+				int chan = (2 * i) + 800;
 				int x = Drone.rc.readBroadcast(chan);
 				int y = Drone.rc.readBroadcast(chan + 1);
 				towers[i] = new MapLocation(x, y);
@@ -56,7 +55,7 @@ public class B_Kite implements Behavior {
 						}
 					}
 					if (newTower) {
-						int chan = (2 * index) + 550;
+						int chan = (2 * index) + 800;
 						Drone.rc.broadcast(chan, at.x);
 						Drone.rc.broadcast(chan + 1, at.y);
 						towers[index] = new MapLocation(at.x, at.y);
