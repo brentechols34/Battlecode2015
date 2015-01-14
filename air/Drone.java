@@ -30,7 +30,6 @@ public class Drone {
 
                 /* get behavior */
                 mood = chooseB();
-                mood.setRc(Drone.rc);
 
                 /* perform round */
                 mood.perception();

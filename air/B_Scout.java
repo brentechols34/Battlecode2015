@@ -16,7 +16,7 @@ import battlecode.common.*;
  */
 public class B_Scout implements Behavior {
 
-	public static RobotController rc;
+	public static RobotController rc = Drone.rc;
 	boolean map[][] = new boolean[1000][1000]; // HQ in the center
 	boolean explored[][] = new boolean[1000][1000]; // HQ in the center
 	short toBrodcast[];

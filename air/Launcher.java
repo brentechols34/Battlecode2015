@@ -37,7 +37,6 @@ public class Launcher {
 
 				/* get behavior */
 				mood = chooseB();
-				mood.setRc(Launcher.rc);
 
 				/* perform round */
 				mood.perception();

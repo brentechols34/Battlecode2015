@@ -14,39 +14,26 @@ import battlecode.common.*;
 public class Missile {
 	static RobotController rc;
 	static Behavior mood; /* current behavior */
-
-	static int range;
 	static Team team;
-	static MapLocation hq;
-	static int channel;
+	static MapLocation enemyHQ;
 
 	public static void run(RobotController rc) {
 		try {
 			Missile.rc = rc;
-			Missile.range = rc.getType().attackRadiusSquared;
 			Missile.team = rc.getTeam();
-			Missile.hq = rc.senseHQLocation();
-			Missile.channel = (rc.getID() % 100) + 600;
+			Missile.enemyHQ = rc.senseEnemyHQLocation();
 
 			mood = new B_Missile(); /* starting behavior of turtling */
 
 			//missiles only live 5 rounds
-			for(int i = 0; i < 4; i++) {
+			while(true) {
 				/* perform round */
 				mood.perception();
 				mood.calculation();
 				mood.action();
 				/* end round */
 				Missile.rc.yield();
-			}
-			
-			/* final round if no enemy than disentigrate rather than explode */
-
-			mood.perception();
-			mood.calculation();
-			mood.action();
-			rc.disintegrate();
-			
+			}		
 		} catch (Exception e) {
 			System.out.println("Missile Exception");
 			e.printStackTrace();
