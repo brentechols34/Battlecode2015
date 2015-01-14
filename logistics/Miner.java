@@ -38,7 +38,6 @@ public class Miner {
     static final boolean TESTING_MINING = false;
     static final int ORE_CHANNEL = 10000;
     static final int SUPPLY_THRESHOLD = 500;
-    static final boolean IS_SUPPLYING = true;
 	
 	public static void run(RobotController rc) {
         Miner.rc = rc;
@@ -47,6 +46,7 @@ public class Miner {
         myTeam = rc.getTeam();
         enemyTeam = myTeam.opponent();
         myHealth = rc.getHealth();
+        State state = new Mining();
 
         while (true) {
             try {
@@ -55,42 +55,21 @@ public class Miner {
                 oreHere = (int) (rc.senseOre(myLoc) +.5);
             	bestVal = rc.readBroadcast(1000);
             	bestLoc = new MapLocation(rc.readBroadcast(1001), rc.readBroadcast(1002));
+                enemies = rc.senseNearbyRobots(24, Miner.enemyTeam);
 
-                 //send panic on being attacked
-                enemies = rc.senseNearbyRobots(24, enemyTeam);
-                double curHealth = rc.getHealth();
-                if (curHealth < myHealth) {
-                    myHealth = curHealth;
-                    rc.broadcast(911, myLoc.x);
-                    rc.broadcast(912, myLoc.y);
-                    Move.tryMove(rc.senseHQLocation());
-                    continue;
-                }
-                
-                //run from enemies
-                if (enemies.length > 0) {
-                    Move.tryMove(rc.senseHQLocation());
-                    continue;
-                }
-                
-                requestSupply();
-
-            	if (rc.isCoreReady()) {
-            		if (oreHere > bestVal) {
-            			rc.broadcast(1000, oreHere);
-            			rc.broadcast(1001, myLoc.x);
-            			rc.broadcast(1002, myLoc.y);
-            		}
-        			defaultMove();
-        			rc.yield();
+                // Update the most lucrative position's ore
+                if (myLoc.x == rc.readBroadcast(1001) && myLoc.y == rc.readBroadcast(1002)) {
+                    rc.broadcast(1000, (int) (rc.senseOre(myLoc)+.5));
                 }
 
-                if (TESTING_MINING && Clock.getRoundNum() == 1000) {
+                // Run the current state
+                state = state.run(rc);
+
+                if (TESTING_MINING && (Clock.getRoundNum() == 1000 || Clock.getRoundNum() == 1999)) {
                     System.out.println("Ore Extracted: " + rc.readBroadcast(ORE_CHANNEL));
                 }
-                if (TESTING_MINING && Clock.getRoundNum() == 1999) {
-                    System.out.println("Ore Extracted: " + rc.readBroadcast(ORE_CHANNEL));
-                }
+
+                rc.yield();
             } catch (Exception e) {
                 System.out.println("Miner Exception");
                 e.printStackTrace();
@@ -100,46 +79,20 @@ public class Miner {
 	
 	static void defaultMove() throws GameActionException {
 		Direction d = findSpot();
-		if (myLoc.x == rc.readBroadcast(1001) && myLoc.y == rc.readBroadcast(1002)) {
-			rc.broadcast(1000, (int) (rc.senseOre(myLoc)+.5));
-		}
-		if (rc.isCoreReady()) {
-        	if (oreHere < 3 && bestVal > 3) Move.tryMove(bestLoc);
-        	if (rc.isCoreReady() && rc.canMine() && oreHere > 3) {
-                if (TESTING_MINING) {
-                    int extracted = (int)(Math.max(Math.min(3, oreHere/4),0.2) * 10);
-                    rc.broadcast(ORE_CHANNEL, rc.readBroadcast(ORE_CHANNEL) + extracted);
-                }
-
-                rc.mine();
+        if (oreHere < 3 && bestVal > 3) Move.tryMove(bestLoc);
+        if (rc.canMine() && oreHere > 3) {
+            if (TESTING_MINING) {
+                int extracted = (int)(Math.max(Math.min(3, oreHere/4),0.2) * 10);
+                rc.broadcast(ORE_CHANNEL, rc.readBroadcast(ORE_CHANNEL) + extracted);
             }
-        	else if (rc.isCoreReady() && rc.canMove(d)) {
-    			rc.move(d);
-    			return;
-    		}
-		}
+
+            rc.mine();
+        }
+        else if (rc.canMove(d)) {
+            rc.move(d);
+            return;
+        }
 	}
-
-    static void goSupply() throws GameActionException {
-        if(myLoc.distanceSquaredTo(rc.senseHQLocation()) < 15) {
-            if (rc.canMine() && oreHere > 0) {
-                if (TESTING_MINING) {
-                    int extracted = (int)(Math.max(Math.min(3, oreHere/4),0.2) * 10);
-                    rc.broadcast(ORE_CHANNEL, rc.readBroadcast(ORE_CHANNEL) + extracted);
-                }
-
-                rc.mine();
-            }
-
-            return;
-        }
-
-        Direction d = myLoc.directionTo(rc.senseHQLocation());
-        if (rc.canMove(d)) {
-            Move.tryMove(d);
-            return;
-        }
-    }
 	
 	public static Direction findSpot() throws GameActionException {
 		double bestFound = rc.senseOre(myLoc);
@@ -157,30 +110,126 @@ public class Miner {
 		return bestDir;
 	}
 
-    static void requestSupply () throws GameActionException {
-        if (rc.getSupplyLevel() < SUPPLY_THRESHOLD && IS_SUPPLYING) {
-            resupplyChannel = SupplyBeaver.requestResupply(rc, rc.getLocation(), resupplyChannel);
-
-            int head = rc.readBroadcast(196);
-            MapLocation beaverLoc = new MapLocation(rc.readBroadcast(198), rc.readBroadcast(199));
-            if (head == resupplyChannel && beaverLoc.distanceSquaredTo(rc.getLocation()) < 20) {
-                //System.out.println("waiting for refuel");
-                while (rc.getSupplyLevel() < SUPPLY_THRESHOLD) {
-                    oreHere = (int) (rc.senseOre(myLoc) +.5);
-                    if (rc.isCoreReady() && rc.canMine() && oreHere > 0) {
-                        if (TESTING_MINING) {
-                            int extracted = (int)(Math.max(Math.min(3, oreHere/4),0.2) * 10);
-                            rc.broadcast(ORE_CHANNEL, rc.readBroadcast(ORE_CHANNEL) + extracted);
-                        }
-
-                        rc.mine();
-                    }
-
-                    rc.yield();
-                }
-            }
-        } else {
-            resupplyChannel = 0;
+    static void MineHere () throws GameActionException {
+        if (TESTING_MINING) {
+            int extracted = (int)(Math.max(Math.min(3, oreHere/4),0.2) * 10);
+            rc.broadcast(ORE_CHANNEL, rc.readBroadcast(ORE_CHANNEL) + extracted);
         }
+
+        rc.mine();
     }
 }
+
+interface State {
+    State run (RobotController rc) throws GameActionException;
+}
+
+//State for when the miner is just mining along
+class Mining implements State {
+    public State run (RobotController rc) throws GameActionException {
+        // Check our supply level, and put in a request
+        if (rc.getSupplyLevel() < Miner.SUPPLY_THRESHOLD && this.requestSupply(rc)) {
+            return new Resupplying();
+        } else {
+            Miner.resupplyChannel = 0;
+        }
+
+        //Check if we need to start retreating
+        double curHealth = rc.getHealth();
+        if (Miner.enemies.length > 0 || curHealth < Miner.myHealth) {
+            Miner.myHealth = curHealth;
+
+            //Broadcast out our position
+            rc.broadcast(911, Miner.myLoc.x);
+            rc.broadcast(912, Miner.myLoc.y);
+
+            State retreat = new Retreating();
+            retreat.run(rc);
+
+            return retreat;
+        }
+
+        //Otherwise just default move
+        if (rc.isCoreReady()) {
+            if (Miner.oreHere > Miner.bestVal) {
+                rc.broadcast(1000, Miner.oreHere);
+                rc.broadcast(1001, Miner.myLoc.x);
+                rc.broadcast(1002, Miner.myLoc.y);
+            }
+            Miner.defaultMove();
+        }
+
+        return this;
+    }
+
+    boolean requestSupply (RobotController rc) throws GameActionException {
+        Miner.resupplyChannel = SupplyBeaver.requestResupply(rc, rc.getLocation(), Miner.resupplyChannel);
+
+        int head = rc.readBroadcast(196);
+        MapLocation beaverLoc = new MapLocation(rc.readBroadcast(198), rc.readBroadcast(199));
+
+
+        //If we are close, and are the resupply target, than trigger a resupply
+        return head == Miner.resupplyChannel && beaverLoc.distanceSquaredTo(rc.getLocation()) < 20;
+    }
+}
+
+
+//State for when the miner is close to a beaver, and awaiting a resupply
+class Resupplying implements State {
+    int roundsWaited = 0;
+
+    public State run (RobotController rc) throws GameActionException {
+        if (rc.isCoreReady() && rc.canMine() && Miner.oreHere > 0) {
+            Miner.MineHere();
+        }
+
+        //If the resupply hasn't come yet, it probably isnt' coming so just go back to mining
+        roundsWaited++;
+        if (roundsWaited == 10) {
+            return new Mining();
+        }
+
+        //Transition to Mining once we are resupplied
+        if (rc.getSupplyLevel() > Miner.SUPPLY_THRESHOLD) {
+            return new Mining();
+        }
+
+        return this;
+    }
+}
+
+
+//State for when we are running away!
+class Retreating implements State {
+    int roundsSinceEnemy = 0;
+
+    public State run (RobotController rc) throws GameActionException {
+        //Move towards the HQ
+        Move.tryMove(rc.senseHQLocation());
+
+        //send panic on being attacked
+        double curHealth = rc.getHealth();
+        if (curHealth < Miner.myHealth) {
+            Miner.myHealth = curHealth;
+
+            //Broadcast out our position
+            rc.broadcast(911, Miner.myLoc.x);
+            rc.broadcast(912, Miner.myLoc.y);
+            return this;
+        }
+
+        //run from enemies
+        if (Miner.enemies.length == 0) {
+            roundsSinceEnemy++;
+        }
+
+        //We are probably safe now
+        if (roundsSinceEnemy == 5) {
+            return new Mining();
+        }
+
+        return this;
+    }
+}
+
