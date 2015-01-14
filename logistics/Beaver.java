@@ -63,8 +63,8 @@ public class Beaver {
 		try {
 			if (rc.readBroadcast(72) == 1) {
 				rc.broadcast(72, 0);
-				amPathBeaver = true;
-				doPathBeaverThings();
+				PathBeaver.rc = rc;
+				PathBeaver.run();
 			} else if (rc.readBroadcast(8) > 2) {
 				SupplyBeaver.run(rc);
 			}
@@ -317,79 +317,6 @@ public class Beaver {
 			return true;
 		}
 		return false;
-	}
-
-	static void doPathBeaverThings() {
-		rc.setIndicatorString(0, "I am the path beaver");
-		MapLocation hq = rc.senseHQLocation();
-		MapLocation enemyhq = rc.senseEnemyHQLocation();
-		Path p = new Path(new Point(hq.x, hq.y), new Point(enemyhq.x, enemyhq.y));
-		MapLocation myLoc = rc.getLocation();
-		int path_count = 0;
-
-		//start positions will be rally point
-		//channel 72 will be zero when pathbeaver is done.
-		try {
-			rc.broadcast(179, path_count);
-			int changed = 0;
-			while (true) {
-				rc.broadcast(187, myLoc.x);
-				rc.broadcast(188, myLoc.y);
-				if (changed > 10) {
-					Point start = new Point(rc.readBroadcast(73), rc.readBroadcast(74)); //HQ
-					Point finish = new Point(rc.readBroadcast(75), rc.readBroadcast(76)); //RALLY
-					//System.out.println("Pathing from: " + start + " to " + finish);
-					Point[] path = p.pathfind(start, finish); //this might take a bit
-					if (path != null) {
-						int channel = 578;
-						int len = path.length;
-						rc.broadcast(77, len);
-						for (Point pr : path) {
-							rc.broadcast(channel, pr.x);
-							rc.broadcast(channel + 1, pr.y);
-							channel += 2;
-							//System.out.println(pr.x + " " + pr.y);
-						}
-						//rc.broadcast(72, 0);
-						changed = 0;
-						rc.broadcast(179, ++path_count);
-					} else {
-						System.out.println("Null path");
-					}
-				} else {
-					RobotInfo[] allies = rc.senseNearbyRobots(9999999, rc.getTeam());
-					for (RobotInfo r : allies) {
-						if (!isStationary(r.type)) {
-							for (int i = -3; i <= 3; i++) {
-								for (int j = -3; j <= 3; j++) {
-									MapLocation ml = new MapLocation(r.location.x + i, r.location.y + j);
-									TerrainTile tt = rc.senseTerrainTile(ml);
-									RobotInfo sensed = null;
-									if (rc.canSenseLocation(ml)) {
-										sensed = rc.senseRobotAtLocation(ml);
-									}
-									if ((tt != TerrainTile.NORMAL && tt != TerrainTile.UNKNOWN) || (sensed != null && isStationary(sensed.type) && sensed.type != RobotType.HQ)) {
-										if (p.addObstacle(new Point(ml.x, ml.y))) {
-											changed++;
-										};
-									}
-								}
-							}
-						}
-					}
-				}
-
-				int minX = rc.readBroadcast(179);
-				int maxX = rc.readBroadcast(180);
-				int minY = rc.readBroadcast(181);
-				int maxY = rc.readBroadcast(182);
-				p.setLimits(minX, maxX, minY, maxY);
-			}
-		} catch (Exception e) {
-			System.out.println("PathBeaver Exception");
-			e.printStackTrace();
-		}
-
 	}
 
 }

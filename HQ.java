@@ -9,6 +9,7 @@ import battlecode.common.*;
 
 import java.util.Random;
 
+import team163.logistics.PathBeaver;
 import team163.utils.Point;
 import team163.utils.Spawn;
 import team163.utils.Supply;
@@ -54,11 +55,7 @@ public class HQ {
             System.out.println("Broke setting rally location");
         }
         try {
-            rc.broadcast(72, 1);
-            rc.broadcast(179, 0); //init vals
-            rc.broadcast(180, Integer.MAX_VALUE);
-            rc.broadcast(181, 0);
-            rc.broadcast(182, Integer.MAX_VALUE);
+            rc.broadcast(72, 1); //path beaver
 
             // SUPPLY INIT
             rc.broadcast(196, 200);
@@ -69,6 +66,14 @@ public class HQ {
             System.out.println(rallyX + " " + rallyY);
             rc.broadcast(75, rallyX);
             rc.broadcast(76, rallyY);
+            
+            //Request initial path
+            rc.broadcast(2000,1);
+            int requestChannel = PathBeaver.getPathRequestChannel(0);
+            rc.broadcast(requestChannel,myLoc.x);
+            rc.broadcast(requestChannel+1,myLoc.y);
+            rc.broadcast(requestChannel+2,rallyX);
+            rc.broadcast(requestChannel+3,rallyY);
 
         } catch (Exception e) {
             System.out.println("Couldn't request path beaver");

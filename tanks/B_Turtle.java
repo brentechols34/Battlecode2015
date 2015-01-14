@@ -2,6 +2,7 @@ package team163.tanks;
 
 import java.util.Random;
 
+import team163.logistics.PathBeaver;
 import team163.utils.*;
 import battlecode.common.*;
 
@@ -14,7 +15,6 @@ public class B_Turtle implements Behavior {
 	MapLocation rally;
 	MapLocation goal;
 	Random rand = new Random();
-	//    static int currentCount = 0;
 	boolean pathSet = false;
 	int pathCount = 0;
 	boolean madeItToRally = false;
@@ -91,11 +91,11 @@ public class B_Turtle implements Behavior {
 
 	public void rallyMove() throws GameActionException {
 		//Constants, should abstract to some constant class TODO
-		int rallyBaseChannel = 578;
+		int rallyBaseChannel = PathBeaver.getPathChannel(0);
 		int rallyVersionChannel = 179;
-		int rallyLength = rc.readBroadcast(77);
-
+		int rallyLength = rc.readBroadcast(rallyBaseChannel);
 		MapLocation myLoc = rc.getLocation();
+		
 		if (rc.isCoreReady()) {
 			if (enemies.length > 0) {
 				if (rc.isWeaponReady()) {
@@ -107,18 +107,20 @@ public class B_Turtle implements Behavior {
 				}
 				return;
 			}	
-
 			int currentVersion = rc.readBroadcast(rallyVersionChannel);
 			if (currentVersion > pathCount || panther == null) { //if the path has been updated
 				pathCount = currentVersion;
-				panther = new PathMove(rc, rallyBaseChannel, rallyLength, (panther==null)?0:panther.getCount());
+				//System.out.println(rallyBaseChannel + " " + rallyLength);
+				panther = new PathMove(rc, rallyBaseChannel+1, rallyLength, (panther==null)?0:panther.getCount());
 			}
 			if (panther.amAFailure) { //if I cannot path effectively, try to bug to the rally
 				Move.tryMove(rally);
 			} else {
 				panther.attemptMove(); //attempt to move
 			}
-			if (panther.finished) madeItToRally = true; //check if I made it to the goal
+			if (panther.finished) {
+				madeItToRally = true; //check if I made it to the goal
+			}
 		}
 	}
 

@@ -24,6 +24,7 @@ public class PathMove {
 		} catch (GameActionException e) {
 			System.out.println("PathMove: failed to find initialize pathing.");
 		}
+		System.out.println(currentStep);
 	}
 	
 	public int getCount() {
@@ -99,7 +100,7 @@ public class PathMove {
 		if (finished) return;
 		//am on path or can see it 
 		if (myLoc.isAdjacentTo(currentStep) || myLoc.equals(currentStep)) { //update node
-			if (currentNode >= pathLen-1) { //if at destination do nothing
+			if (currentNode >= pathLen-5) { //if at destination do nothing
 				finished = true;
 				return;
 			}
