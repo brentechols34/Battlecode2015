@@ -99,7 +99,7 @@ public class B_Scout implements Behavior {
 		}
 	}
 
-	public void panicAlert(MapLocation m) {
+	public void panicAlert() {
 		throw new UnsupportedOperationException("Not supported yet."); // To
 																		// change
 																		// body

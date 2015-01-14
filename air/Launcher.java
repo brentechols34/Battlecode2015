@@ -21,7 +21,9 @@ public class Launcher {
 	static int range;
 	static Team team;
 	static MapLocation hq;
+	static MapLocation enemyHQ;
 	static int channel;
+	static boolean panic = false;
 
 	public static void run(RobotController rc) {
 		try {
@@ -29,7 +31,7 @@ public class Launcher {
 			Launcher.range = rc.getType().attackRadiusSquared;
 			Launcher.team = rc.getTeam();
 			Launcher.hq = rc.senseHQLocation();
-			Launcher.channel = (rc.getID()%100) + 600;
+			Launcher.enemyHQ = rc.senseEnemyHQLocation();
 			
 			mood = new B_Launcher(); /* starting behavior of turtling */
 
@@ -41,8 +43,11 @@ public class Launcher {
 				/* perform round */
 				mood.perception();
 				mood.calculation();
+				if(!panic) {
 				mood.action();
-
+				}
+				mood.panicAlert();
+				
 				/* end round */
 				Launcher.rc.yield();
 			}
