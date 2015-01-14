@@ -81,12 +81,7 @@ public class Miner {
 		Direction d = findSpot();
         if (oreHere < 3 && bestVal > 3) Move.tryMove(bestLoc);
         if (rc.canMine() && oreHere > 3) {
-            if (TESTING_MINING) {
-                int extracted = (int)(Math.max(Math.min(3, oreHere/4),0.2) * 10);
-                rc.broadcast(ORE_CHANNEL, rc.readBroadcast(ORE_CHANNEL) + extracted);
-            }
-
-            rc.mine();
+            MineHere();
         }
         else if (rc.canMove(d)) {
             rc.move(d);
@@ -127,6 +122,8 @@ interface State {
 //State for when the miner is just mining along
 class Mining implements State {
     public State run (RobotController rc) throws GameActionException {
+        rc.setIndicatorString(0, "Mining");
+
         // Check our supply level, and put in a request
         if (rc.getSupplyLevel() < Miner.SUPPLY_THRESHOLD && this.requestSupply(rc)) {
             return new Resupplying();
@@ -170,7 +167,7 @@ class Mining implements State {
 
 
         //If we are close, and are the resupply target, than trigger a resupply
-        return head == Miner.resupplyChannel && beaverLoc.distanceSquaredTo(rc.getLocation()) < 20;
+        return head == Miner.resupplyChannel && beaverLoc.distanceSquaredTo(rc.getLocation()) < 25;
     }
 }
 
@@ -180,6 +177,18 @@ class Resupplying implements State {
     int roundsWaited = 0;
 
     public State run (RobotController rc) throws GameActionException {
+        rc.setIndicatorString(0, "Resupplying");
+
+        //Check if we need to start retreating
+        double curHealth = rc.getHealth();
+        if (Miner.enemies.length > 0 || curHealth < Miner.myHealth) {
+            State retreat = new Retreating();
+            retreat.run(rc);
+
+            return retreat;
+        }
+
+        //Just relax and mine until we are resupplied
         if (rc.isCoreReady() && rc.canMine() && Miner.oreHere > 0) {
             Miner.MineHere();
         }
@@ -205,6 +214,8 @@ class Retreating implements State {
     int roundsSinceEnemy = 0;
 
     public State run (RobotController rc) throws GameActionException {
+        rc.setIndicatorString(0, "Retreating");
+
         //Move towards the HQ
         Move.tryMove(rc.senseHQLocation());
 
