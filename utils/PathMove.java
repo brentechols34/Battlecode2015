@@ -13,6 +13,7 @@ public class PathMove {
 	private final RobotController rc;
 	public boolean finished;
 	public boolean amAFailure;
+	
 	public PathMove(RobotController rc, int pathBaseChannel, int pathLen, int previousCount) {
 		this.pathBaseChannel = pathBaseChannel;
 		this.rc = rc;
@@ -20,7 +21,7 @@ public class PathMove {
 		finished = false;
 		amAFailure=false;
 		try {
-			findPath(previousCount);
+			findPath(Math.max(1,previousCount));
 		} catch (GameActionException e) {
 			System.out.println("PathMove: failed to find initialize pathing.");
 		}
@@ -42,11 +43,11 @@ public class PathMove {
 				return;
 			}
 		}
-		if (prev == 0) {
+		if (prev == 1) {
 			amAFailure=true;
 			return;
 		}
-		findPath(0);
+		findPath(1);
 	}
 
 	public boolean isObsBetween(MapLocation myLoc, MapLocation dest) {
@@ -96,21 +97,20 @@ public class PathMove {
 
 	public void attemptMove() throws GameActionException {
 		MapLocation myLoc = rc.getLocation();
-		if (finished) return;
 		//am on path or can see it 
+		System.out.println(currentNode + " " + pathLen);
 		if (myLoc.isAdjacentTo(currentStep) || myLoc.equals(currentStep)) { //update node
 			if (currentNode >= pathLen-5) { //if at destination do nothing
 				finished = true;
 				return;
 			}
 			int x,y;
-			
 			do {
 				currentNode++;
 				x = rc.readBroadcast(pathBaseChannel + currentNode * 2);
 				y = rc.readBroadcast(pathBaseChannel + currentNode * 2 + 1);       
 				currentStep = new MapLocation(x,y);
-			} while (!isObsBetween(myLoc, currentStep));
+			} while (!isObsBetween(myLoc, currentStep) && currentNode < pathLen-4);
 			currentNode--;
 			x = rc.readBroadcast(pathBaseChannel + currentNode * 2);
 			y = rc.readBroadcast(pathBaseChannel + currentNode * 2 + 1);       

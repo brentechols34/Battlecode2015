@@ -24,18 +24,13 @@ public class Move {
 	static MBugger mb;
 	static Random rand = new Random();
 
-	/* current target end map location */
-	static MapLocation curTarget;
-
 	static Direction[] directions = { Direction.NORTH, Direction.NORTH_EAST,
 			Direction.EAST, Direction.SOUTH_EAST, Direction.SOUTH,
 			Direction.SOUTH_WEST, Direction.WEST, Direction.NORTH_WEST };
 
 	static public void setRc(RobotController in) {
 		Move.rc = in;
-		curTarget = rc.senseHQLocation();
 		mb = new MBugger(rc);
-		mb.finish = new Point(curTarget.x, curTarget.y);
 	}
 
 	// This method will attempt to move in Direction d (or as close to it as
@@ -46,7 +41,6 @@ public class Move {
 			int offsetIndex = 0;
 			int[] offsets = { 0, 1, -1, 2, -2 };
 			int dirint = directionToInt(d);
-			boolean blocked = false;
 			while (offsetIndex < 5
 					&& !rc.canMove(directions[(dirint + offsets[offsetIndex] + 8) % 8])) {
 				offsetIndex++;
@@ -71,18 +65,20 @@ public class Move {
 	 * @param m
 	 *            end target map location
 	 */
+	static MapLocation last;
 	static public void tryMove(MapLocation m) {
 		try {
 			if (!rc.isCoreReady()) return;
-			if (m.compareTo(curTarget) == 0 || !set) {
+			MapLocation ml = rc.getLocation();
+			if (!set || m != last) {
+				last = m;
 				set = true;
 				stored = false;
-				curTarget = m;
 				mb.reset();
+				mb.start = new Point(ml.x,ml.y);
 				mb.setTargetLocation(new Point(m.x, m.y));
 			}
 			// try using bugging system
-			MapLocation ml = rc.getLocation();
 			Point p = mb.nextMove();
 			if (p!=null) {
 				MapLocation loc = new MapLocation(p.x, p.y);

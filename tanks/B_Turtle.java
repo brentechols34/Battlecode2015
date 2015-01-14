@@ -31,10 +31,13 @@ public class B_Turtle implements Behavior {
 			int x = rc.readBroadcast(50);
 			int y = rc.readBroadcast(51);
 			rally = new MapLocation(x, y);
+
+			checkTarget();
 			x = rc.readBroadcast(67);
 			y = rc.readBroadcast(68);
 			goal = new MapLocation(x, y);
 			nearest = goal;
+
 		} catch (Exception e) {
 			System.out.println("B_Turtle perception error");
 		}
@@ -47,14 +50,23 @@ public class B_Turtle implements Behavior {
 		double max = rc.getLocation().distanceSquaredTo(nearest);
 		if (enemies.length > 0) {
 			for (RobotInfo ri : enemies) {
+				MapLocation loc = ri.location;
 				double dis = rc.getLocation().distanceSquaredTo(ri.location);
 				if (dis < max) {
 					max = dis;
-					nearest = ri.location;
+					nearest = loc;
+				}
+				if (ri.type == RobotType.TOWER) {
+					try {
+						rc.broadcast(67, loc.x);
+						rc.broadcast(68, loc.y);
+						goal = loc;
+					} catch (GameActionException e) {
+						System.out.println("Calculation error.");
+					}
 				}
 			}
 		}
-
 	}
 
 	public void action() {
@@ -79,7 +91,7 @@ public class B_Turtle implements Behavior {
 		int versionChannel = 179;
 		int rallyLength = rc.readBroadcast(rallyBaseChannel);
 		MapLocation myLoc = rc.getLocation();
-		
+
 		if (rc.isCoreReady()) {
 			if (enemies.length > 0) {
 				if (rc.isWeaponReady()) {
@@ -90,7 +102,7 @@ public class B_Turtle implements Behavior {
 					return;
 				}
 				return;
-			}	
+			}
 			int currentVersion = rc.readBroadcast(versionChannel);
 			if (currentVersion > pathCount || panther == null) { //if the path has been updated
 				pathCount = currentVersion;
@@ -102,19 +114,49 @@ public class B_Turtle implements Behavior {
 				panther.attemptMove(); //attempt to move
 			}
 			if (panther.finished) {
+				Move.tryMove(rally);
 				madeItToRally = true; //check if I made it to the goal
 			}
 		}
 	}
 
+	public void checkTarget() throws GameActionException{
+		int x = rc.readBroadcast(67);
+		int y = rc.readBroadcast(68);
+		MapLocation r = new MapLocation(x,y);
+		RobotInfo ri;
+		if (rc.canSenseLocation(r) && (ri=rc.senseRobotAtLocation(r)) != null && (ri.type != RobotType.TOWER && ri.type != RobotType.HQ)) {
+			retarget();
+		}
+
+	}
+
+	public void retarget() throws GameActionException {
+		MapLocation[] towers = rc.senseEnemyTowerLocations();
+		if (towers.length == 0) {
+			MapLocation enHQ = rc.senseEnemyHQLocation();
+			rc.broadcast(67, enHQ.x);
+			rc.broadcast(68, enHQ.y);
+			nearest = enHQ;
+		} else {
+			int closest = findClosestToHQ(towers);
+			rc.broadcast(67, towers[closest].x);
+			rc.broadcast(68, towers[closest].y);
+			nearest = towers[closest];
+		}
+
+	}
+
 	public void attackMove() throws GameActionException {
-		if (enemies.length > 0) {
+		if (enemies.length > 0){
 			if (rc.isWeaponReady()) {
 				rc.attackLocation(nearest);
-				return;
-			} 
+			} else {
+				Move.tryMove(nearest);
+			}
+		} else {
+			Move.tryMove(goal);
 		}
-		Move.tryMove(nearest);
 	}
 
 	public static int findClosestToHQ(MapLocation[] locs) {

@@ -58,7 +58,6 @@ public class Tank {
      */
     private static void update() {
         try {
-            /* if more than 10 tanks trigger aggressive behavior */
             if (rc.readBroadcast(66) == 1) {
                 mood.attacking = true;
             } else {

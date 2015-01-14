@@ -74,8 +74,6 @@ public class MBugger {
 	 */
 	private boolean isTraversable(int x, int y) {
 		try {
-			boolean traversable = true;
-			Boolean temp = null;
 			MapLocation next = new MapLocation(x, y);
 
 			// check if off the map
@@ -84,7 +82,7 @@ public class MBugger {
 			}
 			
 			RobotInfo ri = rc.senseRobotAtLocation(next);
-			if (ri!=null&& (rand.nextDouble() > .0 || isStationary(ri.type))) {
+			if (ri!=null&& (rand.nextDouble() > .30 || isStationary(ri.type))) {
 				return false;
 			}
 			
@@ -174,7 +172,7 @@ public class MBugger {
 		// just in case, we'll modify the move count.
 		reverse = !reverse;
 		moveCount--;
-		closest=null;
+		closest = null;
 		return null;
 	}
 
