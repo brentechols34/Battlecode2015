@@ -17,7 +17,7 @@ public class B_Turtle implements Behavior {
 	Random rand = new Random();
 	boolean pathSet = false;
 	int pathCount = 0;
-	boolean madeItToRally = false;
+	public boolean madeItToRally = false;
 	public boolean attacking;
 	boolean offPath = false;
 	PathMove panther = null;
@@ -34,21 +34,6 @@ public class B_Turtle implements Behavior {
 			x = rc.readBroadcast(67);
 			y = rc.readBroadcast(68);
 			goal = new MapLocation(x, y);
-			RobotInfo ri;
-			if (rc.canSenseLocation(goal) && ((ri = rc.senseRobotAtLocation(goal)) == null || ri.type != RobotType.TOWER)) {
-				MapLocation[] towers = rc.senseEnemyTowerLocations();
-				if (towers.length == 0) {
-					MapLocation enHQ = rc.senseEnemyHQLocation();
-					rc.broadcast(67, enHQ.x);
-					rc.broadcast(68, enHQ.y);
-					goal = enHQ;
-				} else {
-					int closest = findClosestToHQ(towers);
-					rc.broadcast(67, towers[closest].x);
-					rc.broadcast(68, towers[closest].y);
-					goal = towers[closest];
-				}
-			}
 			nearest = goal;
 		} catch (Exception e) {
 			System.out.println("B_Turtle perception error");
@@ -86,13 +71,12 @@ public class B_Turtle implements Behavior {
 		} catch (Exception e) {
 			System.out.println("Tank Tutle action Error");
 		}
-		rc.yield();
 	}
 
 	public void rallyMove() throws GameActionException {
 		//Constants, should abstract to some constant class TODO
 		int rallyBaseChannel = PathBeaver.getPathChannel(0);
-		int rallyVersionChannel = 179;
+		int versionChannel = 179;
 		int rallyLength = rc.readBroadcast(rallyBaseChannel);
 		MapLocation myLoc = rc.getLocation();
 		
@@ -107,10 +91,9 @@ public class B_Turtle implements Behavior {
 				}
 				return;
 			}	
-			int currentVersion = rc.readBroadcast(rallyVersionChannel);
+			int currentVersion = rc.readBroadcast(versionChannel);
 			if (currentVersion > pathCount || panther == null) { //if the path has been updated
 				pathCount = currentVersion;
-				//System.out.println(rallyBaseChannel + " " + rallyLength);
 				panther = new PathMove(rc, rallyBaseChannel+1, rallyLength, (panther==null)?0:panther.getCount());
 			}
 			if (panther.amAFailure) { //if I cannot path effectively, try to bug to the rally
@@ -125,19 +108,13 @@ public class B_Turtle implements Behavior {
 	}
 
 	public void attackMove() throws GameActionException {
-		MapLocation myLoc = rc.getLocation();
 		if (enemies.length > 0) {
 			if (rc.isWeaponReady()) {
 				rc.attackLocation(nearest);
 				return;
-			} else if (rc.canMove(myLoc.directionTo(nearest))) {
-				rc.move(myLoc.directionTo(nearest));
-				return;
-			}
-			return;
-		} else {
-			Move.tryMove(goal);
+			} 
 		}
+		Move.tryMove(nearest);
 	}
 
 	public static int findClosestToHQ(MapLocation[] locs) {

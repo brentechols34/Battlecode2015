@@ -73,6 +73,7 @@ public class Move {
 	 */
 	static public void tryMove(MapLocation m) {
 		try {
+			if (!rc.isCoreReady()) return;
 			if (m.compareTo(curTarget) == 0 || !set) {
 				set = true;
 				stored = false;

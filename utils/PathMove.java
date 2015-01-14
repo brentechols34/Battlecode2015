@@ -24,7 +24,6 @@ public class PathMove {
 		} catch (GameActionException e) {
 			System.out.println("PathMove: failed to find initialize pathing.");
 		}
-		System.out.println(currentStep);
 	}
 	
 	public int getCount() {
@@ -104,10 +103,19 @@ public class PathMove {
 				finished = true;
 				return;
 			}
-			currentNode += 1;
-			int x = rc.readBroadcast(pathBaseChannel + currentNode * 2);
-			int y = rc.readBroadcast(pathBaseChannel + currentNode * 2 + 1);       
+			int x,y;
+			
+			do {
+				currentNode++;
+				x = rc.readBroadcast(pathBaseChannel + currentNode * 2);
+				y = rc.readBroadcast(pathBaseChannel + currentNode * 2 + 1);       
+				currentStep = new MapLocation(x,y);
+			} while (!isObsBetween(myLoc, currentStep));
+			currentNode--;
+			x = rc.readBroadcast(pathBaseChannel + currentNode * 2);
+			y = rc.readBroadcast(pathBaseChannel + currentNode * 2 + 1);       
 			currentStep = new MapLocation(x,y);
+
 		}
 		Move.tryMove(myLoc.directionTo(currentStep)); //move toward
 	}
