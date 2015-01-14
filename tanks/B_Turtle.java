@@ -114,7 +114,6 @@ public class B_Turtle implements Behavior {
 				panther.attemptMove(); //attempt to move
 			}
 			if (panther.finished) {
-				Move.tryMove(rally);
 				madeItToRally = true; //check if I made it to the goal
 			}
 		}
