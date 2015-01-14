@@ -63,7 +63,7 @@ public class B_Missile implements Behavior {
 
     }
 
-    public void panicAlert(MapLocation m) {
+    public void panicAlert() {
         // TODO Auto-generated method stub
 
     }

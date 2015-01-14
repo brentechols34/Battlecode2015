@@ -11,7 +11,10 @@ public class Drone {
 
     static int range;
     static Team team;
+    static Team opponent;
     static MapLocation hq;
+    static MapLocation enemyHQ;
+    static boolean right; //turn right
 
     static Direction[] directions = {Direction.NORTH, Direction.NORTH_EAST,
         Direction.EAST, Direction.SOUTH_EAST, Direction.SOUTH,
@@ -22,9 +25,12 @@ public class Drone {
             Drone.rc = rc;
             Drone.range = rc.getType().attackRadiusSquared;
             Drone.team = rc.getTeam();
+            Drone.opponent = rc.getTeam().opponent();
             Drone.hq = rc.senseHQLocation();
+            Drone.enemyHQ = rc.senseEnemyHQLocation();
+            Drone.right = (rc.getID() % 2 == 0); //50% chance of right
 
-            mood = new B_Scout(); /* starting behavior of turtling */
+            mood = new B_Kite(); /* starting behavior of turtling */
 
             while (true) {
 
