@@ -10,7 +10,6 @@ import battlecode.common.*;
 import java.util.Random;
 
 import team163.utils.Move;
-import team163.utils.Path;
 import team163.utils.Point;
 
 /**
@@ -61,11 +60,12 @@ public class Beaver {
 			maxBarracks = 0;
 		}
 		try {
-			if (rc.readBroadcast(72) == 1) {
-				rc.broadcast(72, 0);
-				PathBeaver.rc = rc;
-				PathBeaver.run();
-			} else if (rc.readBroadcast(8) > 2) {
+//			if (rc.readBroadcast(72) == 1) {
+//				rc.broadcast(72, 0);
+//				PathBeaver.rc = rc;
+//				PathBeaver.run();
+//			} else 
+			if (rc.readBroadcast(8) > 2) {
 				SupplyBeaver.run(rc);
 			}
 		} catch (Exception e) {

@@ -7,8 +7,8 @@ import battlecode.common.*;
 public class Tank {
 
     static RobotController rc;
-    //static B_Turtle mood; /* current behavior */
-    static TankBrain tb;
+    static B_Turtle mood; /* current behavior */
+
     static int range;
     static int senseRange = 24;
     static Team team;
@@ -26,21 +26,20 @@ public class Tank {
             Tank.team = rc.getTeam();
 
 			//Move.setRc(rc);
-            //mood = new B_Turtle(); /* starting behavior of turtling */
-            tb = new TankBrain(rc);
+            mood = new B_Turtle(); /* starting behavior of turtling */
+
             while (true) {
 
                 /* get behavior */
-                //update();
+                update();
 
                 /* perform round */
-                //mood.perception();
-                //mood.calculation();
-                //if (!panic) {
-                    //mood.action();
-                //}
-                //mood.panicAlert();
-            	tb.act();
+                mood.perception();
+                mood.calculation();
+                if (!panic) {
+                    mood.action();
+                }
+                mood.panicAlert();
 
                 /* end round */
                 Tank.rc.yield();
@@ -57,19 +56,19 @@ public class Tank {
      *
      * @return Behavior interface
      */
-//    private static void update() {
-//        try {
-//            if (rc.readBroadcast(66) == 1) {
-//                mood.attacking = true;
-//            } else {
-//                mood.attacking = false;
-//            }
-//
-////            requestSupply();
-//        } catch (Exception e) {
-//            System.out.println("Error caught in choosing tank behavior");
-//        }
-//    }
+    private static void update() {
+        try {
+            if (rc.readBroadcast(66) == 1) {
+                mood.attacking = true;
+            } else {
+                mood.attacking = false;
+            }
+
+//            requestSupply();
+        } catch (Exception e) {
+            System.out.println("Error caught in choosing tank behavior");
+        }
+    }
 
     static void requestSupply() throws GameActionException {
         if (rc.getSupplyLevel() < 250) {

@@ -1,7 +1,6 @@
 package team163.logistics;
 
-import team163.utils.Path;
-import team163.utils.Point;
+import team163.utils.SimplePather;
 import battlecode.common.GameActionException;
 import battlecode.common.MapLocation;
 import battlecode.common.RobotInfo;
@@ -20,16 +19,16 @@ public class PathBeaver {
 	public static RobotController rc;
 	static int changed = 0;
 	static final int maxPaths = 10;
-	static PointPair[] paths = new PointPair[maxPaths];
+	static MapLocationPair[] paths = new MapLocationPair[maxPaths];
 	static int pathCount=0;
 	static int pathVersion=0;
-	static Path p;
+	static SimplePather p;
 
-	private static class PointPair {
-		Point start;
-		Point finish;
+	private static class MapLocationPair {
+		MapLocation start;
+		MapLocation finish;
 
-		public PointPair(Point start, Point finish) {
+		public MapLocationPair(MapLocation start, MapLocation finish) {
 			this.start = start;
 			this.finish = finish;
 		}
@@ -40,11 +39,11 @@ public class PathBeaver {
 		rc.setIndicatorString(0, "I am the path beaver");
 		MapLocation hq = rc.senseHQLocation();
 		MapLocation enemyhq = rc.senseEnemyHQLocation();
-		p = new Path(new Point(hq.x, hq.y), new Point(enemyhq.x, enemyhq.y));
+		p = new SimplePather(rc);
 		MapLocation myLoc = rc.getLocation();
 
 
-		//start positions will be rally point
+		//start positions will be rally MapLocation
 		//channel 72 will be zero when pathbeaver is done.
 		while (true) {
 			try {
@@ -53,50 +52,26 @@ public class PathBeaver {
 				rc.broadcast(188, myLoc.y);
 
 				checkRequests();
-				
-				if (changed > 4) {
-					rc.broadcast(179, ++pathVersion);
-					for (int i = 0; i < pathCount; i++) {
-						loadPath(paths[i], i);
-					}
-				} else mapScan();
+				rc.broadcast(179, ++pathVersion);
+				for (int i = 0; i < pathCount; i++) {
+					loadPath(paths[i], i);
+				}
 			} catch (Exception e) {
 				changed = 5;
 			}
 		}
 	}
 
-	private static void mapScan() throws GameActionException {
-		RobotInfo[] allies = rc.senseNearbyRobots(9999999, rc.getTeam());
-		for (RobotInfo r : allies) {
-			if (!isStationary(r.type)) {
-				for (int i = -3; i <= 3; i++) {
-					for (int j = -3; j <= 3; j++) {
-						MapLocation ml = new MapLocation(r.location.x + i, r.location.y + j);
-						TerrainTile tt = rc.senseTerrainTile(ml);
-						RobotInfo sensed = null;
-						if (rc.canSenseLocation(ml)) {sensed = rc.senseRobotAtLocation(ml);}
-						if ((tt != TerrainTile.NORMAL && tt != TerrainTile.UNKNOWN) || (sensed != null && isStationary(sensed.type) && sensed.type != RobotType.HQ)) {
-							if (p.addObstacle(new Point(ml.x, ml.y))) {
-								changed++;
-							}
-						}
-					}
-				}
-			}
-		}
-	}
-
 	private static void checkRequests() throws GameActionException {
 		if (rc.readBroadcast(2000 + pathCount) != 0) { //if I got a new path request
-			//check for points
+			//check for MapLocations
 			int sx = rc.readBroadcast(2001 + maxPaths + pathCount * 4);
 			int sy = rc.readBroadcast(2001 + maxPaths + pathCount * 4+1);
 			int fx = rc.readBroadcast(2001 + maxPaths + pathCount * 4+2);
 			int fy = rc.readBroadcast(2001 + maxPaths + pathCount * 4+3);
-			Point start = new Point(sx,sy);
-			Point finish = new Point(fx,fy);
-			paths[pathCount] = new PointPair(start, finish);
+			MapLocation start = new MapLocation(sx,sy);
+			MapLocation finish = new MapLocation(fx,fy);
+			paths[pathCount] = new MapLocationPair(start, finish);
 			loadPath(paths[pathCount], pathCount);
 			pathCount++;
 		}
@@ -104,19 +79,19 @@ public class PathBeaver {
 	}
 
 	//
-	//		Point start = new Point(rc.readBroadcast(73), rc.readBroadcast(74)); //HQ
-	//		Point finish = new Point(rc.readBroadcast(75), rc.readBroadcast(76)); //RALLY
+	//		MapLocation start = new MapLocation(rc.readBroadcast(73), rc.readBroadcast(74)); //HQ
+	//		MapLocation finish = new MapLocation(rc.readBroadcast(75), rc.readBroadcast(76)); //RALLY
 	//first val in channel is 
-	private static void loadPath(PointPair pr, int count) throws GameActionException {
+	private static void loadPath(MapLocationPair pr, int count) throws GameActionException {
 		//System.out.println(pr.start + " " + pr.finish);
-		Point[] path = p.pathfind(pr.start, pr.finish); //this might take a bit
+		MapLocation[] path = p.pathfind(pr.start, pr.finish); //this might take a bit
 
 		if (path != null) {
 			int channel = getPathChannel(count);
 			int len = path.length;
 			rc.broadcast(channel, len);
 			channel++;
-			for (Point pnt : path) {
+			for (MapLocation pnt : path) {
 				rc.broadcast(channel, pnt.x);
 				rc.broadcast(channel + 1, pnt.y);
 				channel += 2;
