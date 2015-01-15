@@ -37,7 +37,6 @@ public class Move {
 	// possible)
 	static public void tryMove(Direction d) {
 		try {
-			rc.setIndicatorString(0, "Not bugging");
 			set = false;
 			int offsetIndex = 0;
 			int[] offsets = { 0, 1, -1, 2, -2 };
@@ -72,10 +71,9 @@ public class Move {
 		try {
 			//if (!rc.isCoreReady()) return;
 			MapLocation ml = rc.getLocation();
-			if (!set || !m.equals(last)) {
+			if (!set || !m.equals(last) || rand.nextDouble() > .80) {
 				last = m;
 				set = true;
-				rc.setIndicatorString(0, "Hard Reset" + " from " + mb.finish + " to " + m);
 				mb.reset();
 				mb.setTargetLocation(new Point(m.x, m.y));
 				mb.start = new Point(ml.x,ml.y);
@@ -89,11 +87,9 @@ public class Move {
 				if (rc.canMove(dir)) {
 					rc.move(dir);
 				} else {
-					rc.setIndicatorString(0, "Soft Reset: can't move there " + loc + " " + dir);
 					mb.softReset();
 				}
 			} else {
-				rc.setIndicatorString(0, "Hard Reset: null result from bugger " + mb.start + " " + mb.finish);
 				mb.reset();
 				mb.setTargetLocation(new Point(m.x, m.y));
 				mb.start = new Point(ml.x,ml.y);

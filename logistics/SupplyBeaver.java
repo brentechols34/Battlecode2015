@@ -63,7 +63,7 @@ public class SupplyBeaver {
 
                 rc.yield();
             } catch (Exception e) {
-                System.out.println("Beaver Exception");
+                System.out.println("Supply Beaver Exception");
                 e.printStackTrace();
             }
         }

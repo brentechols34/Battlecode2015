@@ -24,8 +24,6 @@ public class B_Turtle implements Behavior {
 
 	public void perception() {
 		try {
-			rc.setIndicatorString(0, "");
-			rc.setIndicatorString(1, "");
 			if (!pathSet) {
 				pathSet = true;
 				pathCount = rc.readBroadcast(179);
@@ -156,15 +154,12 @@ public class B_Turtle implements Behavior {
 				//I should wait
 				int dis = myLoc.distanceSquaredTo(nearest);
 				if (dis <= 37) {
-					rc.setIndicatorString(1, "moving away from " + nearest);
 					Move.tryMove(rc.getLocation().directionTo(nearest).opposite());
 				} else {
-					rc.setIndicatorString(1, "moving toward");
 					Move.tryMove(nearest);
 				}
 			} else {
 				if (rc.isWeaponReady()) {
-					rc.setIndicatorString(1, "attacking nearest");
 					rc.attackLocation(nearest);
 				} else {
 					Move.tryMove(nearest);
@@ -198,7 +193,7 @@ public class B_Turtle implements Behavior {
 		//read and see if someone is under attack
 		try {
 			int panicX = rc.readBroadcast(911);
-			if (panicX != 0) { //try to assist
+			if (panicX != 0 && rc.readBroadcast(66) == 0) { //try to assist
 				rc.setIndicatorDot(rc.getLocation(), 2, 2, 2);
 				if(enemies.length > 0 && rc.isWeaponReady()) {
 					rc.attackLocation(nearest);
