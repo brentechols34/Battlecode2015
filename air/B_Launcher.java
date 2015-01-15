@@ -58,7 +58,7 @@ public class B_Launcher implements Behavior {
 					}
 				}
 			} else {
-				if (rc.isWeaponReady()) {
+				if (rc.isWeaponReady() && rc.getMissileCount() > 0) {
 					Move.tryMove(nearest);
 				} else {
 					Move.tryMove(rc.getLocation().directionTo(nearest)
