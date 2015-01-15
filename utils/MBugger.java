@@ -82,7 +82,7 @@ public class MBugger {
 			}
 			
 			RobotInfo ri = rc.senseRobotAtLocation(next);
-			if (ri!=null&& (rand.nextDouble() > .30 || isStationary(ri.type))) {
+			if (ri!=null&& (rand.nextDouble() > .25 || isStationary(ri.type))) {
 				return false;
 			}
 			
@@ -116,6 +116,11 @@ public class MBugger {
 		this.start = getCurrentPosn();
 		this.finish = finish;
 		closest = start;
+	}
+	
+	public void softReset() {
+		closest = null;
+		moveCount = 0;
 	}
 
 	public void reset() {

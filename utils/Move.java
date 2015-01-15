@@ -37,6 +37,7 @@ public class Move {
 	// possible)
 	static public void tryMove(Direction d) {
 		try {
+			rc.setIndicatorString(0, "Not bugging");
 			set = false;
 			int offsetIndex = 0;
 			int[] offsets = { 0, 1, -1, 2, -2 };
@@ -48,6 +49,7 @@ public class Move {
 			if (offsetIndex < 5 && rc.isCoreReady()) {
 				rc.move(directions[(dirint + offsets[offsetIndex] + 8) % 8]);
 			}
+			last = null;
 		} catch (Exception e) {
 			System.out.println("Error in tryMove");
 		}
@@ -68,33 +70,33 @@ public class Move {
 	static MapLocation last;
 	static public void tryMove(MapLocation m) {
 		try {
-			if (!rc.isCoreReady()) return;
+			//if (!rc.isCoreReady()) return;
 			MapLocation ml = rc.getLocation();
-			if (!set || m != last) {
+			if (!set || !m.equals(last)) {
 				last = m;
 				set = true;
-				stored = false;
+				rc.setIndicatorString(0, "Hard Reset" + " from " + mb.finish + " to " + m);
 				mb.reset();
-				mb.start = new Point(ml.x,ml.y);
 				mb.setTargetLocation(new Point(m.x, m.y));
+				mb.start = new Point(ml.x,ml.y);
 			}
+			if (!rc.isCoreReady()) return;
 			// try using bugging system
 			Point p = mb.nextMove();
 			if (p!=null) {
 				MapLocation loc = new MapLocation(p.x, p.y);
 				Direction dir = rc.getLocation().directionTo(loc);
-				if (rc.isCoreReady() && rc.canMove(dir)) {
-					count = 0;
+				if (rc.canMove(dir)) {
 					rc.move(dir);
 				} else {
-					mb.reset();
-					mb.start = new Point(ml.x,ml.y);
-					mb.setTargetLocation(new Point(m.x, m.y));
+					rc.setIndicatorString(0, "Soft Reset: can't move there " + loc + " " + dir);
+					mb.softReset();
 				}
 			} else {
+				rc.setIndicatorString(0, "Hard Reset: null result from bugger " + mb.start + " " + mb.finish);
 				mb.reset();
-				mb.start = new Point(ml.x,ml.y);
 				mb.setTargetLocation(new Point(m.x, m.y));
+				mb.start = new Point(ml.x,ml.y);
 			}
 		} catch (Exception e) {
 			System.out.println("Error attempting bugging");

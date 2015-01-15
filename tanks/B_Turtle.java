@@ -24,6 +24,8 @@ public class B_Turtle implements Behavior {
 
 	public void perception() {
 		try {
+			rc.setIndicatorString(0, "");
+			rc.setIndicatorString(1, "");
 			if (!pathSet) {
 				pathSet = true;
 				pathCount = rc.readBroadcast(179);
@@ -61,6 +63,7 @@ public class B_Turtle implements Behavior {
 						rc.broadcast(67, loc.x);
 						rc.broadcast(68, loc.y);
 						goal = loc;
+						nearest = goal;
 					} catch (GameActionException e) {
 						System.out.println("Calculation error.");
 					}
@@ -97,11 +100,10 @@ public class B_Turtle implements Behavior {
 				if (rc.isWeaponReady()) {
 					rc.attackLocation(nearest);
 					return;
-				} else if (rc.canMove(myLoc.directionTo(nearest))) {
-					rc.move(myLoc.directionTo(nearest));
+				} else {
+					Move.tryMove(myLoc.directionTo(nearest));
 					return;
 				}
-				return;
 			}
 			int currentVersion = rc.readBroadcast(versionChannel);
 			if (currentVersion > pathCount || panther == null) { //if the path has been updated
@@ -147,14 +149,34 @@ public class B_Turtle implements Behavior {
 	}
 
 	public void attackMove() throws GameActionException {
+		RobotInfo[] allies = rc.senseNearbyRobots(nearest, 40, rc.getTeam());
+		MapLocation myLoc = rc.getLocation();
 		if (enemies.length > 0){
-			if (rc.isWeaponReady()) {
-				rc.attackLocation(nearest);
+			if (allies.length < 7) {
+				//I should wait
+				int dis = myLoc.distanceSquaredTo(nearest);
+				if (dis <= 37) {
+					rc.setIndicatorString(1, "moving away from " + nearest);
+					Move.tryMove(rc.getLocation().directionTo(nearest).opposite());
+				} else {
+					rc.setIndicatorString(1, "moving toward");
+					Move.tryMove(nearest);
+				}
 			} else {
-				Move.tryMove(nearest);
+				if (rc.isWeaponReady()) {
+					rc.setIndicatorString(1, "attacking nearest");
+					rc.attackLocation(nearest);
+				} else {
+					Move.tryMove(nearest);
+				}
 			}
 		} else {
-			Move.tryMove(goal);
+			int dis = myLoc.distanceSquaredTo(goal);
+			if (dis > 38 || allies.length > 7) {
+				Move.tryMove(goal);
+			} else {
+				if (dis < 35) Move.tryMove(rc.getLocation().directionTo(nearest).opposite());
+			}
 		}
 	}
 
