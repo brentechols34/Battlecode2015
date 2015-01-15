@@ -82,7 +82,7 @@ public class MBugger {
 			MapLocation next = new MapLocation(x, y);
 			if (rc.canSenseLocation(next)) {
 				RobotInfo ri = rc.senseRobotAtLocation(next);
-				if (ri!=null && (isStationary(ri.type)||avoid>0)) { // 
+				if (ri!=null) { //&& () ||avoid>0
 					return false;
 				}
 			}
@@ -156,8 +156,8 @@ public class MBugger {
 		try {	
 			Point me = getCurrentPosn();
 			Point potential;
-			if (isOnLine(me) < 3
-					&& (closest == null || me.distance(finish) <= finish.distance(closest))) {
+			if (isOnLine(me) < 2
+					&& (closest == null || me.distance(finish) < finish.distance(closest))) {
 				// find the next spot that is on the line, return it.
 				if ((potential = followLine(me)) != null) {
 					return potential;
@@ -167,16 +167,20 @@ public class MBugger {
 			if ((potential = bug(me)) != null) {
 				return potential;
 			}
+			//If it gets here what happened is that it tried to bug around an allied unit, and then it moved
+			//basically the map changed
+			//right now it gives up and restarts the bugging basically
+			//closest = null;
+			//start = getCurrentPosn();
+			
+			//try to move directly to goal, I should end up hitting the real obstacle, or the goal which is good enough
+			//I think I have to reset closest but idk
+			closest = null;
+			return closestToGoal(me);
 		} catch (Exception e) {
 			System.out.println("Error in nextMove()" + e);
 		}
-		// if it gets here, there are major problems.
-		// just in case, we'll modify the move count.
-		reverse = !reverse;
-		closest = null;
-		start = getCurrentPosn();
-		
-		return followLine(start);
+		return null;
 	}
 
 	private boolean recursed;
@@ -200,10 +204,7 @@ public class MBugger {
 
 		}
 		if (recursed) {
-			start = getCurrentPosn();
-			closest = start;
-			reverse = !reverse;
-			return followLine(start);
+			return null;
 		}
 		recursed = true;
 		reverse = !reverse;
@@ -225,7 +226,7 @@ public class MBugger {
 				System.out.println("\n\npotential was null\n\n");
 			}
 			dis = isOnLine(potential);
-			if (dis < 3
+			if (dis < 2
 					&& finish.distance(potential) < me.distance(finish)) {
 				if (isTraversable(potential.x, potential.y)) {
 					if ((int) dis != 0) {
@@ -239,6 +240,29 @@ public class MBugger {
 		}
 		return backup;
 	}
+	
+	public Point closestToGoal(Point from) {
+		Point p = null;
+		double min = Double.MAX_VALUE;
+		Point t;
+		double td;
+		for (int i = 0; i < 1; i++) {
+			t = moveTo(from,i);
+			td = distance(t,finish);
+			if (td < min && isTraversable(t.x, t.y)) {
+				min=td;
+				p=t;
+			}
+		}
+		return p;
+	}
+	
+    private static float distance(Point p1, Point p2) {
+        final float dx = Math.abs(p1.x - p2.x);
+        final float dy = Math.abs(p1.y - p2.y);
+        return dx > dy ? (dy * 20f / 70 + dx) : (dx * 20f / 70 + dy);
+    }
+
 
 	private Point moveTo(Point p, int d) {
 		switch (d) {

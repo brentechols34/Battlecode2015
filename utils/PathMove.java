@@ -40,6 +40,7 @@ public class PathMove {
 
 	public void findPath(int prev) throws GameActionException {
 		MapLocation myLoc = rc.getLocation();
+		boolean good = false;
 		for (int i = prev; i < pathLen; i++) {
 			int x = rc.readBroadcast(pathBaseChannel + i * 2);
 			int y = rc.readBroadcast(pathBaseChannel + i * 2 + 1);
@@ -47,14 +48,30 @@ public class PathMove {
 			if (!isObsBetween(myLoc, temp)) {
 				currentNode = i;
 				currentStep = temp;
+				good = true;
+			}
+		}
+		if (!good) refindPath();
+	}
+	
+	public void refindPath() throws GameActionException {
+		MapLocation myLoc = rc.getLocation();
+		for (int i = 0; i < pathLen; i++) {
+			int x = rc.readBroadcast(pathBaseChannel + i * 2);
+			int y = rc.readBroadcast(pathBaseChannel + i * 2 + 1);
+			MapLocation temp = new MapLocation(x,y);
+			if (!isObsBetween(myLoc, temp)) {
+				currentNode = i;
+				currentStep = temp;
+				amAFailure = false;
 				return;
 			}
 		}
-		if (prev == 1) {
-			amAFailure=true;
-			return;
-		}
-		findPath(1);
+		currentNode = 0;
+		int x = rc.readBroadcast(pathBaseChannel);
+		int y = rc.readBroadcast(pathBaseChannel + 1);
+		currentStep = new MapLocation(x,y);
+		amAFailure = true;
 	}
 
 	public boolean isObsBetween(MapLocation myLoc, MapLocation dest) throws GameActionException {
@@ -106,7 +123,6 @@ public class PathMove {
 		}
 		TerrainTile tt = rc.senseTerrainTile(m);
 		if (tt != TerrainTile.NORMAL) return true;
-		
 		return false;
 	}
 
@@ -124,30 +140,34 @@ public class PathMove {
 
 	public void attemptMove() throws GameActionException {
 		MapLocation myLoc = rc.getLocation();
+		
+		//Couldn't see path last time
+		//try to find it
+		if (amAFailure) {
+			refindPath();
+			if (amAFailure) { //if I still can't see path
+				Move.tryMove(currentStep); //try to bug to the start
+				return;
+			}
+		}
 		//am on path or can see it 
-		if (currentNode >= pathLen-1) { //if at destination do nothing
+		if (currentNode >= pathLen-3 && !isObsBetween(myLoc,currentStep)) { //if at destination do nothing
 			currentNode = pathLen-1;
 			int x = rc.readBroadcast(pathBaseChannel + currentNode * 2);
 			int y = rc.readBroadcast(pathBaseChannel + currentNode * 2 + 1);       
 			currentStep = new MapLocation(x,y);
 			finished = true;
+		} else {
+			finished = false;
 		}
 		if (!finished && (myLoc.isAdjacentTo(currentStep) || myLoc.equals(currentStep))) { //update node
 			currentNode++;
-//			int x,y;
-//			do {
-//				currentNode++;
-//				x = rc.readBroadcast(pathBaseChannel + currentNode * 2);
-//				y = rc.readBroadcast(pathBaseChannel + currentNode * 2 + 1);       
-//				currentStep = new MapLocation(x,y);
-//			} while (!isObsBetween(myLoc, currentStep) && currentNode < pathLen);
-//			currentNode--;
-			int x = rc.readBroadcast(pathBaseChannel + currentNode * 2);
-			int y = rc.readBroadcast(pathBaseChannel + currentNode * 2 + 1);       
+			int x,y;
+			x = rc.readBroadcast(pathBaseChannel + currentNode * 2);
+			y = rc.readBroadcast(pathBaseChannel + currentNode * 2 + 1);       
 			currentStep = new MapLocation(x,y);
 		}
-		if (!amAFailure) Move.tryMove(myLoc.directionTo(currentStep));
-		else { Move.tryMove(currentStep); }
+		Move.tryMove(myLoc.directionTo(currentStep));
 	}
 
 }

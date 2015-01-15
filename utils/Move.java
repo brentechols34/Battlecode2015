@@ -20,13 +20,13 @@ public class Move {
 	static int persistance = 0;
 
 	/* instantiate movement utils */
-	
+
 	static MBugger mb;
 	static Random rand = new Random();
 
 	static Direction[] directions = { Direction.NORTH, Direction.NORTH_EAST,
-			Direction.EAST, Direction.SOUTH_EAST, Direction.SOUTH,
-			Direction.SOUTH_WEST, Direction.WEST, Direction.NORTH_WEST };
+		Direction.EAST, Direction.SOUTH_EAST, Direction.SOUTH,
+		Direction.SOUTH_WEST, Direction.WEST, Direction.NORTH_WEST };
 
 	static public void setRc(RobotController in) {
 		Move.rc = in;
@@ -67,57 +67,37 @@ public class Move {
 	 */
 	static MapLocation last;
 	static public void tryMove(MapLocation m) {
-		rc.setIndicatorString(0, "Trying to bug: should not see this.");
 		if (m.equals(rc.getLocation())) {
-			rc.setIndicatorString(0, "Already at location.");
 			return;
 		}
 		try {
-			//if (!rc.isCoreReady()) return;
+			if (!rc.isCoreReady()) return;
 			MapLocation ml = rc.getLocation();
-			if (!set || !m.equals(last) || count > 3) { //  || rand.nextDouble() > .90
+			if (!set || !m.equals(last)) { //  || rand.nextDouble() > .90
 				last = m;
 				set = true;
 				mb.reset();
 				mb.setTargetLocation(new Point(m.x, m.y));
 				mb.start = new Point(ml.x,ml.y);
-				if (count > 3) {
-					//robot avoid for like 10 rounds
-					mb.avoid = 10;
-					count = 0;
-				}
-				
-			}
-			if (!rc.isCoreReady()) {
-				rc.setIndicatorString(0, "");
-				return;
+				mb.reverse = !mb.reverse;
 			}
 			// try using bugging system
 			Point p = mb.nextMove();
-			
 			if (p!=null) {
 				MapLocation loc = new MapLocation(p.x, p.y);
 				Direction dir = ml.directionTo(loc);
 				if (rc.canMove(dir)) {
-					rc.setIndicatorString(0,"Bug success " + dir);
-					mb.avoid--;
 					rc.move(dir);
 				} else {
-					rc.setIndicatorString(0,"Tried to move: " + dir);
-					mb.avoid++;
-					count++;
-					mb.closest = null;
+					//mb.closest = null;
 				}
-			} else {
-				rc.setIndicatorString(0,"Bugger returned null.");
 			}
-			
 		} catch (Exception e) {
 			System.out.println("Error attempting bugging");
 			e.printStackTrace();
 		}
 	}
-	
+
 
 
 	static int directionToInt(Direction d) {

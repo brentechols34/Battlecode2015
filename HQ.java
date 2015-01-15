@@ -164,6 +164,10 @@ public class HQ {
 		if (timeout > 0) {
 			rc.broadcast(667, timeout - 1);
 		}
+		int retarget_cooldown = rc.readBroadcast(69);
+		if (retarget_cooldown > 0) {
+			rc.broadcast(69, retarget_cooldown - 1);
+		}
 	}
 
 	static void performUnitCount() throws GameActionException {
