@@ -109,8 +109,8 @@ public class Beaver {
 					}
 					buildStuff();
 					defaultMove();
-					rc.yield();
 				}
+				rc.yield();
 			} catch (Exception e) {
 				System.out.println("Beaver Exception");
 				e.printStackTrace();
@@ -150,20 +150,18 @@ public class Beaver {
 
 	public static Direction findSpot() throws GameActionException {
 		double bestFound = rc.senseOre(myLoc);
-		Direction bestDir = Direction.NONE;
-		double tempOre;
-		for (Direction d : directions) {
-			MapLocation potential = myLoc.add(d);
-			tempOre = rc.senseOre(potential);
-			RobotInfo atLoc = rc.senseRobotAtLocation(potential);
-			if (tempOre > bestFound
-					&& (atLoc == null)
-					|| (tempOre == bestFound && (rand.nextBoolean() || bestDir == Direction.NONE))) {
-				bestFound = tempOre;
-				bestDir = d;
-			}
+		Direction[] counts = new Direction[9];
+		counts[0] = Direction.NONE;
+		int count = 1;
+		for (int i = 1; i < 8; i++) {
+			double oreHere = rc.senseOre(myLoc.add(directions[i]));
+			if (bestFound < oreHere) {
+				count = 1;
+				counts[0] = directions[i];
+				bestFound = oreHere;
+			} else if (bestFound == oreHere) counts[count++] = directions[i];
 		}
-		return bestDir;
+		return counts[(int) (count * rand.nextDouble())];
 	}
 
 	static void buildStuff() throws GameActionException {

@@ -83,6 +83,7 @@ public class B_Turtle implements Behavior {
 			}
 		} catch (Exception e) {
 			System.out.println("Tank Tutle action Error");
+			e.printStackTrace();
 		}
 	}
 
@@ -102,19 +103,22 @@ public class B_Turtle implements Behavior {
 					Move.tryMove(myLoc.directionTo(nearest));
 					return;
 				}
-			}
-			int currentVersion = rc.readBroadcast(versionChannel);
-			if (currentVersion > pathCount || panther == null) { //if the path has been updated
-				pathCount = currentVersion;
-				panther = new PathMove(rc, rallyBaseChannel+1, rallyLength, (panther==null)?0:panther.getCount());
-			}
-			if (panther.amAFailure) { //if I cannot path effectively, try to bug to the rally
-				Move.tryMove(rally);
 			} else {
-				panther.attemptMove(); //attempt to move
-			}
-			if (panther.finished) {
-				madeItToRally = true; //check if I made it to the goal
+				int currentVersion = rc.readBroadcast(versionChannel);
+				if (currentVersion > pathCount || panther == null) { //if the path has been updated
+					pathCount = currentVersion;
+					panther = new PathMove(rc, rallyBaseChannel+1, rallyLength, (panther==null)?0:panther.getCount());
+				}
+				if (panther.amAFailure) { //if I cannot path effectively, try to bug to the rally
+					Move.tryMove(rally);
+				} else {
+					panther.attemptMove();
+					//panther.attemptMove(); //attempt to move
+				}
+				if (panther.finished) {
+					rc.setIndicatorString(0,"Successfully rallied");
+					madeItToRally = true; //check if I made it to the goal
+				}
 			}
 		}
 	}
@@ -147,7 +151,7 @@ public class B_Turtle implements Behavior {
 	}
 
 	public void attackMove() throws GameActionException {
-		RobotInfo[] allies = rc.senseNearbyRobots(nearest, 40, rc.getTeam());
+		RobotInfo[] allies = rc.senseNearbyRobots(nearest, 37, rc.getTeam());
 		MapLocation myLoc = rc.getLocation();
 		if (enemies.length > 0){
 			if (allies.length < 7) {

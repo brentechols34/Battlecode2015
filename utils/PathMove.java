@@ -3,6 +3,8 @@ package team163.utils;
 import battlecode.common.GameActionException;
 import battlecode.common.MapLocation;
 import battlecode.common.RobotController;
+import battlecode.common.RobotInfo;
+import battlecode.common.RobotType;
 import battlecode.common.TerrainTile;
 
 public class PathMove {
@@ -20,9 +22,14 @@ public class PathMove {
 		this.pathLen = pathLen;
 		finished = false;
 		amAFailure=false;
+		currentNode = 0;
 		try {
+			int x = rc.readBroadcast(pathBaseChannel);
+			int y = rc.readBroadcast(pathBaseChannel + 1);
+			currentStep = new MapLocation(x,y);
 			findPath(Math.max(1,previousCount));
 		} catch (GameActionException e) {
+			e.printStackTrace();
 			System.out.println("PathMove: failed to find initialize pathing.");
 		}
 	}
@@ -50,7 +57,7 @@ public class PathMove {
 		findPath(1);
 	}
 
-	public boolean isObsBetween(MapLocation myLoc, MapLocation dest) {
+	public boolean isObsBetween(MapLocation myLoc, MapLocation dest) throws GameActionException {
 		Point p1 = new Point(myLoc.x, myLoc.y);
 		Point p2 = new Point(dest.x, dest.y);
 		if (p1.distance(p2) < 2) {
@@ -74,7 +81,7 @@ public class PathMove {
 			if (x1 == x2 && y1 == y2) {
 				break;
 			}
-			if (rc.senseTerrainTile(new MapLocation(x1, y1)) == TerrainTile.VOID) {
+			if (impassable(x1,y1)) {
 				return true;
 			}
 			if (e2 < dx) {
@@ -84,15 +91,35 @@ public class PathMove {
 			if (x1 == x2 && y1 == y2) {
 				break;
 			}
-			if (rc.senseTerrainTile(new MapLocation(x1, y1)) == TerrainTile.VOID) {
+			if (impassable(x1,y1)) {
 				return true;
 			}
 		}
 		return false;
 	}
+	
+	public boolean impassable(int x, int y) throws GameActionException {
+		MapLocation m = new MapLocation(x,y);
+		if (rc.canSenseLocation(m)) {
+			RobotInfo ri = rc.senseRobotAtLocation(m);
+			if (ri != null && isStationary(ri.type)) return true;
+		}
+		TerrainTile tt = rc.senseTerrainTile(m);
+		if (tt != TerrainTile.NORMAL) return true;
+		
+		return false;
+	}
 
-	public boolean stillGood() {
+	public boolean stillGood() throws GameActionException {
 		return !isObsBetween(rc.getLocation(), currentStep);
+	}
+	
+	static boolean isStationary(RobotType rt) {
+		return (rt != null && rt == RobotType.AEROSPACELAB
+				|| rt == RobotType.BARRACKS || rt == RobotType.HELIPAD
+				|| rt == RobotType.HQ || rt == RobotType.MINERFACTORY
+				|| rt == RobotType.SUPPLYDEPOT || rt == RobotType.TANKFACTORY
+				|| rt == RobotType.TECHNOLOGYINSTITUTE || rt == RobotType.TOWER || rt == RobotType.TRAININGFIELD);
 	}
 
 	public void attemptMove() throws GameActionException {
@@ -119,11 +146,8 @@ public class PathMove {
 			int y = rc.readBroadcast(pathBaseChannel + currentNode * 2 + 1);       
 			currentStep = new MapLocation(x,y);
 		}
-		if (!finished) {
-			Move.tryMove(myLoc.directionTo(currentStep)); //move toward
-		} else {
-			Move.tryMove(myLoc.directionTo(currentStep));
-		}
+		if (!amAFailure) Move.tryMove(myLoc.directionTo(currentStep));
+		else { Move.tryMove(currentStep); }
 	}
 
 }

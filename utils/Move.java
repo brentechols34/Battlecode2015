@@ -48,7 +48,6 @@ public class Move {
 			if (offsetIndex < 5 && rc.isCoreReady()) {
 				rc.move(directions[(dirint + offsets[offsetIndex] + 8) % 8]);
 			}
-			last = null;
 		} catch (Exception e) {
 			System.out.println("Error in tryMove");
 		}
@@ -68,32 +67,51 @@ public class Move {
 	 */
 	static MapLocation last;
 	static public void tryMove(MapLocation m) {
+		rc.setIndicatorString(0, "Trying to bug: should not see this.");
+		if (m.equals(rc.getLocation())) {
+			rc.setIndicatorString(0, "Already at location.");
+			return;
+		}
 		try {
 			//if (!rc.isCoreReady()) return;
 			MapLocation ml = rc.getLocation();
-			if (!set || !m.equals(last) || rand.nextDouble() > .80) {
+			if (!set || !m.equals(last) || count > 3) { //  || rand.nextDouble() > .90
 				last = m;
 				set = true;
 				mb.reset();
 				mb.setTargetLocation(new Point(m.x, m.y));
 				mb.start = new Point(ml.x,ml.y);
+				if (count > 3) {
+					//robot avoid for like 10 rounds
+					mb.avoid = 10;
+					count = 0;
+				}
+				
 			}
-			if (!rc.isCoreReady()) return;
+			if (!rc.isCoreReady()) {
+				rc.setIndicatorString(0, "");
+				return;
+			}
 			// try using bugging system
 			Point p = mb.nextMove();
+			
 			if (p!=null) {
 				MapLocation loc = new MapLocation(p.x, p.y);
-				Direction dir = rc.getLocation().directionTo(loc);
+				Direction dir = ml.directionTo(loc);
 				if (rc.canMove(dir)) {
+					rc.setIndicatorString(0,"Bug success " + dir);
+					mb.avoid--;
 					rc.move(dir);
 				} else {
-					mb.softReset();
+					rc.setIndicatorString(0,"Tried to move: " + dir);
+					mb.avoid++;
+					count++;
+					mb.closest = null;
 				}
 			} else {
-				mb.reset();
-				mb.setTargetLocation(new Point(m.x, m.y));
-				mb.start = new Point(ml.x,ml.y);
+				rc.setIndicatorString(0,"Bugger returned null.");
 			}
+			
 		} catch (Exception e) {
 			System.out.println("Error attempting bugging");
 			e.printStackTrace();

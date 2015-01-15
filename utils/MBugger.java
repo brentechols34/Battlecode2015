@@ -14,10 +14,9 @@ public class MBugger {
 
 	public Point start;
 	public Point finish;
-	private int moveCount;
 	public Point closest;
 	public boolean reverse;
-	private Random rand;
+	public int avoid;
 
 	/**
 	 * Code in the following range needs to be modified for specific purposes
@@ -28,19 +27,18 @@ public class MBugger {
 	RobotController rc;
 	int width;
 	int height;
-
+	Random rand;
+	
 	public MBugger(RobotController rc) {
 		map = new boolean[120][120];
 		for (boolean[] i : map)
 			Arrays.fill(i, true);
-
+		rand = new Random(rc.getID());
 		this.closest = null;
 		reverse = true;
-		moveCount = 0;
 		this.rc = rc;
 		this.width = 120;
 		this.height = 120;
-		rand = new Random(rc.getID());
 	}
 
 	public void setWidth(int width) {
@@ -64,7 +62,7 @@ public class MBugger {
 		}
 		return null;
 	}
-	
+
 
 
 	/**
@@ -74,18 +72,20 @@ public class MBugger {
 	 */
 	private boolean isTraversable(int x, int y) {
 		try {
-			MapLocation next = new MapLocation(x, y);
+			
 
 			// check if off the map
 			if (isOOB(x, y)) {
 				return false;
 			}
 			
-			RobotInfo ri = rc.senseRobotAtLocation(next);
-			if (ri!=null) { //&& isStationary(ri.type)
-				return false;
+			MapLocation next = new MapLocation(x, y);
+			if (rc.canSenseLocation(next)) {
+				RobotInfo ri = rc.senseRobotAtLocation(next);
+				if (ri!=null && (isStationary(ri.type)||avoid>0)) { // 
+					return false;
+				}
 			}
-			
 
 			// if it is an obstacle add obstacle and update map
 			if (rc.senseTerrainTile(next) != TerrainTile.NORMAL) {
@@ -98,7 +98,7 @@ public class MBugger {
 		}
 		return false;
 	}
-	
+
 	static boolean isStationary(RobotType rt) {
 		return (rt == RobotType.AEROSPACELAB || rt == RobotType.BARRACKS || rt == RobotType.HELIPAD || rt == RobotType.HQ ||  rt == RobotType.MINERFACTORY || rt == RobotType.SUPPLYDEPOT || rt == RobotType.TANKFACTORY || rt == RobotType.TECHNOLOGYINSTITUTE || rt == RobotType.TOWER || rt == RobotType.TRAININGFIELD);
 	}
@@ -117,17 +117,15 @@ public class MBugger {
 		this.finish = finish;
 		closest = start;
 	}
-	
+
 	public void softReset() {
 		closest = null;
-		moveCount = 0;
 	}
 
 	public void reset() {
 		closest = null;
 		start = null;
 		finish = null;
-		moveCount = 0;
 	}
 
 	private double isOnLine(Point p) {
@@ -155,8 +153,7 @@ public class MBugger {
 	 * @return the next position to move to.
 	 */
 	public Point nextMove() {
-		try {
-			moveCount++;
+		try {	
 			Point me = getCurrentPosn();
 			Point potential;
 			if (isOnLine(me) < 3
@@ -176,9 +173,10 @@ public class MBugger {
 		// if it gets here, there are major problems.
 		// just in case, we'll modify the move count.
 		reverse = !reverse;
-		moveCount--;
 		closest = null;
-		return null;
+		start = getCurrentPosn();
+		
+		return followLine(start);
 	}
 
 	private boolean recursed;
@@ -202,7 +200,10 @@ public class MBugger {
 
 		}
 		if (recursed) {
-			return null;
+			start = getCurrentPosn();
+			closest = start;
+			reverse = !reverse;
+			return followLine(start);
 		}
 		recursed = true;
 		reverse = !reverse;
@@ -219,12 +220,12 @@ public class MBugger {
 		double dis;
 		for (int i = 0; i < 8; i++) {
 			potential = moveTo(me, i);
-			
+
 			if(potential == null) {
 				System.out.println("\n\npotential was null\n\n");
 			}
 			dis = isOnLine(potential);
-			if (dis < 2
+			if (dis < 3
 					&& finish.distance(potential) < me.distance(finish)) {
 				if (isTraversable(potential.x, potential.y)) {
 					if ((int) dis != 0) {
@@ -259,18 +260,6 @@ public class MBugger {
 			return new Point(p.x - 1, p.y - 1);
 		default:
 			return null;
-		}
-	}
-
-	public int getMoveCount() {
-		return moveCount;
-	}
-
-	public double pathRatio() {
-		if (moveCount == 0) {
-			return 0;
-		} else {
-			return ((double) moveCount) / Point.manhattan(start, finish);
 		}
 	}
 
