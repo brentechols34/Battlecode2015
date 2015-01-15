@@ -9,75 +9,66 @@ import battlecode.common.TerrainTile;
 
 public class PathMove {
 	private int currentNode;
-	private MapLocation currentStep;
-	private final int pathBaseChannel;
-	private final int pathLen;
 	private final RobotController rc;
 	public boolean finished;
 	public boolean amAFailure;
-	
-	public PathMove(RobotController rc, int pathBaseChannel, int pathLen, int previousCount) {
-		this.pathBaseChannel = pathBaseChannel;
+
+	public final SimplePather sp;
+	public MapLocation[] path;
+	public MapLocation goal;
+
+
+
+	public PathMove(RobotController rc) {
 		this.rc = rc;
-		this.pathLen = pathLen;
+		sp = new SimplePather(rc);
 		finished = false;
 		amAFailure=false;
 		currentNode = 0;
-		try {
-			int x = rc.readBroadcast(pathBaseChannel);
-			int y = rc.readBroadcast(pathBaseChannel + 1);
-			currentStep = new MapLocation(x,y);
-			findPath(Math.max(1,previousCount));
-		} catch (GameActionException e) {
-			e.printStackTrace();
-			System.out.println("PathMove: failed to find initialize pathing.");
-		}
 	}
-	
+
 	public int getCount() {
 		return currentNode;
 	}
 
-	public void findPath(int prev) throws GameActionException {
-		MapLocation myLoc = rc.getLocation();
-		boolean good = false;
-		for (int i = prev; i < pathLen; i++) {
-			int x = rc.readBroadcast(pathBaseChannel + i * 2);
-			int y = rc.readBroadcast(pathBaseChannel + i * 2 + 1);
-			MapLocation temp = new MapLocation(x,y);
-			if (!isObsBetween(myLoc, temp)) {
-				currentNode = i;
-				currentStep = temp;
-				good = true;
+	public void findPath(int prev) {
+		try {
+			MapLocation myLoc = rc.getLocation();
+			boolean good = false;
+			for (int i = prev; i < path.length; i++) {
+				MapLocation temp = path[i];
+				if (!isObsBetween(myLoc, temp)) {
+					currentNode = i;
+					good = true;
+				}
 			}
+			if (!good) refindPath();
+		} catch (GameActionException e) {
+			e.printStackTrace();
 		}
-		if (!good) refindPath();
 	}
-	
+
 	public void refindPath() throws GameActionException {
 		MapLocation myLoc = rc.getLocation();
-		for (int i = 0; i < pathLen; i++) {
-			int x = rc.readBroadcast(pathBaseChannel + i * 2);
-			int y = rc.readBroadcast(pathBaseChannel + i * 2 + 1);
-			MapLocation temp = new MapLocation(x,y);
+		for (int i = 0; i < path.length; i++) {
+			MapLocation temp = path[i];
 			if (!isObsBetween(myLoc, temp)) {
 				currentNode = i;
-				currentStep = temp;
 				amAFailure = false;
 				return;
 			}
 		}
 		currentNode = 0;
-		int x = rc.readBroadcast(pathBaseChannel);
-		int y = rc.readBroadcast(pathBaseChannel + 1);
-		currentStep = new MapLocation(x,y);
 		amAFailure = true;
 	}
+	
+	public void givePath(MapLocation[] points) throws GameActionException {
+		this.path = points;
+		refindPath();
+	}
 
-	public boolean isObsBetween(MapLocation myLoc, MapLocation dest) throws GameActionException {
-		Point p1 = new Point(myLoc.x, myLoc.y);
-		Point p2 = new Point(dest.x, dest.y);
-		if (p1.distance(p2) < 2) {
+	public boolean isObsBetween(MapLocation p1, MapLocation p2) throws GameActionException {
+		if (p1.isAdjacentTo(p2)) {
 			return false;
 		}
 		int x1 = p1.x;
@@ -98,7 +89,7 @@ public class PathMove {
 			if (x1 == x2 && y1 == y2) {
 				break;
 			}
-			if (impassable(x1,y1)) {
+			if (impassable(new MapLocation(x1,y1))) {
 				return true;
 			}
 			if (e2 < dx) {
@@ -108,15 +99,14 @@ public class PathMove {
 			if (x1 == x2 && y1 == y2) {
 				break;
 			}
-			if (impassable(x1,y1)) {
+			if (impassable(new MapLocation(x1,y1))) {
 				return true;
 			}
 		}
 		return false;
 	}
-	
-	public boolean impassable(int x, int y) throws GameActionException {
-		MapLocation m = new MapLocation(x,y);
+
+	public boolean impassable(MapLocation m) throws GameActionException {
 		if (rc.canSenseLocation(m)) {
 			RobotInfo ri = rc.senseRobotAtLocation(m);
 			if (ri != null && isStationary(ri.type)) return true;
@@ -126,10 +116,6 @@ public class PathMove {
 		return false;
 	}
 
-	public boolean stillGood() throws GameActionException {
-		return !isObsBetween(rc.getLocation(), currentStep);
-	}
-	
 	static boolean isStationary(RobotType rt) {
 		return (rt != null && rt == RobotType.AEROSPACELAB
 				|| rt == RobotType.BARRACKS || rt == RobotType.HELIPAD
@@ -138,36 +124,40 @@ public class PathMove {
 				|| rt == RobotType.TECHNOLOGYINSTITUTE || rt == RobotType.TOWER || rt == RobotType.TRAININGFIELD);
 	}
 
+	public void setDestination(MapLocation m) throws GameActionException {
+		path = sp.pathfind(rc.getLocation(), m);
+		this.goal = m;
+		refindPath();
+		if (path == null)  System.out.println("Please why.");
+	}
+
 	public void attemptMove() throws GameActionException {
+		if (path==null) return;
 		MapLocation myLoc = rc.getLocation();
-		
+		if (currentNode>=path.length) {
+			Move.tryMove(myLoc.directionTo(path[path.length - 1]));
+			return;
+		}
+		if (impassable(path[currentNode])) {
+			rc.setIndicatorString(0, "My path had an obstacle: repathing.");
+			path = sp.pathfind(myLoc, goal);
+			findPath(currentNode);
+
+		}
+		rc.setIndicatorString(0, "Normal:" + path[currentNode].toString());
 		//Couldn't see path last time
 		//try to find it
 		if (amAFailure) {
 			refindPath();
 			if (amAFailure) { //if I still can't see path
-				Move.tryMove(currentStep); //try to bug to the start
+				Move.tryMove(path[currentNode]); //try to bug to the start
 				return;
 			}
 		}
-		//am on path or can see it 
-		if (currentNode >= pathLen-3 && !isObsBetween(myLoc,currentStep)) { //if at destination do nothing
-			currentNode = pathLen-1;
-			int x = rc.readBroadcast(pathBaseChannel + currentNode * 2);
-			int y = rc.readBroadcast(pathBaseChannel + currentNode * 2 + 1);       
-			currentStep = new MapLocation(x,y);
-			finished = true;
-		} else {
-			finished = false;
-		}
-		if (!finished && (myLoc.isAdjacentTo(currentStep) || myLoc.equals(currentStep))) { //update node
+		if (myLoc.equals(path[currentNode])) { //update node
 			currentNode++;
-			int x,y;
-			x = rc.readBroadcast(pathBaseChannel + currentNode * 2);
-			y = rc.readBroadcast(pathBaseChannel + currentNode * 2 + 1);       
-			currentStep = new MapLocation(x,y);
 		}
-		Move.tryMove(myLoc.directionTo(currentStep));
+		if (currentNode < path.length) Move.tryMove(myLoc.directionTo(path[currentNode]));
 	}
 
 }

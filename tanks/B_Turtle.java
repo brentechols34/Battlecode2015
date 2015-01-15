@@ -20,7 +20,7 @@ public class B_Turtle implements Behavior {
 	public boolean madeItToRally = false;
 	public boolean attacking;
 	boolean offPath = false;
-	PathMove2 panther = new PathMove2(rc);
+	PathMove panther = new PathMove(rc);
 
 	public void perception() {
 		try {

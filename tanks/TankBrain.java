@@ -1,6 +1,6 @@
 package team163.tanks;
 
-import team163.utils.PathMove2;
+import team163.utils.PathMove;
 import team163.utils.SimplePather;
 import battlecode.common.GameActionException;
 import battlecode.common.MapLocation;
@@ -10,11 +10,11 @@ public class TankBrain {
 	
 	private RobotController rc;
 	private MapLocation rally;
-	private PathMove2 sp;
+	private PathMove sp;
 	
 	public TankBrain(RobotController rc) {
 		this.rc = rc;
-		this.sp = new PathMove2(rc);
+		this.sp = new PathMove(rc);
 		try {
 			int x = rc.readBroadcast(50);
 			int y = rc.readBroadcast(51);
