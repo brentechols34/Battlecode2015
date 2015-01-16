@@ -10,7 +10,6 @@ import battlecode.common.*;
 import java.util.Random;
 
 import team163.logistics.PathBeaver;
-import team163.utils.Point;
 import team163.utils.Spawn;
 import team163.utils.Supply;
 

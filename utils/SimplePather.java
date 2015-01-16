@@ -58,7 +58,8 @@ public class SimplePather {
 
 	/**
 	 * Finds a path from some start to some finish.
-	 *
+	 * This give absolutely no guarantees about path optimality, in fact, I reasonably 
+	 * guarantee that this will tend not to do that.
 	 * @param start
 	 * @param finish
 	 * @return An array of MapLocations representing a path that does not intersect
@@ -83,11 +84,12 @@ public class SimplePather {
 		}
 		return null;
 	}
-	public MapLocation offsetMapLocation(MapLocation p) {
+
+	public MapLocation offsetMapLocation(MapLocation p) { //centers this point
 		MapLocation t = new MapLocation(p.x - myHQ.x + offsetMyHQ.x, p.y- myHQ.y + offsetMyHQ.y);
 		return t;
 	}
-	public MapLocation unOffsetMapLocation(MapLocation p) {
+	public MapLocation unOffsetMapLocation(MapLocation p) { //returns this point to the real coordinates
 		return new MapLocation(myHQ.x - offsetMyHQ.x + p.x, myHQ.y - offsetMyHQ.y + p.y);
 	}
 
@@ -103,9 +105,9 @@ public class SimplePather {
 		int dir = 0;
 		do {
 			int next = ((prev[current.x][current.y]+3)&7)+1;
-			if (dir == 0 || next != dir) {
+			if (dir == 0 || next != dir) { //this minimizes the path, for efficient radio-ing
 				path_temp[count++] = unOffsetMapLocation(current);
-			    dir = next;
+				dir = next;
 			}
 			current = moveTo(current, next);
 		} while (prev[current.x][current.y] != 0);
@@ -180,17 +182,21 @@ public class SimplePather {
 		}
 	}
 
-	public boolean impassable(MapLocation m) throws GameActionException {
-		if (rc.canSenseLocation(m)) {
-			RobotInfo ri = rc.senseRobotAtLocation(m);
-			if (ri != null && isStationary(ri.type)) return true;
+	public boolean impassable(MapLocation m) {
+		try {
+			TerrainTile tt = rc.senseTerrainTile(m);
+			if (tt == TerrainTile.VOID || tt == TerrainTile.OFF_MAP) return true;
+			if (rc.canSenseLocation(m)) {
+				RobotInfo ri = rc.senseRobotAtLocation(m);
+				if (ri != null && isStationary(ri.type)) return true;
+			}
+			return false;
+		} catch(GameActionException e) {
+			return impassable(m);
 		}
-		TerrainTile tt = rc.senseTerrainTile(m);
-		if (tt == TerrainTile.VOID) return true;
-		return false;
 	}
-	
-	static boolean isStationary(RobotType rt) {
+
+	public static boolean isStationary(RobotType rt) {
 		return (rt != null && rt == RobotType.AEROSPACELAB
 				|| rt == RobotType.BARRACKS || rt == RobotType.HELIPAD
 				|| rt == RobotType.HQ || rt == RobotType.MINERFACTORY
@@ -208,4 +214,28 @@ public class SimplePather {
 		q[i] = p;
 		index++;
 	}
+
+	/**
+	 * This will decompress a path, adding in all the points between
+	 * It's relatively expensive so use only when you think units will be off the path
+	 * So that PathMove can get them back on using a raycast
+	 * @param compressed
+	 * @return
+	 */
+	public static MapLocation[] decompressPath(MapLocation[] compressed) {
+		MapLocation[] buffered = new MapLocation[200];
+		MapLocation next = compressed[0];
+		buffered[0] = next;
+		int count = 1;
+		int compressed_pointer = 1;
+		while (!next.equals(compressed[compressed.length-1]) && count < buffered.length) {
+			next.add(compressed[compressed_pointer-1].directionTo(compressed[compressed_pointer]));
+			if (next.equals(compressed[compressed_pointer])) compressed_pointer++;
+			buffered[count++] = next;
+		}
+		MapLocation[] actual = new MapLocation[count];
+		System.arraycopy(buffered, 0, actual, 0, count);
+		return actual;
+	}
+
 }

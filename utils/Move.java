@@ -77,19 +77,17 @@ public class Move {
 				last = m;
 				set = true;
 				mb.reset();
-				mb.setTargetLocation(new Point(m.x, m.y));
-				mb.start = new Point(ml.x,ml.y);
-				mb.reverse = !mb.reverse;
+				mb.setTargetLocation(m);
+				mb.start = ml;
 			}
 			// try using bugging system
-			Point p = mb.nextMove();
+			MapLocation p = mb.nextMove();
 			if (p!=null) {
-				MapLocation loc = new MapLocation(p.x, p.y);
-				Direction dir = ml.directionTo(loc);
+				Direction dir = ml.directionTo(p);
 				if (rc.canMove(dir)) {
 					rc.move(dir);
 				} else {
-					//mb.closest = null;
+					mb.closest = null;
 				}
 			}
 		} catch (Exception e) {

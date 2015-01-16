@@ -50,6 +50,24 @@ public class B_Turtle implements Behavior {
 		enemies = rc.senseNearbyRobots(Tank.range, Tank.team.opponent());
 
 	}
+	
+	/**
+	 * Loads the path specified by pathCount from the radio
+	 * @param pathCount
+	 * @throws GameActionException
+	 */
+	public void loadPath(int pathCount) throws GameActionException {
+		int channel = PathBeaver.getPathChannel(pathCount);
+		int length = rc.readBroadcast(channel);
+		MapLocation[] path = new MapLocation[length];
+		channel++;
+		for (int i = 0; i < length * 2; i++) {
+			int x = rc.readBroadcast(channel + i*2);
+			int y = rc.readBroadcast(channel + i*2+1);
+			path[i]=new MapLocation(x,y);
+		}
+		panther.givePath(path);
+	}
 
 	public void calculation() {
 		double max = rc.getLocation().distanceSquaredTo(nearest);

@@ -79,19 +79,17 @@ public class Miner {
 
 	static boolean goingToBest;
 	static void defaultMove() throws GameActionException {
-		Direction d = findSpot();
-		if (rc.senseOre(rc.getLocation().add(d))<3) {
-			goingToBest = true;
-		}
-		if (oreHere >= bestVal) goingToBest = false;
-		if ((oreHere <= 3 && bestVal > 3) || goingToBest) {
-			Move.tryMove(bestLoc);
-		} else if (rc.isCoreReady()) {
-			if (oreHere > 3) {
-				if (rc.canMine()) {
-					MineHere();
-				}
-			} else if (rc.canMove(d) && rc.isCoreReady()) {
+		rc.setIndicatorString(0, "");
+		if (rc.isCoreReady() && rc.canMine() && oreHere > 3) {
+			rc.setIndicatorString(0, "Mining");
+			MineHere();
+		} else if (oreHere <= 3) {
+			Direction d = findSpot();
+			if (bestVal > 3 && rc.senseOre(myLoc.add(d)) < 3) {
+				rc.setIndicatorString(0, "Moving to best: " + bestLoc);
+				Move.tryMove(bestLoc);
+			} else if (rc.isCoreReady() && rc.canMove(d)) {
+				rc.setIndicatorString(0, "Moving nearby: " + d);
 				rc.move(d);
 			}
 		}
