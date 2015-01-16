@@ -39,11 +39,11 @@ public class Beaver {
 
 	// max counts of buildings
 	static int maxBarracks = 1;
-	static int maxHelipad = 0;
+	static int maxHelipad = 1;
 	static int maxMinerfactory = 2;
 	static int maxTankfactory = 7;
 	static int maxSupply = 5;
-	static int maxAerospace = 0;
+	static int maxAerospace = 4;
 
 	public static void run(RobotController rc) {
 		Beaver.rc = rc;
