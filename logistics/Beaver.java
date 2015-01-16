@@ -40,8 +40,8 @@ public class Beaver {
 	// max counts of buildings
 	static int maxBarracks = 1;
 	static int maxHelipad = 0;
-	static int maxMinerfactory = 1;
-	static int maxTankfactory = 5;
+	static int maxMinerfactory = 2;
+	static int maxTankfactory = 7;
 	static int maxSupply = 5;
 	static int maxAerospace = 0;
 
@@ -68,7 +68,7 @@ public class Beaver {
 				SupplyBeaver.run(rc);
 			}
 		} catch (Exception e) {
-			System.out.println("Tried to be a path beaver, but I failed");
+			System.out.println("Tried to be a path or supply beaver, but I failed");
 		}
 
 		while (true) {
@@ -184,7 +184,7 @@ public class Beaver {
 			};
 			int[] maxCounts = new int[]{maxBarracks, maxHelipad,
 					maxMinerfactory, maxTankfactory, maxSupply, maxAerospace};
-			int[] priorityOffsets = new int[]{1, 1, 2,
+			int[] priorityOffsets = new int[]{1, 1, 3,
 					(counts[0] > 0) ? 1 : -1000, 3, (counts[1] > 0) ? 1 : -1000};
 			boolean oneGood = false;
 			for (int i = 0; i < priorityOffsets.length; i++) {
