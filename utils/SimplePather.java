@@ -46,14 +46,13 @@ public class SimplePather {
 		this.rc = rc;
 		this.myHQ = rc.senseHQLocation();
 		this.enemyHQ = rc.senseEnemyHQLocation();
-
 		dx = enemyHQ.x - myHQ.x;
 		dy = enemyHQ.y - myHQ.y;
 		offsetMyHQ = new MapLocation(120 - dx, 120 - dy);
 		offsetEnemyHQ = new MapLocation(120 + dx, 120 + dx);
 		prev = new int[360][360];
-		q = new MapLocation[1000];
-		costs = new float[1000];
+		q = new MapLocation[2000];
+		costs = new float[2000];
 	}
 	
 
@@ -135,11 +134,9 @@ public class SimplePather {
 		if (impassable(unOffsetMapLocation(n))) return;
 		final int nx = n.x;
 		final int ny = n.y;
-        //final float potential_cost = distance(parent, n); //cost[parent.x][parent.y] + 
-        if (prev[nx][ny] == 0) { // || cost[nx][ny] > potential_cost
-            add(n, distance(n, dest) * 1.5f); // || cost[nx][ny] > potential_cost
+        if (prev[nx][ny] == 0) {
+            add(n, distance(n, dest) * 1.5f);
             prev[nx][ny] = dir;
-//            cost[nx][ny] = potential_cost;
         }
 	}
 
@@ -188,11 +185,11 @@ public class SimplePather {
 	public boolean impassable(MapLocation m) {
 		try {
 			TerrainTile tt = rc.senseTerrainTile(m);
+			if (tt == TerrainTile.VOID || tt == TerrainTile.OFF_MAP) return true;
 			if (rc.canSenseLocation(m)) {
 				RobotInfo ri = rc.senseRobotAtLocation(m);
 				if (ri != null && isStationary(ri.type)) return true;
 			}
-			if (tt == TerrainTile.VOID || tt == TerrainTile.OFF_MAP) return true;
 			return false;
 		} catch(GameActionException e) {
 			return impassable(m);
