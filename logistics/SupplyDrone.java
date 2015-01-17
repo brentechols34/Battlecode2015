@@ -36,7 +36,8 @@ public class SupplyDrone {
     static MapLocation travelLoc;
     static boolean wasReturning = false;
 
-    static int myHead;
+    static int myHead = -1;
+    static int turnsWaited = 0;
 
     public static void run(RobotController con, int offset) {
         rc = con;
@@ -51,7 +52,8 @@ public class SupplyDrone {
                 rc.broadcast(CHANNELS.SUPPLY_DRONE1.getValue() - 1 + offset, Clock.getRoundNum());
 
                 myLoc = rc.getLocation();
-                rc.setIndicatorString(0, "I am supply beaver | head: " + rc.readBroadcast(196) + " tail: " + rc.readBroadcast(197));
+                rc.setIndicatorString(0, "I am supply beaver | head: " + myHead + " tail: " + rc.readBroadcast(197));
+                rc.setIndicatorString(2, "Actual head: " + rc.readBroadcast(196) + " tail: " + rc.readBroadcast(197));
 
                 //broadcast our updated position
                 rc.broadcast(198, myLoc.x);
@@ -136,12 +138,15 @@ public class SupplyDrone {
         if (myLoc.distanceSquaredTo(dest) < GameConstants.SUPPLY_TRANSFER_RADIUS_SQUARED && Clock.getBytecodeNum() < 4000) {
             RobotInfo info = rc.senseRobotAtLocation(dest);
             if (info == null) {
-                //System.out.println("Supply request invalid, moving on");
-                rc.broadcast(196, (head == 298) ? 200 : (head + 2));
+                turnsWaited++;
+            } else {
+                rc.transferSupplies((int) Math.min(rc.getSupplyLevel() - 500, 2000), dest);
+                completeDelivery();
             }
 
-            rc.transferSupplies((int) Math.min(rc.getSupplyLevel() - 500, 2000), dest);
-            myHead = -1;
+            if (turnsWaited == 3) {
+                completeDelivery();
+            }
         }
 
         usePathMove(dest);
@@ -150,6 +155,11 @@ public class SupplyDrone {
     static void claimDelivery () throws GameActionException {
         myHead = rc.readBroadcast(196);
         rc.broadcast(196, (myHead == 298) ? 200 : (myHead + 2));
+    }
+
+    static void completeDelivery () {
+        myHead = -1;
+        turnsWaited = 0;
     }
 
     static void usePathMove (MapLocation dest) throws GameActionException {
