@@ -15,6 +15,7 @@ public class Drone {
     static MapLocation hq;
     static MapLocation enemyHQ;
     static boolean right; //turn right
+    static boolean panic = false;
 
     static Direction[] directions = {Direction.NORTH, Direction.NORTH_EAST,
         Direction.EAST, Direction.SOUTH_EAST, Direction.SOUTH,
@@ -40,7 +41,10 @@ public class Drone {
                 /* perform round */
                 mood.perception();
                 mood.calculation();
-                mood.action();
+                if (!panic) {
+                    mood.action();
+                }
+                mood.panicAlert();
 
                 /* end round */
                 Drone.rc.yield();
