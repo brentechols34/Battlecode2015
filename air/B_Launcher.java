@@ -18,10 +18,12 @@ public class B_Launcher implements Behavior {
     RobotInfo[] enemies;
     MapLocation nearest;
     MapLocation target;
+    MapLocation myLoc = Launcher.rc.getLocation();
     MapLocation previous = Launcher.rc.getLocation();
     Random rand = new Random();
     boolean madeItToRally = false;
     public boolean attacking;
+    boolean nearTower = false;
     PathMove pm = new PathMove(Launcher.rc);
     int xRally;
     int yRally;
@@ -46,6 +48,7 @@ public class B_Launcher implements Behavior {
             allies = rc.senseNearbyRobots(24, Launcher.team);
             enemies = rc.senseNearbyRobots(24, Launcher.team.opponent());
             nearest = Launcher.enemyHQ;
+            myLoc = rc.getLocation();
             xGoal = rc.readBroadcast(67);
             yGoal = rc.readBroadcast(68);
             if (rc.readBroadcast(66) == 1) {
@@ -94,27 +97,45 @@ public class B_Launcher implements Behavior {
         }
     }
 
+    private void launchThemAll() throws GameActionException {
+        Direction dir = rc.getLocation().directionTo(nearest);
+        for (int j = 0; j < 5; j++) {
+            if (rc.getMissileCount() > 0) {
+                for (int i = 0; i < 8; i++) {
+                    if (rc.canLaunch(dir)) {
+                        if (rc.isWeaponReady()) {
+                            rc.launchMissile(dir);
+                        }
+                        break;
+                    } else {
+                        dir.rotateLeft();
+                    }
+                }
+            }
+        }
+    }
+
     public void action() {
         try {
             if (enemies.length > 0) {
-                Direction dir = rc.getLocation().directionTo(nearest);
-                while (rc.isWeaponReady() && rc.getMissileCount() > 0) {
-                    for (int i = 0; i < 8; i++) {
-                        if (rc.canLaunch(dir)) {
-                            rc.launchMissile(dir);
-                            break;
-                        } else {
-                            dir.rotateLeft();
-                        }
-                    }
-                }
+                launchThemAll();
                 if (wasHurt) {
                     Move.tryMove(rc.getLocation().directionTo(nearest)
                             .opposite());
                 }
             } else {
-                previous = target;
-                pm.attemptMove();
+                if (!Move.inTowerRange(myLoc, rc.senseEnemyTowerLocations(), 35)) {
+                    nearTower = false;
+                } else {
+                    nearTower = true;
+                }
+                if (nearTower) {
+                    launchThemAll();
+                } else {
+                    previous = target;
+                    pm.attemptMove();
+
+                }
             }
         } catch (Exception e) {
             System.out.println("Launcher action Error");

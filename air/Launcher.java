@@ -43,10 +43,10 @@ public class Launcher {
 				/* perform round */
 				mood.perception();
 				mood.calculation();
-				if(!panic) {
+				//if(!panic) {
 				mood.action();
-				}
-				mood.panicAlert();
+				//}
+				//mood.panicAlert();
 				
 				/* end round */
 				Launcher.rc.yield();

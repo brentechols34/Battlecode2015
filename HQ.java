@@ -251,7 +251,7 @@ public class HQ {
 
 	static void decrees() throws GameActionException {
 		/* if more than 60 units execute order 66 (full out attack) */
-		if ((counts[0] + counts[3] + counts[4] + counts[12]) > 30 && rc.readBroadcast(66) == 0) { //soldier + drone + tanks
+		if ((counts[0] + counts[3] + counts[4] + counts[12]) > 15 && rc.readBroadcast(66) == 0) { //soldier + drone + tanks
 			rc.broadcast(66, 1);
 
 			//            rc.broadcast(73, rallyX);
@@ -260,7 +260,7 @@ public class HQ {
 			//            rc.broadcast(76,rc.readBroadcast(68));
 		}
 
-		if ((counts[0] + counts[3] + counts[4] + counts[12]) < 15) {
+		if ((counts[0] + counts[3] + counts[4] + counts[12]) < 5) {
 			rc.broadcast(66, 0);
 		}
 	}
