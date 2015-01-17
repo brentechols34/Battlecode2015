@@ -108,7 +108,6 @@ public class B_Kite implements Behavior {
                 if (Drone.rc.isWeaponReady()
                         && Drone.rc.canAttackLocation(nearest)) {
                     //check if near attack point
-
                     Drone.rc.attackLocation(nearest);
                     Drone.rc.broadcast(825, nearest.x);
                     Drone.rc.broadcast(826, nearest.y);
@@ -138,7 +137,6 @@ public class B_Kite implements Behavior {
         try {
             int panicX = Drone.rc.readBroadcast(911);
             if (panicX != 0) { //try to assist
-                Drone.rc.setIndicatorDot(Drone.rc.getLocation(), 2, 2, 2);
                 if (enemies.length > 0 && Drone.rc.isWeaponReady()
                         && Drone.rc.canAttackLocation(nearest)) {
                     Drone.rc.attackLocation(nearest);

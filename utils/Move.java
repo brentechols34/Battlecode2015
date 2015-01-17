@@ -116,8 +116,8 @@ public class Move {
         }
         return false;
     }
-    
-        /**
+
+    /**
      * Test in range of incoming objects (uses hard set 27 sq at the moment)
      *
      * @param m location to check
@@ -135,7 +135,6 @@ public class Move {
         return false;
     }
 
-
     /**
      * Does not take into account walls and trys to kite around towers and stuff
      *
@@ -147,6 +146,9 @@ public class Move {
             Direction dir = pre;
             MapLocation myLoc = rc.getLocation();
             MapLocation next = myLoc.add(dir);
+            if (myLoc.compareTo(target) == 0) {
+                target = rc.senseHQLocation();
+            }
 
             if (right && inTowerRange(myLoc.add(pre), objects)
                     && inTowerRange(myLoc.add(pre.rotateRight()), objects)
@@ -183,7 +185,7 @@ public class Move {
             Direction direct = myLoc.directionTo(target);
             Direction d = myLoc.directionTo(next);
             do {
-                rc.setIndicatorString(1, "can change");
+                rc.setIndicatorDot(myLoc, 4, 4, 4);
                 if (right) {
                     d = d.rotateRight();
                 } else {
