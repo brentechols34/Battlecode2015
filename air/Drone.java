@@ -54,9 +54,4 @@ public class Drone {
             e.printStackTrace();
         }
     }
-
-    private static Behavior chooseB() {
-        return mood;
-    }
-
 }
