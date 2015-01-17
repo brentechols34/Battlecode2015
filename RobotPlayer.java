@@ -66,7 +66,7 @@ public class RobotPlayer {
                     break;
 
                 case SOLDIER:
-                    Soldier.run(tomatojuice);
+                    Tank.run(tomatojuice);
                     break;
 
                 case BEAVER:

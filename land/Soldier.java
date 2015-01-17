@@ -29,8 +29,7 @@ public class Soldier {
 	public static void run(RobotController rc) {
 		//panther = new PathMove(rc);
 		bb = new BasicBugger(rc);
-		MapLocation eHQ = rc.senseEnemyHQLocation();
-		bb.setDestination(eHQ);
+		panther = new PathMove(rc);
 		while (true) {
 			try {
 				bb.attemptMove();

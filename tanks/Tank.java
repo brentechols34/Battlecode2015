@@ -44,9 +44,7 @@ public class Tank {
                 /* perform round */
                 mood.perception();
                 mood.calculation();
-                if (!panic) {
-                	mood.action();
-                } else mood.panicAlert();
+                mood.action();
 
                 /* end round */
                 Tank.rc.yield();

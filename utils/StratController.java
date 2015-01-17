@@ -15,12 +15,13 @@ public class StratController {
 		Direction.SOUTH_WEST, Direction.WEST, Direction.NORTH_WEST};
 
 	// max counts of buildings
-	static int maxBarracks = 0;
+	static int maxBarracks = 1;
 	static int maxHelipad = 1;
 	static int maxMinerfactory = 2;
-	static int maxTankfactory = 0;
+	static int maxTankfactory = 2;
 	static int maxSupply = 5;
 	static int maxAerospace = 4;
+	
 
 	public static boolean shouldBuildHere(RobotController rc, MapLocation m) {
 		int count = 0;
@@ -40,7 +41,7 @@ public class StratController {
 				e.printStackTrace();
 			}
 		}
-		if (count < 4) return false;
+		if (count < 5) return false;
 		return isSafe(rc,m) && !m.isAdjacentTo(rc.senseHQLocation());	
 	}
 

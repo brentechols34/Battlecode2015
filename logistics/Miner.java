@@ -43,6 +43,7 @@ public class Miner {
 	static final boolean TESTING_MINING = false;
 	static final int ORE_CHANNEL = 10000;
 	static final int SUPPLY_THRESHOLD = 500;
+	static Direction confusedDirection;
 
 	public static void run(RobotController rc) {
 		Miner.rc = rc;
@@ -54,6 +55,7 @@ public class Miner {
 		State state = new Mining();
         pathMove = new PathMove(rc);
         bb = new BasicBugger(rc);
+        confusedDirection = directions[rand.nextInt(8)];
 		while (true) {
 			try {
 				lifetime++;
@@ -104,8 +106,11 @@ public class Miner {
 			Direction d = findSpot();
 			if (d == Direction.NONE) {
                 rc.setIndicatorString(1, "Moving to best: " + bestLoc);
-                if (!bestLoc.equals(bb.goal)) bb.setDestination(bestLoc);
-                bb.attemptMove();
+                if (rc.readBroadcast(1000)==0) Move.tryMove(confusedDirection);
+                else {
+                	if (!bestLoc.equals(bb.goal)) bb.setDestination(bestLoc);
+                	bb.attemptMove();
+                }
 			} else if (rc.isCoreReady() && rc.canMove(d)) {
 				rc.setIndicatorString(1, "Moving nearby: " + d);
                 Move.tryMove(d);

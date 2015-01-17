@@ -6,7 +6,7 @@ import team163.logistics.PathBeaver;
 import team163.utils.*;
 import battlecode.common.*;
 
-public class B_Turtle implements Behavior {
+public class B_Turtle {
 
 	static RobotController rc = Tank.rc;
 	RobotInfo[] allies;
@@ -179,33 +179,5 @@ public class B_Turtle implements Behavior {
 			}
 		}
 		return mindex;
-	}
-
-	public void panicAlert() {
-		//read and see if someone is under attack
-		try {
-			int panicX = rc.readBroadcast(911);
-			if (panicX != 0 && rc.readBroadcast(66) == 0) { //try to assist
-				rc.setIndicatorDot(rc.getLocation(), 2, 2, 2);
-				if(enemies.length > 0 && rc.isWeaponReady()) {
-					rc.attackLocation(nearest);
-				}
-				Tank.panic = true;
-				int panicY = rc.readBroadcast(912);
-				MapLocation aid = new MapLocation(panicX, panicY);
-				// if greater than 5 enemies be a coward
-				if (rc.getLocation().distanceSquaredTo(aid) < 7 && (enemies.length < 1 || enemies.length > 5)) {
-					rc.broadcast(911, 0); //no enemies so reset alarm
-					rc.broadcast(912, 0);
-					Tank.panic = false; //give up or no enemies
-				} else {
-					Move.tryMove(aid);
-				}
-			} else {
-				Tank.panic = false; //no alarm
-			}
-		} catch (Exception e) {
-			System.out.println("Error in tank turtle panic alert");
-		}
 	}
 }
