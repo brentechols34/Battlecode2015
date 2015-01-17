@@ -40,8 +40,8 @@ public class Tank {
 
                 /* get behavior */
                 update();
-//
-//                /* perform round */
+
+                /* perform round */
                 mood.perception();
                 mood.calculation();
                 if (!panic) {

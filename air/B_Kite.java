@@ -58,7 +58,6 @@ public class B_Kite implements Behavior {
                     max = dis;
                     nearest = x.location;
                 }
-                //}
             }
         } catch (Exception e) {
             System.out.println("Error in calculation with da Kite");

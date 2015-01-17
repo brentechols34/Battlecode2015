@@ -1,11 +1,11 @@
 /*
  * Behavior for commander since he has special abilities
  */
-package team163.land;
+package team163.commander;
 
 import battlecode.common.*;
 
-public interface C_Behavior {
+public interface Behavior {
 	
 	/* general concepts of an agent */
 	void perception();
