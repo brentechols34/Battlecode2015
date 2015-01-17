@@ -8,6 +8,7 @@ package team163.logistics;
 import java.util.Random;
 
 import battlecode.common.*;
+import team163.utils.CHANNELS;
 import team163.utils.Move;
 import team163.utils.PathMove;
 
@@ -164,8 +165,8 @@ class Mining implements State {
 			Miner.myHealth = curHealth;
 
 			//Broadcast out our position
-			rc.broadcast(911, Miner.myLoc.x);
-			rc.broadcast(912, Miner.myLoc.y);
+			rc.broadcast(CHANNELS.PANIC_X.getValue(), Miner.myLoc.x);
+			rc.broadcast(CHANNELS.PANIC_Y.getValue(), Miner.myLoc.y);
 
 			State retreat = new Retreating();
 			retreat.run(rc);

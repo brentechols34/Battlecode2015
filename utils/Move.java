@@ -99,6 +99,21 @@ public class Move {
         }
     }
 
+    static public void tryFly (MapLocation m) throws GameActionException {
+        if (!rc.isCoreReady()) {
+            return;
+        }
+
+        Direction d = rc.getLocation().directionTo(m);
+//        int dirint = directionToInt(d);
+//        int[] offsets = {0, 1, -1};
+//        for (int i = 0; i < offsets.length; i++) {
+//
+//        }
+
+        rc.move(d);
+    }
+
     /**
      * Test in range of incoming objects (uses hard set 27 sq at the moment)
      *
