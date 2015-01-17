@@ -24,6 +24,7 @@ public class SimplePather {
 
 	private int[][] prev;
 	private final float[] costs;
+//	private float[][] cost;
 	private final MapLocation[] q;
 	private int index;
 	private MapLocation dest;
@@ -54,7 +55,9 @@ public class SimplePather {
 		prev = new int[360][360];
 		q = new MapLocation[5000];
 		costs = new float[5000];
+//		cost = new float[360][360];
 	}
+	
 
 	/**
 	 * Finds a path from some start to some finish.
@@ -69,6 +72,7 @@ public class SimplePather {
 		start = offsetMapLocation(start);
 		finish = offsetMapLocation(finish);
 		prev = new int[360][360];
+//		cost = new float[360][360];
 		index = 0;
 		MapLocation current;
 		dest = start;
@@ -85,11 +89,11 @@ public class SimplePather {
 		return null;
 	}
 
-	public MapLocation offsetMapLocation(MapLocation p) { //centers this point
+	public MapLocation offsetMapLocation(MapLocation p) { //centers this MapLocation
 		MapLocation t = new MapLocation(p.x - myHQ.x + offsetMyHQ.x, p.y- myHQ.y + offsetMyHQ.y);
 		return t;
 	}
-	public MapLocation unOffsetMapLocation(MapLocation p) { //returns this point to the real coordinates
+	public MapLocation unOffsetMapLocation(MapLocation p) { //returns this MapLocation to the real coordinates
 		return new MapLocation(myHQ.x - offsetMyHQ.x + p.x, myHQ.y - offsetMyHQ.y + p.y);
 	}
 
@@ -105,10 +109,10 @@ public class SimplePather {
 		int dir = 0;
 		do {
 			int next = ((prev[current.x][current.y]+3)&7)+1;
-			if (dir == 0 || next != dir) { //this minimizes the path, for efficient radio-ing
+			//if (dir == 0 || next != dir) { //this minimizes the path, for efficient radio-ing
 			path_temp[count++] = unOffsetMapLocation(current);
-				dir = next;
-			}
+			//	dir = next;
+			//}
 			current = moveTo(current, next);
 		} while (prev[current.x][current.y] != 0);
 		path_temp[count++] = unOffsetMapLocation(current);
@@ -134,10 +138,12 @@ public class SimplePather {
 		if (impassable(unOffsetMapLocation(n))) return;
 		final int nx = n.x;
 		final int ny = n.y;
-		if (prev[nx][ny] == 0) {
-			add(n, distance(n, dest));
-			prev[nx][ny] = dir;
-		}
+        //final float potential_cost = distance(parent, n); //cost[parent.x][parent.y] + 
+        if (prev[nx][ny] == 0) { // || cost[nx][ny] > potential_cost
+            add(n, distance(n, dest) * 1.5f); // || cost[nx][ny] > potential_cost
+            prev[nx][ny] = dir;
+//            cost[nx][ny] = potential_cost;
+        }
 	}
 
 	/**
@@ -197,11 +203,11 @@ public class SimplePather {
 	}
 
 	public static boolean isStationary(RobotType rt) {
-		return (rt != null && rt == RobotType.AEROSPACELAB
+		return (rt != null && (rt == RobotType.AEROSPACELAB
 				|| rt == RobotType.BARRACKS || rt == RobotType.HELIPAD
 				|| rt == RobotType.HQ || rt == RobotType.MINERFACTORY
 				|| rt == RobotType.SUPPLYDEPOT || rt == RobotType.TANKFACTORY
-				|| rt == RobotType.TECHNOLOGYINSTITUTE || rt == RobotType.TOWER || rt == RobotType.TRAININGFIELD);
+				|| rt == RobotType.TECHNOLOGYINSTITUTE || rt == RobotType.TOWER || rt == RobotType.TRAININGFIELD));
 	}
 
 	private void add(MapLocation p, float c) {
@@ -216,7 +222,7 @@ public class SimplePather {
 	}
 
 	/**
-	 * This will decompress a path, adding in all the points between
+	 * This will decompress a path, adding in all the MapLocations between
 	 * It's relatively expensive so use only when you think units will be off the path
 	 * So that PathMove can get them back on using a raycast
 	 * @param compressed
@@ -227,10 +233,10 @@ public class SimplePather {
 		MapLocation next = compressed[0];
 		buffered[0] = next;
 		int count = 1;
-		int compressed_pointer = 1;
+		int compressed_MapLocationer = 1;
 		while (!next.equals(compressed[compressed.length-1]) && count < buffered.length) {
-			next.add(compressed[compressed_pointer-1].directionTo(compressed[compressed_pointer]));
-			if (next.equals(compressed[compressed_pointer])) compressed_pointer++;
+			next.add(compressed[compressed_MapLocationer-1].directionTo(compressed[compressed_MapLocationer]));
+			if (next.equals(compressed[compressed_MapLocationer])) compressed_MapLocationer++;
 			buffered[count++] = next;
 		}
 		MapLocation[] actual = new MapLocation[count];
@@ -239,3 +245,4 @@ public class SimplePather {
 	}
 
 }
+

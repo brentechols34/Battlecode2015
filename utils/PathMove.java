@@ -178,10 +178,6 @@ public class PathMove {
 		if (path==null) return;
 		//System.out.println(Arrays.toString(path) + " " + currentNode);
 		//rc.setIndicatorString(0, "");
-		MapLocation myLoc = rc.getLocation();
-		MapLocation ml = myLoc.add(myLoc.directionTo(path[currentNode]));
-		rc.setIndicatorString(0,myLoc.toString() + " " + path[path.length-1]);
-		
 		if (currentNode>=path.length) {
 			Move.tryMove(myLoc.directionTo(path[path.length - 1]));
 			return;
