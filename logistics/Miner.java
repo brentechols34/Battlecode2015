@@ -83,25 +83,26 @@ public class Miner {
 
 	static boolean goingToBest;
 	static void defaultMove() throws GameActionException {
-		if (rc.isCoreReady() && rc.canMine() && oreHere > 3) {
+
+        // Logic to decongest and remove walls of people
+        RobotInfo[] friends = rc.senseNearbyRobots(myRange, myTeam);
+        for (int i = 0; i < friends.length; i++) {
+            RobotInfo friend = friends[i];
+
+            if (friend.type == RobotType.MINER && rc.senseOre(friend.location) < 3 && rc.senseOre(myLoc.add(friend.location.directionTo(myLoc))) > 3) {
+                Move.tryMove(friend.location.directionTo(myLoc));
+            }
+        }
+
+
+		if (rc.isCoreReady() && rc.canMine() && oreHere > 1) {
 			rc.setIndicatorString(1, "Mining");
 			MineHere();
 		} else {
 			Direction d = findSpot();
-			if (bestVal > 3) {
+			if (d == Direction.NONE) {
                 rc.setIndicatorString(1, "Moving to best: " + bestLoc);
-                if (targetLoc == null) {
-                    pathMove.setDestination(bestLoc);
-                    targetLoc = bestLoc;
-                }
-
-                if (rc.isCoreReady() && rc.canMove(d)) {
-                    pathMove.attemptMove();
-                }
-
-                if (targetLoc.x == myLoc.x && targetLoc.y == myLoc.y) {
-                    targetLoc = null;
-                }
+                Move.tryMove(bestLoc);
 			} else if (rc.isCoreReady() && rc.canMove(d)) {
 				rc.setIndicatorString(1, "Moving nearby: " + d);
                 Move.tryMove(d);
@@ -110,21 +111,24 @@ public class Miner {
 	}
 
 	public static Direction findSpot() throws GameActionException {
-		double bestFound = rc.senseOre(myLoc);
+		double bestFound = 3;
 		Direction[] counts = new Direction[9];
 		counts[0] = Direction.NONE;
-		int count = 1;
+        int count = 1;
+
 		for (int i = 0; i < 8; i++) {
 			double oreHere = rc.senseOre(myLoc.add(directions[i]));
 			if (bestFound < oreHere && rc.canMove(directions[i])) {
-				count = 1;
+                count = 1;
+
 				counts[0] = directions[i];
 				bestFound = oreHere;
-			} else if (bestFound == oreHere) counts[count++] = directions[i];
-		} 
-        
+			} else if (bestFound == oreHere) {
+                counts[count++] = directions[i];
+            }
+		}
 
-		return counts[(int) (count * rand.nextDouble())];
+		return counts[rand.nextInt(count)];
 	}
 
 
@@ -189,7 +193,7 @@ class Mining implements State {
 		MapLocation beaverLoc = new MapLocation(rc.readBroadcast(198), rc.readBroadcast(199));
 
 		//If we are close, and are the resupply target, than trigger a resupply
-		return head == Miner.resupplyChannel && beaverLoc.distanceSquaredTo(rc.getLocation()) < 25;
+		return head == Miner.resupplyChannel && beaverLoc.distanceSquaredTo(rc.getLocation()) < GameConstants.SUPPLY_TRANSFER_RADIUS_SQUARED + 5;
 	}
 }
 

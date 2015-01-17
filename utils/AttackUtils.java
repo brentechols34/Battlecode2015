@@ -16,12 +16,12 @@ public class AttackUtils {
     // This method will attack an enemy in sight, if there is one
     public static void attackSomething(RobotController rc, int myRange, Team enemyTeam) throws GameActionException {
         RobotInfo[] enemies = rc.senseNearbyRobots(myRange, enemyTeam);
-        RobotInfo weakest = enemies[0];
-        RobotInfo weakestMissile = null;
-
         if (enemies.length == 0) {
             return;
         }
+
+        RobotInfo weakest = enemies[0];
+        RobotInfo weakestMissile = null;
 
         for (RobotInfo enemy : enemies) {
             if (enemy.type != RobotType.MISSILE && enemy.health < weakest.health) {
