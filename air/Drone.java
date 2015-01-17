@@ -36,7 +36,7 @@ public class Drone {
             while (true) {
 
                 /* get behavior */
-                mood = chooseB();
+                //mood = chooseB();
 
                 /* perform round */
                 mood.perception();

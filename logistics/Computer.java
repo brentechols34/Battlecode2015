@@ -5,10 +5,16 @@
  */
 package team163.logistics;
 
+import battlecode.common.*;
+
 /**
  *
  * @author sweetness
  */
 public class Computer {
+    
+    public static void run(RobotController rc) {
+        
+    }
     
 }
