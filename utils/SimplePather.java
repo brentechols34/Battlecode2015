@@ -106,7 +106,7 @@ public class SimplePather {
 		do {
 			int next = ((prev[current.x][current.y]+3)&7)+1;
 			if (dir == 0 || next != dir) { //this minimizes the path, for efficient radio-ing
-				path_temp[count++] = unOffsetMapLocation(current);
+			path_temp[count++] = unOffsetMapLocation(current);
 				dir = next;
 			}
 			current = moveTo(current, next);
@@ -185,11 +185,11 @@ public class SimplePather {
 	public boolean impassable(MapLocation m) {
 		try {
 			TerrainTile tt = rc.senseTerrainTile(m);
-			if (tt == TerrainTile.VOID || tt == TerrainTile.OFF_MAP) return true;
 			if (rc.canSenseLocation(m)) {
 				RobotInfo ri = rc.senseRobotAtLocation(m);
 				if (ri != null && isStationary(ri.type)) return true;
 			}
+			if (tt == TerrainTile.VOID || tt == TerrainTile.OFF_MAP) return true;
 			return false;
 		} catch(GameActionException e) {
 			return impassable(m);

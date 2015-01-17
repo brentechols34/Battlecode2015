@@ -72,10 +72,8 @@ public class PathBeaver {
 
 	}
 
-
 	private static void loadPath(MapLocationPair pr, int count) throws GameActionException {
 		MapLocation[] path = p.pathfind(pr.start, pr.finish); //this might take a bit
-
 		if (path != null) {
 			int channel = getPathChannel(count);
 			int len = path.length;

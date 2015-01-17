@@ -110,7 +110,6 @@ public class B_Turtle implements Behavior {
 
 	public void rallyMove() throws GameActionException {
 		MapLocation myLoc = rc.getLocation();
-		rc.setIndicatorString(1, "");
 		if (rc.isCoreReady()) {
 			if (enemies.length > 0) {
 				if (rc.isWeaponReady()) {
@@ -154,6 +153,7 @@ public class B_Turtle implements Behavior {
 	}
 
 	public void attackMove() throws GameActionException {
+		rc.setIndicatorString(0, "Attacking");
 		RobotInfo[] allies = rc.senseNearbyRobots(nearest, 40, rc.getTeam());
 		MapLocation myLoc = rc.getLocation();
 		if (enemies.length > 0){
