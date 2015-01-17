@@ -28,9 +28,13 @@ public class StratController {
 			MapLocation m2 = m.add(d);
 			try {
 				if (rc.senseTerrainTile(m2) == TerrainTile.NORMAL) {
-					RobotInfo ri = rc.senseRobotAtLocation(m2);
-					if (ri == null) count++;
-					else if (ri.buildingLocation != null) count--;
+					if (rc.canSenseLocation(m2)) {
+						RobotInfo ri = rc.senseRobotAtLocation(m2);
+						if (ri == null) count++;
+						else if (ri.buildingLocation != null) count--;
+					} else {
+						count++;
+					}
 				}
 			} catch (GameActionException e) {
 				e.printStackTrace();
@@ -96,26 +100,23 @@ public class StratController {
 				oneGood = true;
 			}
 		}
-		if (oneGood) {
-			int[] oreCosts = new int[]{300, 300, 500, 500, 100, 500};
-			double oreCount = rc.getTeamOre();
-			for (int i = 0; i < counts.length; i++) {
-				counts[i] -= priorityOffsets[i];
-			}
-			int toMake = mindex(counts);
-			if (counts[toMake] + priorityOffsets[toMake] < maxCounts[toMake]
-					&& oreCount >= oreCosts[toMake]) {
-				switch (toMake) {
-				case 0: return RobotType.BARRACKS;
-				case 1: return RobotType.HELIPAD;
-				case 2: return RobotType.MINERFACTORY;
-				case 3: return RobotType.TANKFACTORY;
-				case 4: return RobotType.SUPPLYDEPOT;
-				case 5: return RobotType.AEROSPACELAB;
-				}
-			}
+		int[] oreCosts = new int[]{300, 300, 500, 500, 100, 500};
+		double oreCount = rc.getTeamOre();
+		for (int i = 0; i < counts.length; i++) {
+			counts[i] -= priorityOffsets[i];
 		}
-		return null;
+		int toMake = mindex(counts);
+		if (counts[toMake] + priorityOffsets[toMake] < maxCounts[toMake]
+				&& oreCount >= oreCosts[toMake]) {
+			switch (toMake) {
+			case 0: return RobotType.BARRACKS;
+			case 1: return RobotType.HELIPAD;
+			case 2: return RobotType.MINERFACTORY;
+			case 3: return RobotType.TANKFACTORY;
+			case 4: return RobotType.SUPPLYDEPOT;
+			case 5: return RobotType.AEROSPACELAB;
+			}
+		} return null;
 	}
 
 	static int mindex(int[] options) {
