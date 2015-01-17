@@ -51,11 +51,7 @@ public class Beaver {
 		// check if saved in memory to go with air attack
 		panther = new PathMove(rc);
 		try {
-			if (rc.readBroadcast(72) == 1 && Clock.getRoundNum() > 300) {
-				rc.broadcast(72, 0);
-				PathBeaver.rc = rc;
-				PathBeaver.run();
-			} else if (rc.readBroadcast(8) > 2) {
+			if (rc.readBroadcast(8) > 2) {
 				SupplyBeaver.run(rc);
 			}
 		} catch (Exception e) {
@@ -120,8 +116,8 @@ public class Beaver {
 	static void defaultMove() throws GameActionException {
 		if (panther.goal.isAdjacentTo(myLoc)) {
 			RobotType toMake = StratController.toMake(rc);
-			if (toMake!=null) {tryBuild(directions[rand.nextInt(8)], StratController.toMake(rc));}
-		}
+			if (toMake!=null) {tryBuild(myLoc.directionTo(panther.goal), toMake);}
+		} else panther.attemptMove();
 	}
 
 	static void buildStuff() throws GameActionException {

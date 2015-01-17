@@ -32,7 +32,7 @@ public class StratController {
 			}
 		}
 		if (count < 6) return false;
-		return isSafe(rc,m);	
+		return isSafe(rc,m) && !m.isAdjacentTo(rc.senseHQLocation());	
 	}
 
 	public static boolean isSafe(RobotController rc, MapLocation m) {
