@@ -11,6 +11,7 @@ import java.util.Random;
 
 import team163.utils.Move;
 import team163.utils.Supply;
+import team163.utils.PathMove;
 
 import javax.xml.stream.Location;
 
@@ -30,6 +31,10 @@ public class SupplyBeaver {
     static int myRange;
     static Random rand;
     static MapLocation myLoc;
+    static int lastHead = 0;
+    static MapLocation travelLoc;
+    static PathMove pathMove;
+    static boolean wasReturning = false;
 
     public static void run(RobotController con) {
         rc = con;
@@ -37,6 +42,7 @@ public class SupplyBeaver {
         myRange = rc.getType().attackRadiusSquared;
         myTeam = rc.getTeam();
         enemyTeam = myTeam.opponent();
+        pathMove = new PathMove(rc);
         //System.out.println("new supply beaver!");
 
         while (true) {
@@ -86,19 +92,27 @@ public class SupplyBeaver {
         return channel;
     }
 
-    static void goToBase () {
-        if(myLoc.distanceSquaredTo(rc.senseHQLocation()) < 10) {
-            //System.out.println("Resupplying myself!");
+    static void goToBase () throws GameActionException {
+        wasReturning = true;
+        if (travelLoc != null && !travelLoc.equals(rc.senseHQLocation())) {
+            travelLoc = null;
+        }
+
+        MapLocation hqLoc = rc.senseHQLocation();
+        if(myLoc.distanceSquaredTo(hqLoc) <= GameConstants.SUPPLY_TRANSFER_RADIUS_SQUARED) {
+            rc.setIndicatorString(1, "Resupplying!");
             return;
         }
 
-        Direction d = myLoc.directionTo(rc.senseHQLocation());
-        if (rc.canMove(d)) {
-            Move.tryMove(d);
-        }
+        usePathMove(hqLoc);
     }
 
     static void goSupplyPeople () throws GameActionException {
+        if (wasReturning) {
+            travelLoc = null;
+        }
+        wasReturning = false;
+
         int head = rc.readBroadcast(196);
         int tail = rc.readBroadcast(197);
 
@@ -106,6 +120,7 @@ public class SupplyBeaver {
         if (head == tail) {
             //System.out.println("Queue is empty, no work to do!");
             goToBase();
+            return;
         }
 
         MapLocation dest = new MapLocation(rc.readBroadcast(head), rc.readBroadcast(head + 1));
@@ -122,11 +137,19 @@ public class SupplyBeaver {
             rc.broadcast(196, (head == 298) ? 200 : (head + 2));
         }
 
-        if (rc.isCoreReady()) {
-            Move.tryMove(dest);
+        usePathMove(dest);
+    }
+
+    static void usePathMove (MapLocation dest) throws GameActionException {
+        if (travelLoc == null) {
+            travelLoc = dest;
+            pathMove.setDestination(dest);
         }
-        if (rc.isCoreReady()) {
-            Move.tryMove(myLoc.directionTo(dest));
+        pathMove.attemptMove();
+
+        rc.setIndicatorString(2, "I am going to " + travelLoc.toString());
+        if (travelLoc.x == myLoc.x && travelLoc.y == myLoc.y) {
+            travelLoc = null;
         }
     }
 }

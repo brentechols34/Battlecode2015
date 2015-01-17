@@ -86,8 +86,8 @@ public class StratController {
 		};
 		int[] maxCounts = new int[]{maxBarracks, maxHelipad,
 				maxMinerfactory, maxTankfactory, maxSupply, maxAerospace};
-		int[] priorityOffsets = new int[]{1, 1, 3,
-				(counts[0] > 0) ? 1 : -1000, 3, (counts[1] > 0) ? 1 : -1000};
+		int[] priorityOffsets = new int[]{1, 2, 3,
+				(counts[0] > 0) ? 1 : -1000, 1, (counts[1] > 0) ? 1 : -1000};
 		boolean oneGood = false;
 		for (int i = 0; i < priorityOffsets.length; i++) {
 			if (counts[i] >= maxCounts[i]) {
