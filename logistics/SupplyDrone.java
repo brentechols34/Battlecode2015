@@ -34,22 +34,21 @@ public class SupplyDrone {
     static MapLocation myLoc;
     static int lastHead = 0;
     static MapLocation travelLoc;
-    static PathMove pathMove;
     static boolean wasReturning = false;
 
-    public static void run(RobotController con) {
+    static int myHead;
+
+    public static void run(RobotController con, int offset) {
         rc = con;
         rand = new Random(rc.getID());
         myRange = rc.getType().attackRadiusSquared;
         myTeam = rc.getTeam();
         enemyTeam = myTeam.opponent();
-        pathMove = new PathMove(rc);
-        //System.out.println("new supply beaver!");
 
         while (true) {
             try {
                 //Broadcast to the world that there is a supply drone!
-                rc.broadcast(CHANNELS.SUPPLY_DRONE.getValue(), Clock.getRoundNum());
+                rc.broadcast(CHANNELS.SUPPLY_DRONE1.getValue() - 1 + offset, Clock.getRoundNum());
 
                 myLoc = rc.getLocation();
                 rc.setIndicatorString(0, "I am supply beaver | head: " + rc.readBroadcast(196) + " tail: " + rc.readBroadcast(197));
@@ -122,42 +121,38 @@ public class SupplyDrone {
         int tail = rc.readBroadcast(197);
 
         // If there is no one to supply, go collect more supplies
-        if (head == tail) {
+        if (head == tail && myHead == -1) {
             //System.out.println("Queue is empty, no work to do!");
             goToBase();
             return;
         }
 
-        MapLocation dest = new MapLocation(rc.readBroadcast(head), rc.readBroadcast(head + 1));
+        if (myHead == -1) {
+            claimDelivery();
+        }
+
+        MapLocation dest = new MapLocation(rc.readBroadcast(myHead), rc.readBroadcast(myHead + 1));
         rc.setIndicatorString(1, "Supplying People! " + dest.toString());
-        if (myLoc.distanceSquaredTo(dest) < GameConstants.SUPPLY_TRANSFER_RADIUS_SQUARED) {
+        if (myLoc.distanceSquaredTo(dest) < GameConstants.SUPPLY_TRANSFER_RADIUS_SQUARED && Clock.getBytecodeNum() < 4000) {
             RobotInfo info = rc.senseRobotAtLocation(dest);
             if (info == null) {
                 //System.out.println("Supply request invalid, moving on");
                 rc.broadcast(196, (head == 298) ? 200 : (head + 2));
             }
 
-            //System.out.println("Supplied someone! head now at " + ((head == 298) ? 200 : (head + 2)) + " and tail at " + rc.readBroadcast(197));
             rc.transferSupplies((int) Math.min(rc.getSupplyLevel() - 500, 2000), dest);
-
-            rc.broadcast(196, (head == 298) ? 200 : (head + 2));
+            myHead = -1;
         }
 
         usePathMove(dest);
     }
 
-    static void usePathMove (MapLocation dest) throws GameActionException {
-//        if (travelLoc == null) {
-//            travelLoc = dest;
-//            pathMove.setDestination(dest);
-//        }
-//        pathMove.attemptMove();
-//
-//        rc.setIndicatorString(2, "I am going to " + travelLoc.toString());
-//        if (travelLoc.x == myLoc.x && travelLoc.y == myLoc.y) {
-//            travelLoc = null;
-//        }
+    static void claimDelivery () throws GameActionException {
+        myHead = rc.readBroadcast(196);
+        rc.broadcast(196, (myHead == 298) ? 200 : (myHead + 2));
+    }
 
+    static void usePathMove (MapLocation dest) throws GameActionException {
         Move.tryFly(dest);
     }
 }
