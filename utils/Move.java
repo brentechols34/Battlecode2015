@@ -22,23 +22,20 @@ public class Move {
     static boolean right = true;
 
     /* instantiate movement utils */
-    static MBugger mb;
     static Random rand = new Random();
 
-    static Direction[] directions = {Direction.NORTH, Direction.NORTH_EAST,
+    final static Direction[] directions = {Direction.NORTH, Direction.NORTH_EAST,
         Direction.EAST, Direction.SOUTH_EAST, Direction.SOUTH,
         Direction.SOUTH_WEST, Direction.WEST, Direction.NORTH_WEST};
 
     static public void setRc(RobotController in) {
-        Move.rc = in;
-        mb = new MBugger(rc);
+        rc = in;
     }
 
     // This method will attempt to move in Direction d (or as close to it as
     // possible)
     static public void tryMove(Direction d) {
         try {
-            set = false;
             int offsetIndex = 0;
             int[] offsets = {0, 1, -1, 2, -2};
             int dirint = directionToInt(d);
@@ -67,51 +64,58 @@ public class Move {
      */
     static MapLocation last;
 
-    static public void tryMove(MapLocation m) {
-        if (m.equals(rc.getLocation())) {
-            return;
-        }
-        try {
-            if (!rc.isCoreReady()) {
-                return;
-            }
-            MapLocation ml = rc.getLocation();
-            if (!set || !m.equals(last)) { //  || rand.nextDouble() > .90
-                last = m;
-                set = true;
-                mb.reset();
-                mb.setTargetLocation(m);
-                mb.start = ml;
-            }
-            // try using bugging system
-            MapLocation p = mb.nextMove();
-            if (p != null) {
-                Direction dir = ml.directionTo(p);
-                if (rc.canMove(dir)) {
-                    rc.move(dir);
-                } else {
-                    mb.closest = null;
-                }
-            }
-        } catch (Exception e) {
-            System.out.println("Error attempting bugging");
-            e.printStackTrace();
-        }
-    }
+//    static public void tryMove(MapLocation m) {
+//        if (m.equals(rc.getLocation())) {
+//            return;
+//        }
+//        try {
+//            if (!rc.isCoreReady()) {
+//                return;
+//            }
+//            MapLocation ml = rc.getLocation();
+//            if (!set || !m.equals(last)) { //  || rand.nextDouble() > .90
+//                last = m;
+//                set = true;
+//                mb.reset();
+//                mb.setTargetLocation(m);
+//                mb.start = ml;
+//            }
+//            // try using bugging system
+//            MapLocation p = mb.nextMove();
+//            if (p != null) {
+//                Direction dir = ml.directionTo(p);
+//                if (rc.canMove(dir)) {
+//                    rc.move(dir);
+//                } else {
+//                    mb.closest = null;
+//                }
+//            }
+//        } catch (Exception e) {
+//            System.out.println("Error attempting bugging");
+//            e.printStackTrace();
+//        }
+//    }
 
     static public void tryFly (MapLocation m) throws GameActionException {
         if (!rc.isCoreReady()) {
             return;
         }
 
-        Direction d = rc.getLocation().directionTo(m);
-//        int dirint = directionToInt(d);
-//        int[] offsets = {0, 1, -1};
-//        for (int i = 0; i < offsets.length; i++) {
-//
-//        }
-
-        rc.move(d);
+        try {
+        	Direction d = rc.getLocation().directionTo(m);
+            int offsetIndex = 0;
+            int[] offsets = {0, 1, -1, 2, -2};
+            int dirint = directionToInt(d);
+            while (offsetIndex < 5
+                    && !rc.canMove(directions[(dirint + offsets[offsetIndex] + 8) % 8])) {
+                offsetIndex++;
+            }
+            if (offsetIndex < 5 && rc.isCoreReady()) {
+                rc.move(directions[(dirint + offsets[offsetIndex] + 8) % 8]);
+            }
+        } catch (Exception e) {
+            System.out.println("Error in tryFly");
+        } 
     }
 
     /**

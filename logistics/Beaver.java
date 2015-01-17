@@ -9,6 +9,7 @@ import battlecode.common.*;
 
 import java.util.Random;
 
+import team163.utils.BasicBugger;
 import team163.utils.Move;
 import team163.utils.PathMove;
 import team163.utils.StratController;
@@ -37,6 +38,7 @@ public class Beaver {
 	static int oreHere;
 	static double myHealth;
 	static RobotInfo[] enemies;
+	static BasicBugger bb;
 
 	//pathfinding for building
 	static PathMove panther;
@@ -50,6 +52,7 @@ public class Beaver {
 		myHealth = rc.getHealth();
 		// check if saved in memory to go with air attack
 		panther = new PathMove(rc);
+		bb = new BasicBugger(rc);
 		try {
 //			if (rc.readBroadcast(8) > 2) {
 //				SupplyBeaver.run(rc);
@@ -66,22 +69,22 @@ public class Beaver {
 					attackSomething();
 				}
 
-				//send panic on being attacked
-				enemies = rc.senseNearbyRobots(24, enemyTeam);
-				double curHealth = rc.getHealth();
-				if (curHealth < myHealth) {
-					myHealth = curHealth;
-					rc.broadcast(911, myLoc.x);
-					rc.broadcast(912, myLoc.y);
-					Move.tryMove(rc.senseHQLocation());
-					continue;
-				}
-
-				//run from enemies
-				if (enemies.length > 0) {
-					Move.tryMove(rc.senseHQLocation());
-					continue;
-				}
+//				//send panic on being attacked
+//				enemies = rc.senseNearbyRobots(24, enemyTeam);
+//				double curHealth = rc.getHealth();
+//				if (curHealth < myHealth) {
+//					myHealth = curHealth;
+//					rc.broadcast(911, myLoc.x);
+//					rc.broadcast(912, myLoc.y);
+//					Move.tryMove(rc.senseHQLocation());
+//					continue;
+//				}
+//
+//				//run from enemies
+//				if (enemies.length > 0) {
+//					Move.tryMove(rc.senseHQLocation());
+//					continue;
+//				}
 
 				oreHere = (int) (rc.senseOre(myLoc) + .5);
 				bestVal = rc.readBroadcast(1000);

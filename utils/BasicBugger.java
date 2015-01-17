@@ -5,7 +5,7 @@ public class BasicBugger {
 
 	private RobotController rc;
 	private boolean reverse;
-	private MapLocation goal;
+	public MapLocation goal;
 	private MapLocation closest;
 	private MapLocation hugStart;
 	private MapLocation hugEnd;
@@ -102,7 +102,7 @@ public class BasicBugger {
 		reverse = !reverse;
 		return bug(me);
 	}
-
+	
 	public boolean impassable(MapLocation m) {
 		TerrainTile tt = rc.senseTerrainTile(m);
 		return isObstacle(m) || tt == TerrainTile.OFF_MAP;
@@ -114,7 +114,7 @@ public class BasicBugger {
 			if (tt == TerrainTile.VOID) return true;
 			if (rc.canSenseLocation(m)) {
 				RobotInfo ri = rc.senseRobotAtLocation(m);
-				if (ri != null) return true;
+				if (ri != null && isStationary(ri.type)) return true;
 			}
 			return false;
 		} catch(GameActionException e) {
@@ -152,6 +152,53 @@ public class BasicBugger {
 			return -1;
 		}
 	}
+	
+	/**
+	 * Bresenham's Line algorithm
+	 * @param p1
+	 * @param p2
+	 * @return True if the two given locations have nothing impassable between them, false otherwise
+	 * @throws GameActionException
+	 */
+	public boolean scan(MapLocation p1, MapLocation p2) throws GameActionException {
+		if (p1.isAdjacentTo(p2)) {
+			return false;
+		}
+		int x1 = p1.x;
+		int y1 = p1.y;
+		int x2 = p2.x;
+		int y2 = p2.y;
+		int dx = Math.abs(x2 - x1);
+		int dy = Math.abs(y2 - y1);
+		int sx = (x1 < x2) ? 1 : -1;
+		int sy = (y1 < y2) ? 1 : -1;
+		int err = dx - dy;
+		while (true) {
+			int e2 = err << 1;
+			if (e2 > -dy) {
+				err = err - dy;
+				x1 = x1 + sx;
+			}
+			if (x1 == x2 && y1 == y2) {
+				break;
+			}
+			if (impassable(new MapLocation(x1,y1))) {
+				return true;
+			}
+			if (e2 < dx) {
+				err = err + dx;
+				y1 = y1 + sy;
+			}
+			if (x1 == x2 && y1 == y2) {
+				break;
+			}
+			if (impassable(new MapLocation(x1,y1))) {
+				return true;
+			}
+		}
+		return false;
+	}
+
 
 
 

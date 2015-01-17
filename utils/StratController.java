@@ -40,7 +40,7 @@ public class StratController {
 				e.printStackTrace();
 			}
 		}
-		if (count < 6) return false;
+		if (count < 4) return false;
 		return isSafe(rc,m) && !m.isAdjacentTo(rc.senseHQLocation());	
 	}
 

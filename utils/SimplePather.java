@@ -105,10 +105,10 @@ public class SimplePather {
 		int dir = 0;
 		do {
 			int next = ((prev[current.x][current.y]+3)&7)+1;
-			//if (dir == 0 || next != dir) { //this minimizes the path, for efficient radio-ing
+			if (dir == 0 || next != dir) { //this minimizes the path, for efficient radio-ing
 			path_temp[count++] = unOffsetMapLocation(current);
-			//	dir = next;
-			//}
+				dir = next;
+			}
 			current = moveTo(current, next);
 		} while (prev[current.x][current.y] != 0);
 		path_temp[count++] = unOffsetMapLocation(current);
