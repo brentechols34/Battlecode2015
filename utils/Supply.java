@@ -83,8 +83,8 @@ public class Supply {
             }
         }
 
-        if (min < 20000) {
-            int supply = (int)rc.getSupplyLevel();
+        int supply = (int)rc.getSupplyLevel();
+        if (min < 20000 && supply > 500) {
             rc.transferSupplies((int)Math.min(supply - 500, 500), supplied.location);
         }
     }

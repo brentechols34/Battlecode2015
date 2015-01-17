@@ -30,9 +30,17 @@ public class AlertDrone {
 
     public static void run(RobotController rc) {
         try {
-            int supplierAlive = rc.readBroadcast(CHANNELS.SUPPLY_DRONE.getValue());
+            int supplierAlive = rc.readBroadcast(CHANNELS.SUPPLY_DRONE1.getValue());
             if (supplierAlive != Clock.getRoundNum() && supplierAlive != Clock.getRoundNum() - 1) {
-                SupplyDrone.run(rc);
+                SupplyDrone.run(rc, 1);
+            }
+            supplierAlive = rc.readBroadcast(CHANNELS.SUPPLY_DRONE2.getValue());
+            if (supplierAlive != Clock.getRoundNum() && supplierAlive != Clock.getRoundNum() - 1) {
+                SupplyDrone.run(rc, 2);
+            }
+            supplierAlive = rc.readBroadcast(CHANNELS.SUPPLY_DRONE3.getValue());
+            if (supplierAlive != Clock.getRoundNum() && supplierAlive != Clock.getRoundNum() - 1) {
+                SupplyDrone.run(rc, 3);
             }
 
             AlertDrone.rc = rc;

@@ -67,8 +67,6 @@ public class HQ {
 			rc.broadcast(75, rallyX);
 			rc.broadcast(76, rallyY);
 
-            rc.broadcast(CHANNELS.SUPPLY_DRONE.getValue(), 1);
-
 			//Request initial path
 			rc.broadcast(2000,1);
 			int requestChannel = PathBeaver.getPathRequestChannel(0);
