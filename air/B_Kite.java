@@ -7,6 +7,7 @@ package team163.air;
 
 import battlecode.common.*;
 import static team163.utils.Move.*;
+import team163.utils.AttackUtils;
 
 /**
  * Kite around stuff. Made specifically for drones
@@ -17,6 +18,7 @@ public class B_Kite implements Behavior {
 
     RobotInfo[] enemies;
     RobotInfo[] allies;
+    RobotInfo closestEnemy = null;
     MapLocation[] towers;
     MapLocation target = Drone.enemyHQ;
     MapLocation nearest;
@@ -52,14 +54,20 @@ public class B_Kite implements Behavior {
                 double dis = x.location.distanceSquaredTo(myLoc);
                 if (dis < max) {
                     if (x.type.compareTo(RobotType.MINER) == 0
-                            || x.type.compareTo(RobotType.BEAVER) == 0) {
+                            || x.type.compareTo(RobotType.BEAVER) == 0
+                            || x.type == RobotType.LAUNCHER
+                            || AttackUtils.isStationary(x.type)) {
                         rush = true;
                     } else {
                         enemyCount++;
                         rush = false;
                     }
-                    max = dis;
-                    nearest = x.location;
+
+                    if (closestEnemy == null || (closestEnemy.type == RobotType.MISSILE && x.type == RobotType.MISSILE) || (x.type != RobotType.MISSILE)) {
+                        closestEnemy = x;
+                        nearest = x.location;
+                        max = dis;
+                    }
                 }
             }
         } catch (Exception e) {
