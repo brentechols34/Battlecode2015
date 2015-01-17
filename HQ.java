@@ -10,6 +10,7 @@ import battlecode.common.*;
 import java.util.Random;
 
 import team163.logistics.PathBeaver;
+import team163.utils.CHANNELS;
 import team163.utils.Spawn;
 import team163.utils.Supply;
 
@@ -65,6 +66,8 @@ public class HQ {
 			System.out.println(rallyX + " " + rallyY);
 			rc.broadcast(75, rallyX);
 			rc.broadcast(76, rallyY);
+
+            rc.broadcast(CHANNELS.SUPPLY_DRONE.getValue(), 1);
 
 			//Request initial path
 			rc.broadcast(2000,1);
@@ -135,8 +138,8 @@ public class HQ {
 					attackSomething();
 				}
 
-				if (rc.isCoreReady() && rc.getTeamOre() >= 100 && counts[7] < 2 && (Clock.getRoundNum() > 300 || counts[7] == 0)) { //counts[7] == beaverCount
-						team163.utils.Spawn.trySpawn(directions[rand.nextInt(8)], RobotType.BEAVER);
+				if (rc.isCoreReady() && rc.getTeamOre() >= 100 && counts[7] < 3) { //counts[7] == beaverCount
+                    team163.utils.Spawn.trySpawn(directions[rand.nextInt(8)], RobotType.BEAVER);
 				}
 
 				int pbX = rc.readBroadcast(187);

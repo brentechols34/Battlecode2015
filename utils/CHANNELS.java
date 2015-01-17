@@ -5,7 +5,8 @@ package team163.utils;
  */
 public enum CHANNELS {
     PANIC_X(911),
-    PANIC_Y(912)
+    PANIC_Y(912),
+    SUPPLY_DRONE(913)
     ;
 
     private final int id;

@@ -15,10 +15,10 @@ public class Supply {
             return;
         }
 
-        double min = friends[0].supplyLevel;
-        RobotInfo supplied = friends[0];
+        double min = Double.MAX_VALUE;
+        RobotInfo supplied = null;
 
-        for (int i = friendLength - 1; i >= 0; i--) {
+        outer: for (int i = friendLength - 1; i >= 0; i--) {
             switch (friends[i].type) {
                 case SUPPLYDEPOT:
                 case MINERFACTORY:
@@ -29,7 +29,10 @@ public class Supply {
                 case TANKFACTORY:
                 case AEROSPACELAB:
                 case HANDWASHSTATION:
-                    continue;
+                case TOWER:
+                    continue outer;
+                default:
+                    break;
             }
 
 
@@ -53,10 +56,10 @@ public class Supply {
             return;
         }
 
-        double min = friends[0].supplyLevel;
-        RobotInfo supplied = friends[0];
+        double min = Double.MAX_VALUE;
+        RobotInfo supplied = null;
 
-        for (int i = friendLength - 1; i >= 0; i--) {
+        outer: for (int i = friendLength - 1; i >= 0; i--) {
             switch (friends[i].type) {
                 case SUPPLYDEPOT:
                 case MINERFACTORY:
@@ -67,7 +70,10 @@ public class Supply {
                 case TANKFACTORY:
                 case AEROSPACELAB:
                 case HANDWASHSTATION:
-                    continue;
+                case TOWER:
+                    continue outer;
+                default:
+                    break;
             }
 
 

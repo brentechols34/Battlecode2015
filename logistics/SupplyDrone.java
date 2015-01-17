@@ -9,6 +9,7 @@ import battlecode.common.*;
 
 import java.util.Random;
 
+import team163.utils.CHANNELS;
 import team163.utils.Move;
 import team163.utils.Supply;
 import team163.utils.PathMove;
@@ -19,7 +20,7 @@ import javax.xml.stream.Location;
  *
  * @author sweetness
  */
-public class SupplyBeaver {
+public class SupplyDrone {
 
     static Direction[] directions = {Direction.NORTH, Direction.NORTH_EAST,
             Direction.EAST, Direction.SOUTH_EAST, Direction.SOUTH,
@@ -47,6 +48,9 @@ public class SupplyBeaver {
 
         while (true) {
             try {
+                //Broadcast to the world that there is a supply drone!
+                rc.broadcast(CHANNELS.SUPPLY_DRONE.getValue(), Clock.getRoundNum());
+
                 myLoc = rc.getLocation();
                 rc.setIndicatorString(0, "I am supply beaver | head: " + rc.readBroadcast(196) + " tail: " + rc.readBroadcast(197));
 
@@ -154,6 +158,6 @@ public class SupplyBeaver {
 //            travelLoc = null;
 //        }
 
-        Move.tryMove(dest);
+        Move.tryFly(dest);
     }
 }

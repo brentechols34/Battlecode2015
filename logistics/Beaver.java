@@ -53,13 +53,6 @@ public class Beaver {
 		// check if saved in memory to go with air attack
 		panther = new PathMove(rc);
 		bb = new BasicBugger(rc);
-		try {
-//			if (rc.readBroadcast(8) > 2) {
-//				SupplyBeaver.run(rc);
-//			}
-		} catch (Exception e) {
-			System.out.println("Tried to be a path or supply beaver, but I failed");
-		}
 
 		while (true) {
 			try {

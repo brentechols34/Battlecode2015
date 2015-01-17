@@ -1,10 +1,9 @@
 package team163.air;
 
-import java.awt.*;
 import java.util.Random;
 
 import battlecode.common.*;
-import team163.logistics.SupplyBeaver;
+import team163.logistics.SupplyDrone;
 import team163.utils.AttackUtils;
 import team163.utils.CHANNELS;
 import team163.utils.Move;
@@ -31,8 +30,9 @@ public class AlertDrone {
 
     public static void run(RobotController rc) {
         try {
-            if (rc.readBroadcast(4) == 1) {
-                SupplyBeaver.run(rc);
+            int supplierAlive = rc.readBroadcast(CHANNELS.SUPPLY_DRONE.getValue());
+            if (supplierAlive != Clock.getRoundNum() && supplierAlive != Clock.getRoundNum() - 1) {
+                SupplyDrone.run(rc);
             }
 
             AlertDrone.rc = rc;
