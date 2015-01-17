@@ -14,7 +14,7 @@ import static team163.utils.Move.*;
  * @author sweetness
  */
 public class B_Kite implements Behavior {
-
+    
     RobotInfo[] enemies;
     RobotInfo[] allies;
     MapLocation[] towers;
@@ -23,69 +23,49 @@ public class B_Kite implements Behavior {
     MapLocation myLoc;
     double health = Drone.rc.getHealth();
     boolean wasHurt = false;
-
+    boolean rush = false;
+    
     public void perception() {
         try {
             enemies = Drone.rc.senseNearbyRobots(24, Drone.opponent);
             allies = Drone.rc.senseNearbyRobots(24, Drone.team);
             myLoc = Drone.rc.getLocation();
-            towers = new MapLocation[6]; // for 6 tower locations
+            towers = Drone.rc.senseEnemyTowerLocations(); // for 6 tower locations
             if (Drone.rc.getHealth() != health) {
                 wasHurt = true;
                 health = Drone.rc.getHealth();
             } else {
                 wasHurt = false;
             }
-
-            // read tower locations
-            for (int i = 0; i < 6; i++) {
-                int chan = (2 * i) + 800;
-                int x = Drone.rc.readBroadcast(chan);
-                int y = Drone.rc.readBroadcast(chan + 1);
-                towers[i] = new MapLocation(x, y);
-            }
         } catch (Exception e) {
             System.out.println("Error in perception with Kite by Drone");
             e.printStackTrace();
         }
     }
-
+    
     public void calculation() {
         try {
             double max = Double.MAX_VALUE;
             for (RobotInfo x : enemies) {
-                if (x.type == RobotType.TOWER) {
-                    MapLocation at = x.location;
-                    int index = 0; // place in towers array
-                    boolean newTower = true;
-                    for (int i = 0; i < 6; i++) {
-                        if (towers[i].x == at.x && towers[i].y == at.y) {
-                            newTower = false;
-                        }
-                        if (towers[i].x == 0 && towers[i].y == 0) {
-                            index = i;
-                        }
+                double dis = x.location.distanceSquaredTo(myLoc);
+                if (dis < max) {
+                    if (x.type.compareTo(RobotType.MINER) == 0 ||
+                            x.type.compareTo(RobotType.BEAVER) == 0) {
+                        rush = true;
+                    } else {
+                        rush = false;
                     }
-                    if (newTower) {
-                        int chan = (2 * index) + 800;
-                        Drone.rc.broadcast(chan, at.x);
-                        Drone.rc.broadcast(chan + 1, at.y);
-                        towers[index] = new MapLocation(at.x, at.y);
-                    }
-                } else {
-                    double dis = x.location.distanceSquaredTo(myLoc);
-                    if (dis < max) {
-                        max = dis;
-                        nearest = x.location;
-                    }
+                    max = dis;
+                    nearest = x.location;
                 }
+                //}
             }
         } catch (Exception e) {
             System.out.println("Error in calculation with da Kite");
             e.printStackTrace();
         }
     }
-
+    
     public void action() {
         try {
             // try moving toward target
@@ -103,14 +83,14 @@ public class B_Kite implements Behavior {
                             //no drone there reset
                             Drone.rc.broadcast(825, 0);
                             Drone.rc.broadcast(826, 0);
-
+                            
                         }
                     }
                 } else {
                     tryKite(toAttack, towers);
                 }
             }
-
+            
             if (enemies.length > 0) {
                 if (nearest == null) { //case of a tower
                     nearest = enemies[0].location;
@@ -126,7 +106,9 @@ public class B_Kite implements Behavior {
                     if (enemies.length > allies.length && wasHurt) {
                         tryKite(myLoc.add(nearest.directionTo(myLoc)), towers);
                     }
-
+                    if (rush) {//closest is miner so press attack
+                        tryKite(nearest, towers);
+                    }
                 }
                 if (inTowerRange(myLoc, towers)) { //case of tower
                     team163.utils.Move.tryMove(enemies[0].location.directionTo(myLoc));
@@ -137,10 +119,36 @@ public class B_Kite implements Behavior {
         } catch (Exception e) {
             System.out.println("Error in Kite action for Drone" + e);
         }
-
+        
     }
-
+    
     public void panicAlert() {
+        //read and see if someone is under attack
+        try {
+            int panicX = Drone.rc.readBroadcast(911);
+            if (panicX != 0) { //try to assist
+                Drone.rc.setIndicatorDot(Drone.rc.getLocation(), 2, 2, 2);
+                if (enemies.length > 0 && Drone.rc.isWeaponReady()
+                        && Drone.rc.canAttackLocation(nearest)) {
+                    Drone.rc.attackLocation(nearest);
+                }
+                Drone.panic = true;
+                int panicY = Drone.rc.readBroadcast(912);
+                MapLocation aid = new MapLocation(panicX, panicY);
+                // if greater than 5 enemies be a coward
+                if (Drone.rc.getLocation().distanceSquaredTo(aid) < 7
+                        && (enemies.length < 1 || enemies.length > 5)) {
+                    Drone.rc.broadcast(911, 0); //no enemies so reset alarm
+                    Drone.rc.broadcast(912, 0);
+                    Drone.panic = false; //give up or no enemies
+                } else {
+                    tryKite(aid, towers);
+                }
+            } else {
+                Drone.panic = false; //no alarm
+            }
+        } catch (Exception e) {
+            System.out.println("Error in Drone panic alert" + e);
+        }
     }
-
 }

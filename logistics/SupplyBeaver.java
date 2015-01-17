@@ -50,7 +50,7 @@ public class SupplyBeaver {
 
                 if (rc.isCoreReady()) {
                     double supply = rc.getSupplyLevel();
-                    if (supply > 1000) {
+                    if (supply > 500) {
                         //System.out.println("Supplying people!");
                         goSupplyPeople();
                     } else {
