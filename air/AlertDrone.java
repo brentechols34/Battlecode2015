@@ -4,9 +4,11 @@ import java.awt.*;
 import java.util.Random;
 
 import battlecode.common.*;
+import team163.logistics.SupplyBeaver;
 import team163.utils.AttackUtils;
 import team163.utils.CHANNELS;
 import team163.utils.Move;
+import team163.utils.Supply;
 
 public class AlertDrone {
 
@@ -29,6 +31,10 @@ public class AlertDrone {
 
     public static void run(RobotController rc) {
         try {
+            if (rc.readBroadcast(4) == 1) {
+                SupplyBeaver.run(rc);
+            }
+
             AlertDrone.rc = rc;
             AlertDrone.range = rc.getType().attackRadiusSquared;
             AlertDrone.team = rc.getTeam();
@@ -94,6 +100,11 @@ class Patrolling implements State {
         }
 
         Move.tryFly(nextTower);
+
+        if (Clock.getBytecodesLeft() > 500) {
+            Supply.supplyConservatively(rc, AlertDrone.team);
+        }
+
         return this;
     }
 }
