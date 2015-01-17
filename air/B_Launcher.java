@@ -51,6 +51,7 @@ public class B_Launcher implements Behavior {
             myLoc = rc.getLocation();
             xGoal = rc.readBroadcast(67);
             yGoal = rc.readBroadcast(68);
+            checkTarget();
             if (rc.readBroadcast(66) == 1) {
                 attack = true;
             } else {
@@ -66,6 +67,47 @@ public class B_Launcher implements Behavior {
             System.out.println("Error in Launcher perception " + e);
         }
     }
+    
+	public void checkTarget() throws GameActionException{
+		int x = rc.readBroadcast(67);
+		int y = rc.readBroadcast(68);
+		MapLocation r = new MapLocation(x,y);
+		RobotInfo ri;
+		if (rc.canSenseLocation(r) && (ri=rc.senseRobotAtLocation(r)) != null && (ri.type != RobotType.TOWER && ri.type != RobotType.HQ)) {
+			retarget();
+		}
+
+	}
+
+	public void retarget() throws GameActionException {
+		MapLocation[] towers = rc.senseEnemyTowerLocations();
+		if (towers.length == 0) {
+			MapLocation enHQ = rc.senseEnemyHQLocation();
+			rc.broadcast(67, enHQ.x);
+			rc.broadcast(68, enHQ.y);
+			nearest = enHQ;
+		} else {
+			int closest = findClosestToHQ(towers);
+			rc.broadcast(67, towers[closest].x);
+			rc.broadcast(68, towers[closest].y);
+			nearest = towers[closest];
+		}
+
+	}
+	
+	public static int findClosestToHQ(MapLocation[] locs) {
+		int mindex = 0;
+		MapLocation hq = rc.senseHQLocation();
+		int minDis = hq.distanceSquaredTo(locs[0]);
+		for (int i = 1; i < locs.length; i++) {
+			int dis = hq.distanceSquaredTo(locs[i]);
+			if (locs[i] != null && dis < minDis) {
+				mindex = i;
+				minDis = dis;
+			}
+		}
+		return mindex;
+	}
 
     public void calculation() {
         try {

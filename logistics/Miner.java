@@ -8,6 +8,8 @@ package team163.logistics;
 import java.util.Random;
 
 import battlecode.common.*;
+import team163.utils.BasicBugger;
+import team163.utils.CHANNELS;
 import team163.utils.Move;
 import team163.utils.PathMove;
 
@@ -35,7 +37,7 @@ public class Miner {
 	static RobotInfo[] enemies;
     static PathMove pathMove;
     static MapLocation targetLoc;
-
+    static BasicBugger bb;
 	static int resupplyChannel = 0;
 
 	static final boolean TESTING_MINING = false;
@@ -51,7 +53,7 @@ public class Miner {
 		myHealth = rc.getHealth();
 		State state = new Mining();
         pathMove = new PathMove(rc);
-
+        bb = new BasicBugger(rc);
 		while (true) {
 			try {
 				lifetime++;
@@ -102,7 +104,8 @@ public class Miner {
 			Direction d = findSpot();
 			if (d == Direction.NONE) {
                 rc.setIndicatorString(1, "Moving to best: " + bestLoc);
-                Move.tryMove(bestLoc);
+                if (!bestLoc.equals(bb.goal)) bb.setDestination(bestLoc);
+                bb.attemptMove();
 			} else if (rc.isCoreReady() && rc.canMove(d)) {
 				rc.setIndicatorString(1, "Moving nearby: " + d);
                 Move.tryMove(d);
@@ -164,8 +167,8 @@ class Mining implements State {
 			Miner.myHealth = curHealth;
 
 			//Broadcast out our position
-			rc.broadcast(911, Miner.myLoc.x);
-			rc.broadcast(912, Miner.myLoc.y);
+			rc.broadcast(CHANNELS.PANIC_X.getValue(), Miner.myLoc.x);
+			rc.broadcast(CHANNELS.PANIC_Y.getValue(), Miner.myLoc.y);
 
 			State retreat = new Retreating();
 			retreat.run(rc);
@@ -238,12 +241,17 @@ class Resupplying implements State {
 //State for when we are running away!
 class Retreating implements State {
 	int roundsSinceEnemy = 0;
-
+	
 	public State run (RobotController rc) throws GameActionException {
 		rc.setIndicatorString(0, "Retreating");
 
 		//Move towards the HQ
-		Move.tryMove(rc.senseHQLocation());
+		MapLocation hq = rc.senseHQLocation();
+	    if (!hq.equals(Miner.bb.goal)) {
+	    	Miner.bb.setDestination(hq);
+	    }
+	    Miner.bb.attemptMove();
+	    
 
 		//send panic on being attacked
 		double curHealth = rc.getHealth();
