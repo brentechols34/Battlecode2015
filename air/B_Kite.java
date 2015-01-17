@@ -6,6 +6,7 @@
 package team163.air;
 
 import battlecode.common.*;
+import static team163.utils.Move.*;
 
 /**
  * Kite around stuff. Made specifically for drones
@@ -15,17 +16,26 @@ import battlecode.common.*;
 public class B_Kite implements Behavior {
 
     RobotInfo[] enemies;
+    RobotInfo[] allies;
     MapLocation[] towers;
     MapLocation target = Drone.enemyHQ;
     MapLocation nearest;
     MapLocation myLoc;
-    Direction pre = Drone.rc.getLocation().directionTo(Drone.enemyHQ);
+    double health = Drone.rc.getHealth();
+    boolean wasHurt = false;
 
     public void perception() {
         try {
             enemies = Drone.rc.senseNearbyRobots(24, Drone.opponent);
+            allies = Drone.rc.senseNearbyRobots(24, Drone.team);
             myLoc = Drone.rc.getLocation();
             towers = new MapLocation[6]; // for 6 tower locations
+            if (Drone.rc.getHealth() != health) {
+                wasHurt = true;
+                health = Drone.rc.getHealth();
+            } else {
+                wasHurt = false;
+            }
 
             // read tower locations
             for (int i = 0; i < 6; i++) {
@@ -76,174 +86,53 @@ public class B_Kite implements Behavior {
         }
     }
 
-    private boolean inTowerRange(MapLocation m) {
-        for (MapLocation x : towers) {
-            if (x != null && x.x != 0 && x.y != 0) {
-                if (m.distanceSquaredTo(x) < 26) {
-                    return true;
-                }
-            }
-        }
-        return false;
-    }
-
     public void action() {
         try {
             // try moving toward target
-            if (enemies != null && enemies.length > 0) {
-                if (nearest == null) {
+            MapLocation toAttack = new MapLocation(Drone.rc.
+                    readBroadcast(825), Drone.rc.readBroadcast(826));
+            if (myLoc.distanceSquaredTo(toAttack) < 30 && toAttack.x != 0
+                    && toAttack.y != 0) {
+                if (Drone.rc.canSenseLocation(toAttack)) {
+                    RobotInfo ri = Drone.rc.senseRobotAtLocation(toAttack);
+                    if (ri != null && ri.team != Drone.team) {
+                        if (Drone.rc.canAttackLocation(toAttack)
+                                && Drone.rc.isWeaponReady()) {
+                            Drone.rc.attackLocation(toAttack);
+                        } else {
+                            //no drone there reset
+                            Drone.rc.broadcast(825, 0);
+                            Drone.rc.broadcast(826, 0);
+
+                        }
+                    }
+                } else {
+                    tryKite(toAttack, towers);
+                }
+            }
+
+            if (enemies.length > 0) {
+                if (nearest == null) { //case of a tower
                     nearest = enemies[0].location;
                 }
                 if (Drone.rc.isWeaponReady()
                         && Drone.rc.canAttackLocation(nearest)) {
+                    //check if near attack point
+
                     Drone.rc.attackLocation(nearest);
+                    Drone.rc.broadcast(825, nearest.x);
+                    Drone.rc.broadcast(826, nearest.y);
+                } else {
+                    if (enemies.length > allies.length && wasHurt) {
+                        tryKite(myLoc.add(nearest.directionTo(myLoc)), towers);
+                    }
+
                 }
-                if (inTowerRange(myLoc)) {
+                if (inTowerRange(myLoc, towers)) { //case of tower
                     team163.utils.Move.tryMove(enemies[0].location.directionTo(myLoc));
                 }
             } else {
-                Direction dir = pre;
-                MapLocation next = myLoc.add(dir);
-                boolean check = true;
-                int count = 8;
-                while (check && count-- > 0) {
-                    for (MapLocation x : towers) {
-                        if (x != null && x.x != 0 && x.y != 0) {
-                            for (int j = 0; j < 8; j++) {
-                                if (x.distanceSquaredTo(next) < 26) {
-                                    Direction nDir = (Drone.right) ? dir.rotateRight() : dir
-                                            .rotateLeft(); // turn right or left
-                                    next = myLoc.add(nDir);
-                                }
-                            }
-                        }
-                    }
-
-                    if (Drone.rc.canSenseLocation(Drone.enemyHQ)) {
-                        for (int j = 0; j < 8; j++) {
-                            if (next.distanceSquaredTo(Drone.enemyHQ) < 30
-                                    && count-- > 0) {
-                                dir = (Drone.right) ? dir.rotateRight() : dir
-                                        .rotateLeft();
-                                next = myLoc.add(dir);
-                            }
-                        }
-                    }
-                    // reached the end to the next location is good
-                    check = false;
-                }
-
-                //curve toward target
-                boolean canChange = true;
-                while (target.y > next.y && canChange) {
-                    Drone.rc.setIndicatorString(1, "can change y +");
-                    MapLocation newLoc = new MapLocation(next.x, next.y + 1);
-                    double dis = newLoc.y - myLoc.y;
-                    if (dis > 1 || dis < -1) {
-                        break;
-                    }
-                    if (newLoc.compareTo(myLoc) == 0) {
-                        Direction d = myLoc.directionTo(target).opposite();
-                        newLoc = myLoc.add((Drone.right) ? d.rotateRight() : d
-                                .rotateLeft());
-                    }
-
-                    canChange = !inTowerRange(newLoc);
-                    if (newLoc.distanceSquaredTo(Drone.enemyHQ) < 30) {
-                        canChange = false;
-                    }
-                    if (canChange) {
-                        next = newLoc;
-                    }
-                }
-
-                canChange = true;
-                while (target.y < next.y && canChange) {
-                    Drone.rc.setIndicatorString(1, "can change y -");
-                    MapLocation newLoc = new MapLocation(next.x, next.y - 1);
-                    double dis = newLoc.y - myLoc.y;
-                    if (dis > 1 || dis < -1) {
-                        break;
-                    }
-                    if (newLoc.compareTo(myLoc) == 0) {
-                        Direction d = myLoc.directionTo(target).opposite();
-                        newLoc = myLoc.add((Drone.right) ? d.rotateRight() : d
-                                .rotateLeft());
-                    }
-
-                    canChange = !inTowerRange(newLoc);
-                    if (newLoc.distanceSquaredTo(Drone.enemyHQ) < 30) {
-                        canChange = false;
-                    }
-                    if (canChange) {
-                        next = newLoc;
-                    }
-                }
-
-                canChange = true;
-                while (target.x < next.x && canChange) {
-                    Drone.rc.setIndicatorString(1, "can change x -");
-                    MapLocation newLoc = new MapLocation(next.x - 1, next.y);
-                    double dis = newLoc.x - myLoc.x;
-                    if (dis > 1 || dis < -1) {
-                        break;
-                    }
-                    if (newLoc.compareTo(myLoc) == 0) {
-                        Direction d = myLoc.directionTo(target).opposite();
-                        newLoc = myLoc.add((Drone.right) ? d.rotateRight() : d
-                                .rotateLeft());
-                    }
-
-                    canChange = !inTowerRange(newLoc);
-                    if (newLoc.distanceSquaredTo(Drone.enemyHQ) < 30) {
-                        canChange = false;
-                    }
-                    if (canChange) {
-                        next = newLoc;
-                    }
-                }
-
-                canChange = true;
-                while (target.x > next.x && canChange) {
-                    Drone.rc.setIndicatorString(1, "can change x +" + (next.x + 1));
-                    MapLocation newLoc = new MapLocation(next.x + 1, next.y);
-                    double dis = newLoc.x - myLoc.x;
-                    if (dis > 1 || dis < -1) {
-                        break;
-                    }
-                    if (newLoc.compareTo(myLoc) == 0) {
-                        Direction d = myLoc.directionTo(target).opposite();
-                        newLoc = myLoc.add((Drone.right) ? d.rotateRight() : d
-                                .rotateLeft());
-                    }
-
-                    canChange = !inTowerRange(newLoc);
-                    if (newLoc.distanceSquaredTo(Drone.enemyHQ) < 30) {
-                        canChange = false;
-                    }
-                    if (canChange) {
-                        next = newLoc;
-                    }
-                }
-
-                dir = myLoc.directionTo(next);
-
-                if (Drone.rc.senseTerrainTile(next) == TerrainTile.OFF_MAP) {
-                    dir = dir.opposite();
-                }
-
-                if (Drone.rc.isCoreReady()) {
-                    for (int i = 0; i < 8; i++) {
-                        if (Drone.rc.canMove(dir) && !inTowerRange(myLoc.add(dir))) {
-                            pre = dir;
-                            Drone.rc.move(dir);
-                            break;
-                        } else {
-                            dir = (Drone.right) ? dir.rotateRight() : dir
-                                    .rotateLeft();
-                        }
-                    }
-                }
+                tryKite(target, towers);
             }
         } catch (Exception e) {
             System.out.println("Error in Kite action for Drone" + e);
