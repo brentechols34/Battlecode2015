@@ -178,10 +178,13 @@ public class PathMove {
 		if (path==null) return;
 		//System.out.println(Arrays.toString(path) + " " + currentNode);
 		//rc.setIndicatorString(0, "");
+		MapLocation myLoc = rc.getLocation();
+		
 		if (currentNode>=path.length) {
 			Move.tryMove(myLoc.directionTo(path[path.length - 1]));
 			return;
 		}
+		MapLocation ml = myLoc.add(myLoc.directionTo(path[currentNode]));
 		if (impassable(ml)) {
 			path = sp.pathfind(myLoc, goal);
 			findPath(currentNode);
