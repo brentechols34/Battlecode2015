@@ -8,36 +8,59 @@ package team163.air;
 import battlecode.common.*;
 
 /**
- * 
+ *
  * @author sweetness
  */
 public class Missile {
-	static RobotController rc;
-	static Behavior mood; /* current behavior */
-	static Team team;
-	static MapLocation enemyHQ;
+    public static void run(RobotController rc) {
+        try {
+            Team team = rc.getTeam();
+            double ratio;
+            RobotInfo[] robots;
+            MapLocation loc = rc.senseEnemyHQLocation();
+            MapLocation myLoc;
 
-	public static void run(RobotController rc) {
-		try {
-			Missile.rc = rc;
-			Missile.team = rc.getTeam();
-			Missile.enemyHQ = rc.senseEnemyHQLocation();
+            //missiles only live 5 rounds
+            while (true) {
+                /* perform round */
+                robots = rc.senseNearbyRobots(14);
+                myLoc = rc.getLocation();
 
-			mood = new B_Missile(); /* starting behavior of turtling */
+                double enemy = 0;
+                double allie = 0;
 
-			//missiles only live 5 rounds
-			while(true) {
-				/* perform round */
-				mood.perception();
-				mood.calculation();
-				mood.action();
-				/* end round */
-				Missile.rc.yield();
-			}		
-		} catch (Exception e) {
-			System.out.println("Missile Exception");
-			e.printStackTrace();
-		}
-	}
+                for (RobotInfo x : robots) {
+                    if (x.team == team) {
+                        allie++;
+                    } else {
+                        loc = x.location;
+                        if (loc.isAdjacentTo(myLoc)) {
+                            enemy++;
+                        }
+                    }
+                }
+
+                if (allie == 0 && enemy > 0) {
+                    ratio = 1;
+                } else {
+                    ratio = enemy / allie;
+                }
+
+                if (ratio > .5) {
+                    rc.explode();
+                } else {
+                    Direction dir = rc.getLocation().directionTo(loc);
+                    if (rc.canMove(dir) && rc.isCoreReady()) {
+                        rc.move(dir);
+                    }
+                }
+                /* end round */
+                rc.yield();
+            }
+        } catch (Exception e) {
+            System.out.println("Missile Exception");
+            e.printStackTrace();
+        }
+    }
 
 }

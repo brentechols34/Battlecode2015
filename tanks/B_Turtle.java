@@ -20,30 +20,53 @@ public class B_Turtle implements Behavior {
 	public boolean madeItToRally = false;
 	public boolean attacking;
 	boolean offPath = false;
-	PathMove panther = null;
+	PathMove panther = new PathMove(rc);
 
 	public void perception() {
 		try {
-			if (!pathSet) {
-				pathSet = true;
-				pathCount = rc.readBroadcast(179);
-			}
 			int x = rc.readBroadcast(50);
 			int y = rc.readBroadcast(51);
 			rally = new MapLocation(x, y);
-
 			checkTarget();
 			x = rc.readBroadcast(67);
 			y = rc.readBroadcast(68);
 			goal = new MapLocation(x, y);
 			nearest = goal;
+			try{
+				if (rc.readBroadcast(66) == 0) {
+					if (!rally.equals(panther.goal)) panther.setDestination(rally);
+				} else {
+					if (!goal.equals(panther.goal)) panther.setDestination(goal);
+				}
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
 
 		} catch (Exception e) {
 			System.out.println("B_Turtle perception error");
+			e.printStackTrace();
 		}
 		allies = rc.senseNearbyRobots(Tank.senseRange, Tank.team);
 		enemies = rc.senseNearbyRobots(Tank.range, Tank.team.opponent());
 
+	}
+	
+	/**
+	 * Loads the path specified by pathCount from the radio
+	 * @param pathCount
+	 * @throws GameActionException
+	 */
+	public void loadPath(int pathCount) throws GameActionException {
+		int channel = PathBeaver.getPathChannel(pathCount);
+		int length = rc.readBroadcast(channel);
+		MapLocation[] path = new MapLocation[length];
+		channel++;
+		for (int i = 0; i < length * 2; i++) {
+			int x = rc.readBroadcast(channel + i*2);
+			int y = rc.readBroadcast(channel + i*2+1);
+			path[i]=new MapLocation(x,y);
+		}
+		panther.givePath(path);
 	}
 
 	public void calculation() {
@@ -52,19 +75,21 @@ public class B_Turtle implements Behavior {
 			for (RobotInfo ri : enemies) {
 				MapLocation loc = ri.location;
 				double dis = rc.getLocation().distanceSquaredTo(ri.location);
-				if (dis < max) {
+				if (dis < max && ri.type != RobotType.TOWER) {
 					max = dis;
 					nearest = loc;
 				}
-				if (ri.type == RobotType.TOWER) {
-					try {
+				try {
+					int retarget_cooldown = rc.readBroadcast(69);
+					if (ri.type == RobotType.TOWER && retarget_cooldown == 0) {
 						rc.broadcast(67, loc.x);
 						rc.broadcast(68, loc.y);
+						rc.broadcast(69, 4);
 						goal = loc;
-						nearest = goal;
-					} catch (GameActionException e) {
-						System.out.println("Calculation error.");
 					}
+				} catch (GameActionException e) {
+					System.out.println("Calc error");
+					e.printStackTrace();
 				}
 			}
 		}
@@ -72,14 +97,10 @@ public class B_Turtle implements Behavior {
 
 	public void action() {
 		try {
-			if (enemies.length > 0 && rc.isWeaponReady()) {
-				rc.attackLocation(nearest);
+			if (rc.readBroadcast(66) == 1) {
+				attackMove();
 			} else {
-				if (attacking && madeItToRally) {
-					attackMove();
-				} else {
-					rallyMove();
-				}
+				rallyMove();
 			}
 		} catch (Exception e) {
 			System.out.println("Tank Tutle action Error");
@@ -88,12 +109,8 @@ public class B_Turtle implements Behavior {
 	}
 
 	public void rallyMove() throws GameActionException {
-		//Constants, should abstract to some constant class TODO
-		int rallyBaseChannel = PathBeaver.getPathChannel(0);
-		int versionChannel = 179;
-		int rallyLength = rc.readBroadcast(rallyBaseChannel);
 		MapLocation myLoc = rc.getLocation();
-
+		rc.setIndicatorString(1, "");
 		if (rc.isCoreReady()) {
 			if (enemies.length > 0) {
 				if (rc.isWeaponReady()) {
@@ -104,21 +121,7 @@ public class B_Turtle implements Behavior {
 					return;
 				}
 			} else {
-				int currentVersion = rc.readBroadcast(versionChannel);
-				if (currentVersion > pathCount || panther == null) { //if the path has been updated
-					pathCount = currentVersion;
-					panther = new PathMove(rc, rallyBaseChannel+1, rallyLength, (panther==null)?0:panther.getCount());
-				}
-				if (panther.amAFailure) { //if I cannot path effectively, try to bug to the rally
-					Move.tryMove(rally);
-				} else {
-					panther.attemptMove();
-					//panther.attemptMove(); //attempt to move
-				}
-				if (panther.finished) {
-					rc.setIndicatorString(0,"Successfully rallied");
-					madeItToRally = true; //check if I made it to the goal
-				}
+				panther.attemptMove();
 			}
 		}
 	}
@@ -151,31 +154,16 @@ public class B_Turtle implements Behavior {
 	}
 
 	public void attackMove() throws GameActionException {
-		RobotInfo[] allies = rc.senseNearbyRobots(nearest, 37, rc.getTeam());
+		RobotInfo[] allies = rc.senseNearbyRobots(nearest, 40, rc.getTeam());
 		MapLocation myLoc = rc.getLocation();
 		if (enemies.length > 0){
-			if (allies.length < 7) {
-				//I should wait
-				int dis = myLoc.distanceSquaredTo(nearest);
-				if (dis <= 37) {
-					Move.tryMove(rc.getLocation().directionTo(nearest).opposite());
-				} else {
-					Move.tryMove(nearest);
-				}
+			if (rc.isWeaponReady() && rc.canAttackLocation(nearest)) {
+				rc.attackLocation(nearest);
 			} else {
-				if (rc.isWeaponReady()) {
-					rc.attackLocation(nearest);
-				} else {
-					Move.tryMove(nearest);
-				}
+				Move.tryMove(myLoc.directionTo(nearest));
 			}
 		} else {
-			int dis = myLoc.distanceSquaredTo(goal);
-			if (dis > 38 || allies.length > 7) {
-				Move.tryMove(goal);
-			} else {
-				if (dis < 35) Move.tryMove(rc.getLocation().directionTo(nearest).opposite());
-			}
+			if (allies.length > 7 || goal.distanceSquaredTo(myLoc) > 37) panther.attemptMove();
 		}
 	}
 

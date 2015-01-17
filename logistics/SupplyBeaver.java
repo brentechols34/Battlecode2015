@@ -10,8 +10,6 @@ import battlecode.common.*;
 import java.util.Random;
 
 import team163.utils.Move;
-import team163.utils.Path;
-import team163.utils.Point;
 import team163.utils.Supply;
 
 import javax.xml.stream.Location;
@@ -35,7 +33,6 @@ public class SupplyBeaver {
 
     public static void run(RobotController con) {
         rc = con;
-        rc.setIndicatorString(0, "I am supply beaver");
         rand = new Random(rc.getID());
         myRange = rc.getType().attackRadiusSquared;
         myTeam = rc.getTeam();
@@ -45,6 +42,7 @@ public class SupplyBeaver {
         while (true) {
             try {
                 myLoc = rc.getLocation();
+                rc.setIndicatorString(0, "I am supply beaver | head: " + rc.readBroadcast(196) + " tail: " + rc.readBroadcast(197));
 
                 //broadcast our updated position
                 rc.broadcast(198, myLoc.x);
@@ -74,6 +72,7 @@ public class SupplyBeaver {
         // Default assign the channel to the tail
         if (channel == 0) {
             channel = requester.readBroadcast(197);
+            System.out.println("Requested on channel " + channel);
 
             // Adjust the tail pointer for new requests
             channel = (channel == 300) ? 200 : channel;

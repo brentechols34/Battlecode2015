@@ -10,7 +10,6 @@ import battlecode.common.*;
 import java.util.Random;
 
 import team163.logistics.PathBeaver;
-import team163.utils.Point;
 import team163.utils.Spawn;
 import team163.utils.Supply;
 
@@ -164,6 +163,10 @@ public class HQ {
 		int timeout = rc.readBroadcast(667);
 		if (timeout > 0) {
 			rc.broadcast(667, timeout - 1);
+		}
+		int retarget_cooldown = rc.readBroadcast(69);
+		if (retarget_cooldown > 0) {
+			rc.broadcast(69, retarget_cooldown - 1);
 		}
 	}
 

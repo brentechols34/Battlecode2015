@@ -10,8 +10,6 @@ import battlecode.common.*;
 import java.util.Random;
 
 import team163.utils.Move;
-import team163.utils.Path;
-import team163.utils.Point;
 
 /**
  *
@@ -41,11 +39,11 @@ public class Beaver {
 
 	// max counts of buildings
 	static int maxBarracks = 1;
-	static int maxHelipad = 0;
-	static int maxMinerfactory = 1;
-	static int maxTankfactory = 5;
+	static int maxHelipad = 1;
+	static int maxMinerfactory = 2;
+	static int maxTankfactory = 7;
 	static int maxSupply = 5;
-	static int maxAerospace = 0;
+	static int maxAerospace = 4;
 
 	public static void run(RobotController rc) {
 		Beaver.rc = rc;
@@ -69,7 +67,7 @@ public class Beaver {
 				SupplyBeaver.run(rc);
 			}
 		} catch (Exception e) {
-			System.out.println("Tried to be a path beaver, but I failed");
+			System.out.println("Tried to be a path or supply beaver, but I failed");
 		}
 
 		while (true) {
@@ -175,7 +173,7 @@ public class Beaver {
 			}
 		}
 		if (!rc.getLocation().isAdjacentTo(rc.senseHQLocation())
-				&& adj_count > 5) {
+				&& adj_count > 6) {
 			int[] counts = new int[]{rc.readBroadcast(3), // barracks
 					rc.readBroadcast(6), // helipad
 					rc.readBroadcast(15), // minerfactory
