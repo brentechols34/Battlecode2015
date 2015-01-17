@@ -56,45 +56,6 @@ public class Move {
         set = false;
     }
 
-    /**
-     * Try moving using the bugger High of 2360 bytecode Low of 560 bytecode
-     * Average of about 1400 bytecode
-     *
-     * @param m end target map location
-     */
-    static MapLocation last;
-
-//    static public void tryMove(MapLocation m) {
-//        if (m.equals(rc.getLocation())) {
-//            return;
-//        }
-//        try {
-//            if (!rc.isCoreReady()) {
-//                return;
-//            }
-//            MapLocation ml = rc.getLocation();
-//            if (!set || !m.equals(last)) { //  || rand.nextDouble() > .90
-//                last = m;
-//                set = true;
-//                mb.reset();
-//                mb.setTargetLocation(m);
-//                mb.start = ml;
-//            }
-//            // try using bugging system
-//            MapLocation p = mb.nextMove();
-//            if (p != null) {
-//                Direction dir = ml.directionTo(p);
-//                if (rc.canMove(dir)) {
-//                    rc.move(dir);
-//                } else {
-//                    mb.closest = null;
-//                }
-//            }
-//        } catch (Exception e) {
-//            System.out.println("Error attempting bugging");
-//            e.printStackTrace();
-//        }
-//    }
 
     static public void tryFly (MapLocation m) throws GameActionException {
         if (!rc.isCoreReady()) {
