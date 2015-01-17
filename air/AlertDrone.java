@@ -1,12 +1,13 @@
 package team163.air;
 
-import java.awt.*;
 import java.util.Random;
 
 import battlecode.common.*;
+import team163.logistics.SupplyDrone;
 import team163.utils.AttackUtils;
 import team163.utils.CHANNELS;
 import team163.utils.Move;
+import team163.utils.Supply;
 
 public class AlertDrone {
 
@@ -29,6 +30,11 @@ public class AlertDrone {
 
     public static void run(RobotController rc) {
         try {
+            int supplierAlive = rc.readBroadcast(CHANNELS.SUPPLY_DRONE.getValue());
+            if (supplierAlive != Clock.getRoundNum() && supplierAlive != Clock.getRoundNum() - 1) {
+                SupplyDrone.run(rc);
+            }
+
             AlertDrone.rc = rc;
             AlertDrone.range = rc.getType().attackRadiusSquared;
             AlertDrone.team = rc.getTeam();
@@ -94,6 +100,11 @@ class Patrolling implements State {
         }
 
         Move.tryFly(nextTower);
+
+        if (Clock.getBytecodesLeft() > 500) {
+            Supply.supplyConservatively(rc, AlertDrone.team);
+        }
+
         return this;
     }
 }

@@ -9,6 +9,7 @@ import battlecode.common.*;
 
 import java.util.Random;
 
+import team163.utils.CHANNELS;
 import team163.utils.Move;
 import team163.utils.Supply;
 import team163.utils.PathMove;
@@ -19,7 +20,7 @@ import javax.xml.stream.Location;
  *
  * @author sweetness
  */
-public class SupplyBeaver {
+public class SupplyDrone {
 
     static Direction[] directions = {Direction.NORTH, Direction.NORTH_EAST,
             Direction.EAST, Direction.SOUTH_EAST, Direction.SOUTH,
@@ -47,6 +48,9 @@ public class SupplyBeaver {
 
         while (true) {
             try {
+                //Broadcast to the world that there is a supply drone!
+                rc.broadcast(CHANNELS.SUPPLY_DRONE.getValue(), Clock.getRoundNum());
+
                 myLoc = rc.getLocation();
                 rc.setIndicatorString(0, "I am supply beaver | head: " + rc.readBroadcast(196) + " tail: " + rc.readBroadcast(197));
 
@@ -93,6 +97,7 @@ public class SupplyBeaver {
     }
 
     static void goToBase () throws GameActionException {
+        rc.setIndicatorString(1, "Heading back to base!");
         wasReturning = true;
         if (travelLoc != null && !travelLoc.equals(rc.senseHQLocation())) {
             travelLoc = null;
@@ -124,6 +129,7 @@ public class SupplyBeaver {
         }
 
         MapLocation dest = new MapLocation(rc.readBroadcast(head), rc.readBroadcast(head + 1));
+        rc.setIndicatorString(1, "Supplying People! " + dest.toString());
         if (myLoc.distanceSquaredTo(dest) < GameConstants.SUPPLY_TRANSFER_RADIUS_SQUARED) {
             RobotInfo info = rc.senseRobotAtLocation(dest);
             if (info == null) {
@@ -141,15 +147,17 @@ public class SupplyBeaver {
     }
 
     static void usePathMove (MapLocation dest) throws GameActionException {
-        if (travelLoc == null) {
-            travelLoc = dest;
-            pathMove.setDestination(dest);
-        }
-        pathMove.attemptMove();
+//        if (travelLoc == null) {
+//            travelLoc = dest;
+//            pathMove.setDestination(dest);
+//        }
+//        pathMove.attemptMove();
+//
+//        rc.setIndicatorString(2, "I am going to " + travelLoc.toString());
+//        if (travelLoc.x == myLoc.x && travelLoc.y == myLoc.y) {
+//            travelLoc = null;
+//        }
 
-        rc.setIndicatorString(2, "I am going to " + travelLoc.toString());
-        if (travelLoc.x == myLoc.x && travelLoc.y == myLoc.y) {
-            travelLoc = null;
-        }
+        Move.tryFly(dest);
     }
 }

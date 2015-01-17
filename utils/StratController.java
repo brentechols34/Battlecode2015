@@ -20,9 +20,8 @@ public class StratController {
 	static int maxMinerfactory = 2;
 	static int maxTankfactory = 2;
 	static int maxSupply = 5;
-	static int maxAerospace = 4;
+	static int maxAerospace = 10;
 	
-
 	public static boolean shouldBuildHere(RobotController rc, MapLocation m) {
 		int count = 0;
 		for (Direction d : directions) {

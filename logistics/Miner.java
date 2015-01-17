@@ -195,7 +195,7 @@ class Mining implements State {
 	}
 
 	boolean requestSupply (RobotController rc) throws GameActionException {
-		Miner.resupplyChannel = SupplyBeaver.requestResupply(rc, rc.getLocation(), Miner.resupplyChannel);
+		Miner.resupplyChannel = SupplyDrone.requestResupply(rc, rc.getLocation(), Miner.resupplyChannel);
 
 		int head = rc.readBroadcast(196);
 		MapLocation beaverLoc = new MapLocation(rc.readBroadcast(198), rc.readBroadcast(199));

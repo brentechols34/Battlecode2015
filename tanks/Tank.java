@@ -1,7 +1,6 @@
 package team163.tanks;
 
-import team163.logistics.SupplyBeaver;
-import team163.utils.Move;
+import team163.logistics.SupplyDrone;
 import battlecode.common.*;
 
 public class Tank {
@@ -77,7 +76,7 @@ public class Tank {
 
     static void requestSupply() throws GameActionException {
         if (rc.getSupplyLevel() < 250) {
-            resupplyChannel = SupplyBeaver.requestResupply(rc, rc.getLocation(), resupplyChannel);
+            resupplyChannel = SupplyDrone.requestResupply(rc, rc.getLocation(), resupplyChannel);
 
             int head = rc.readBroadcast(196);
             MapLocation beaverLoc = new MapLocation(rc.readBroadcast(198), rc.readBroadcast(199));
