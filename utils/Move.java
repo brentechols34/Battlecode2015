@@ -116,6 +116,25 @@ public class Move {
         }
         return false;
     }
+    
+        /**
+     * Test in range of incoming objects (uses hard set 27 sq at the moment)
+     *
+     * @param m location to check
+     * @param obj stuff to avoid
+     * @return
+     */
+    public static boolean inTowerRange(MapLocation m, MapLocation[] obj, int range) {
+        for (MapLocation x : obj) {
+            if (x != null && x.x != 0 && x.y != 0) {
+                if (m.distanceSquaredTo(x) < range) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
 
     /**
      * Does not take into account walls and trys to kite around towers and stuff
