@@ -163,7 +163,7 @@ public class B_Turtle implements Behavior {
 				Move.tryMove(myLoc.directionTo(nearest));
 			}
 		} else {
-			if (allies.length > 7 || goal.distanceSquaredTo(myLoc) > 37) panther.attemptMove();
+			if (allies.length > 5 || goal.distanceSquaredTo(myLoc) > 37) panther.attemptMove();
 		}
 	}
 
