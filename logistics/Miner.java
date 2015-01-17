@@ -9,6 +9,7 @@ import java.util.Random;
 
 import battlecode.common.*;
 import team163.utils.Move;
+import team163.utils.PathMove;
 
 /**
  *
@@ -32,6 +33,8 @@ public class Miner {
 	static int lifetime = 0;
 	static double myHealth;
 	static RobotInfo[] enemies;
+    static PathMove pathMove;
+    static MapLocation targetLoc;
 
 	static int resupplyChannel = 0;
 
@@ -47,6 +50,7 @@ public class Miner {
 		enemyTeam = myTeam.opponent();
 		myHealth = rc.getHealth();
 		State state = new Mining();
+        pathMove = new PathMove(rc);
 
 		while (true) {
 			try {
@@ -82,11 +86,22 @@ public class Miner {
 		if (rc.isCoreReady() && rc.canMine() && oreHere > 3) {
 			rc.setIndicatorString(1, "Mining");
 			MineHere();
-		} else if (oreHere <= 3) {
+		} else {
 			Direction d = findSpot();
 			if (bestVal > 3) {
-				rc.setIndicatorString(1, "Moving to best: " + bestLoc);
-				Move.tryMove(bestLoc);
+                rc.setIndicatorString(1, "Moving to best: " + bestLoc);
+                if (targetLoc == null) {
+                    pathMove.setDestination(bestLoc);
+                    targetLoc = bestLoc;
+                }
+
+                if (rc.isCoreReady() && rc.canMove(d)) {
+                    pathMove.attemptMove();
+                }
+
+                if (targetLoc.x == myLoc.x && targetLoc.y == myLoc.y) {
+                    targetLoc = null;
+                }
 			} else if (rc.isCoreReady() && rc.canMove(d)) {
 				rc.setIndicatorString(1, "Moving nearby: " + d);
                 Move.tryMove(d);
@@ -99,7 +114,7 @@ public class Miner {
 		Direction[] counts = new Direction[9];
 		counts[0] = Direction.NONE;
 		int count = 1;
-		for (int i = 1; i < 8; i++) {
+		for (int i = 0; i < 8; i++) {
 			double oreHere = rc.senseOre(myLoc.add(directions[i]));
 			if (bestFound < oreHere && rc.canMove(directions[i])) {
 				count = 1;

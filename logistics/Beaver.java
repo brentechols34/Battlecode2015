@@ -173,7 +173,7 @@ public class Beaver {
 			}
 		}
 		if (!rc.getLocation().isAdjacentTo(rc.senseHQLocation())
-				&& adj_count > 6) {
+				&& adj_count > 7) {
 			int[] counts = new int[]{rc.readBroadcast(3), // barracks
 					rc.readBroadcast(6), // helipad
 					rc.readBroadcast(15), // minerfactory
@@ -183,7 +183,7 @@ public class Beaver {
 			};
 			int[] maxCounts = new int[]{maxBarracks, maxHelipad,
 					maxMinerfactory, maxTankfactory, maxSupply, maxAerospace};
-			int[] priorityOffsets = new int[]{1, 1, 5,
+			int[] priorityOffsets = new int[]{1, 1, 3,
 					(counts[0] > 0) ? 1 : -1000, 3, (counts[1] > 0) ? 1 : -1000};
 			boolean oneGood = false;
 			for (int i = 0; i < priorityOffsets.length; i++) {
