@@ -4,6 +4,7 @@ import battlecode.common.Direction;
 import battlecode.common.GameActionException;
 import battlecode.common.MapLocation;
 import battlecode.common.RobotController;
+import battlecode.common.RobotInfo;
 import battlecode.common.RobotType;
 import battlecode.common.TerrainTile;
 
@@ -26,7 +27,11 @@ public class StratController {
 		for (Direction d : directions) {
 			MapLocation m2 = m.add(d);
 			try {
-				if (rc.senseTerrainTile(m2) == TerrainTile.NORMAL && rc.senseRobotAtLocation(m2) == null) count++;
+				if (rc.senseTerrainTile(m2) == TerrainTile.NORMAL) {
+					RobotInfo ri = rc.senseRobotAtLocation(m2);
+					if (ri == null) count++;
+					else if (ri.buildingLocation != null) count--;
+				}
 			} catch (GameActionException e) {
 				e.printStackTrace();
 			}
@@ -49,7 +54,7 @@ public class StratController {
 		//find a reasonably close location that is a safe location
 		//start close to me, work outwards, and return first valid location
 		while (true) {
-			int dis = 1;
+			int dis = 2;
 			MapLocation a;
 			for (int i = -dis; i <= dis; i++) {
 				a = new MapLocation(m.x+i,m.y+dis);
@@ -62,6 +67,7 @@ public class StratController {
 				if (shouldBuildHere(rc,a)) return a;
 			}
 			dis++;
+			if (dis > 100) System.out.println("OH NOES");
 		}
 	}
 
@@ -71,49 +77,47 @@ public class StratController {
 			maxTankfactory = 0;
 			maxBarracks = 0;
 		}
-
-		if (StratController.shouldBuildHere(rc, rc.getLocation())) {
-			int[] counts = new int[]{rc.readBroadcast(3), // barracks
-					rc.readBroadcast(6), // helipad
-					rc.readBroadcast(15), // minerfactory
-					rc.readBroadcast(18), // tank factory
-					rc.readBroadcast(17), // Supply depot
-					rc.readBroadcast(7) // Aerospacelab
-			};
-			int[] maxCounts = new int[]{maxBarracks, maxHelipad,
-					maxMinerfactory, maxTankfactory, maxSupply, maxAerospace};
-			int[] priorityOffsets = new int[]{1, 1, 3,
-					(counts[0] > 0) ? 1 : -1000, 3, (counts[1] > 0) ? 1 : -1000};
-			boolean oneGood = false;
-			for (int i = 0; i < priorityOffsets.length; i++) {
-				if (counts[i] >= maxCounts[i]) {
-					priorityOffsets[i] = -1000;
-				} else {
-					oneGood = true;
+		int[] counts = new int[]{rc.readBroadcast(3), // barracks
+				rc.readBroadcast(6), // helipad
+				rc.readBroadcast(15), // minerfactory
+				rc.readBroadcast(18), // tank factory
+				rc.readBroadcast(17), // Supply depot
+				rc.readBroadcast(7) // Aerospacelab
+		};
+		int[] maxCounts = new int[]{maxBarracks, maxHelipad,
+				maxMinerfactory, maxTankfactory, maxSupply, maxAerospace};
+		int[] priorityOffsets = new int[]{1, 1, 3,
+				(counts[0] > 0) ? 1 : -1000, 3, (counts[1] > 0) ? 1 : -1000};
+		boolean oneGood = false;
+		for (int i = 0; i < priorityOffsets.length; i++) {
+			if (counts[i] >= maxCounts[i]) {
+				priorityOffsets[i] = -1000;
+			} else {
+				oneGood = true;
+			}
+		}
+		if (oneGood) {
+			int[] oreCosts = new int[]{300, 300, 500, 500, 100, 500};
+			double oreCount = rc.getTeamOre();
+			for (int i = 0; i < counts.length; i++) {
+				counts[i] -= priorityOffsets[i];
+			}
+			int toMake = mindex(counts);
+			if (counts[toMake] + priorityOffsets[toMake] < maxCounts[toMake]
+					&& oreCount >= oreCosts[toMake]) {
+				switch (toMake) {
+				case 0: return RobotType.BARRACKS;
+				case 1: return RobotType.HELIPAD;
+				case 2: return RobotType.MINERFACTORY;
+				case 3: return RobotType.TANKFACTORY;
+				case 4: return RobotType.SUPPLYDEPOT;
+				case 5: return RobotType.AEROSPACELAB;
 				}
 			}
-			if (oneGood) {
-				int[] oreCosts = new int[]{300, 300, 500, 500, 100, 500};
-				double oreCount = rc.getTeamOre();
-				for (int i = 0; i < counts.length; i++) {
-					counts[i] -= priorityOffsets[i];
-				}
-				int toMake = mindex(counts);
-				if (counts[toMake] + priorityOffsets[toMake] < maxCounts[toMake]
-						&& oreCount >= oreCosts[toMake]) {
-					switch (toMake) {
-					case 0: return RobotType.BARRACKS;
-					case 1: return RobotType.HELIPAD;
-					case 2: return RobotType.MINERFACTORY;
-					case 3: return RobotType.TANKFACTORY;
-					case 4: return RobotType.SUPPLYDEPOT;
-					case 5: return RobotType.AEROSPACELAB;
-					}
-				}
-			}
-		} return null;
+		}
+		return null;
 	}
-	
+
 	static int mindex(int[] options) {
 		int dex = 0;
 		int min = options[0];

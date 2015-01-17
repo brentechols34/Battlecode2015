@@ -24,7 +24,6 @@ public class SimplePather {
 
 	private int[][] prev;
 	private final float[] costs;
-//	private float[][] cost;
 	private final MapLocation[] q;
 	private int index;
 	private MapLocation dest;
@@ -53,9 +52,8 @@ public class SimplePather {
 		offsetMyHQ = new MapLocation(120 - dx, 120 - dy);
 		offsetEnemyHQ = new MapLocation(120 + dx, 120 + dx);
 		prev = new int[360][360];
-		q = new MapLocation[5000];
-		costs = new float[5000];
-//		cost = new float[360][360];
+		q = new MapLocation[1000];
+		costs = new float[1000];
 	}
 	
 
@@ -72,7 +70,6 @@ public class SimplePather {
 		start = offsetMapLocation(start);
 		finish = offsetMapLocation(finish);
 		prev = new int[360][360];
-//		cost = new float[360][360];
 		index = 0;
 		MapLocation current;
 		dest = start;

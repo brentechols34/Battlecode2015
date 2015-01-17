@@ -37,7 +37,7 @@ public class Beaver {
 	static int oreHere;
 	static double myHealth;
 	static RobotInfo[] enemies;
-	
+
 	//pathfinding for building
 	static PathMove panther;
 
@@ -87,7 +87,7 @@ public class Beaver {
 				bestVal = rc.readBroadcast(1000);
 				bestLoc = new MapLocation(rc.readBroadcast(1001),
 						rc.readBroadcast(1002));
-				
+
 				buildStuff();
 				if (rc.isCoreReady()) {
 					if (oreHere > bestVal) {
@@ -116,7 +116,10 @@ public class Beaver {
 	static void defaultMove() throws GameActionException {
 		if (panther.goal.isAdjacentTo(myLoc)) {
 			RobotType toMake = StratController.toMake(rc);
-			if (toMake!=null) {tryBuild(myLoc.directionTo(panther.goal), toMake);}
+			Direction dir = myLoc.directionTo(panther.goal);
+			if (toMake!=null && rc.canBuild(dir, toMake)) {
+				rc.build(myLoc.directionTo(panther.goal),toMake);
+			}
 		} else panther.attemptMove();
 	}
 
