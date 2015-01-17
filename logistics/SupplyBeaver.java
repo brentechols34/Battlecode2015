@@ -123,6 +123,9 @@ public class SupplyBeaver {
         }
 
         if (rc.isCoreReady()) {
+            Move.tryMove(dest);
+        }
+        if (rc.isCoreReady()) {
             Move.tryMove(myLoc.directionTo(dest));
         }
     }
