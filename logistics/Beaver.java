@@ -61,7 +61,7 @@ public class Beaver {
 			maxBarracks = 0;
 		}
 		try {
-			if (rc.readBroadcast(72) == 1) {
+			if (rc.readBroadcast(72) == 1 && Clock.getRoundNum() > 300) {
 				rc.broadcast(72, 0);
 				PathBeaver.rc = rc;
 				PathBeaver.run();
@@ -185,7 +185,7 @@ public class Beaver {
 			};
 			int[] maxCounts = new int[]{maxBarracks, maxHelipad,
 					maxMinerfactory, maxTankfactory, maxSupply, maxAerospace};
-			int[] priorityOffsets = new int[]{1, 1, 2,
+			int[] priorityOffsets = new int[]{1, 1, 5,
 					(counts[0] > 0) ? 1 : -1000, 3, (counts[1] > 0) ? 1 : -1000};
 			boolean oneGood = false;
 			for (int i = 0; i < priorityOffsets.length; i++) {

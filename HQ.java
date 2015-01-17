@@ -136,9 +136,10 @@ public class HQ {
 					attackSomething();
 				}
 
-				if (rc.isCoreReady() && rc.getTeamOre() >= 100 && counts[7] < 3) { //counts[7] == beaverCount
+				if (rc.isCoreReady() && rc.getTeamOre() >= 100 && counts[7] < 3 && (Clock.getRoundNum() > 300 || counts[7] == 0)) { //counts[7] == beaverCount
 						team163.utils.Spawn.trySpawn(directions[rand.nextInt(8)], RobotType.BEAVER);
 				}
+
 				int pbX = rc.readBroadcast(187);
 				int pbY = rc.readBroadcast(188);
 

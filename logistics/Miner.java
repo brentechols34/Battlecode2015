@@ -80,11 +80,11 @@ public class Miner {
 	static void defaultMove() throws GameActionException {
 		rc.setIndicatorString(1,"");
 		Direction d = findSpot();
-        if ((oreHere < 3 && bestVal > 3) || rc.senseOre(rc.getLocation().add(d))<3) {
+        if (oreHere < 3) {
         	rc.setIndicatorString(1,"Moving to best");
         	Move.tryMove(bestLoc);
         } else if (oreHere > 3 && rc.canMine()) {
-        	rc.setIndicatorString(1,"Mining here");
+        	rc.setIndicatorString(1, "Mining here");
         	MineHere();
         } else if (rc.canMove(d)) {
         	rc.setIndicatorString(1,"Moving to somewhere");
@@ -106,7 +106,9 @@ public class Miner {
 				counts[0] = directions[i];
 				bestFound = oreHere;
 			} else if (bestFound == oreHere) counts[count++] = directions[i];
-		}
+		} 
+        
+
 		return counts[(int) (count * rand.nextDouble())];
 	}
 	
