@@ -11,6 +11,7 @@ import battlecode.common.Team;
 import java.util.Random;
 
 import team163.utils.AttackUtils;
+import team163.utils.BasicBugger;
 import team163.utils.Move;
 import team163.utils.PathMove;
 
@@ -23,14 +24,22 @@ public class Soldier {
 	static MapLocation rally;
 	static MapLocation goal;
 	static boolean attacking;
+	static BasicBugger bb;
 
 	public static void run(RobotController rc) {
-		panther = new PathMove(rc);
+		//panther = new PathMove(rc);
+		bb = new BasicBugger(rc);
+		MapLocation eHQ = rc.senseEnemyHQLocation();
+		bb.setDestination(eHQ);
 		while (true) {
-			if (attacking) {
-				attack();
-			} else {
-				dontAttack();
+			try {
+				bb.attemptMove();
+				
+				
+				rc.yield();
+			} catch (GameActionException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
 			}
 		}
 	}

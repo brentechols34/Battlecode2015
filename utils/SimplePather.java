@@ -46,7 +46,6 @@ public class SimplePather {
 		this.rc = rc;
 		this.myHQ = rc.senseHQLocation();
 		this.enemyHQ = rc.senseEnemyHQLocation();
-
 		dx = enemyHQ.x - myHQ.x;
 		dy = enemyHQ.y - myHQ.y;
 		offsetMyHQ = new MapLocation(120 - dx, 120 - dy);
