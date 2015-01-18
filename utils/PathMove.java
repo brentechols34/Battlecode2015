@@ -163,7 +163,9 @@ public class PathMove {
 	 * @throws GameActionException
 	 */
 	public void setDestination(MapLocation m) throws GameActionException {
+		rc.setIndicatorString(0, m.toString());
 		path = sp.pathfind(rc.getLocation(), m);
+		
 		this.goal = m;
 		refindPath();
 		if (path == null)  System.out.println("Please why.");

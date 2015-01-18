@@ -102,11 +102,11 @@ public class Beaver {
 	}
 
 	static boolean isStationary(RobotType rt) {
-		return (rt != null && rt == RobotType.AEROSPACELAB
+		return (rt != null && (rt == RobotType.AEROSPACELAB
 				|| rt == RobotType.BARRACKS || rt == RobotType.HELIPAD
 				|| rt == RobotType.HQ || rt == RobotType.MINERFACTORY
 				|| rt == RobotType.SUPPLYDEPOT || rt == RobotType.TANKFACTORY
-				|| rt == RobotType.TECHNOLOGYINSTITUTE || rt == RobotType.TOWER || rt == RobotType.TRAININGFIELD);
+				|| rt == RobotType.TECHNOLOGYINSTITUTE || rt == RobotType.TOWER || rt == RobotType.TRAININGFIELD));
 	}
 
 	static void defaultMove() throws GameActionException {

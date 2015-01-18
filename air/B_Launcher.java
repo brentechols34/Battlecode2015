@@ -122,7 +122,7 @@ public class B_Launcher implements Behavior {
                     }
                 }
             }
-
+            rc.setIndicatorString(0,"1");
             if (attack) {
                 if (previous.x != xGoal && previous.y != yGoal) {
                     target = new MapLocation(xGoal, yGoal);
@@ -134,6 +134,7 @@ public class B_Launcher implements Behavior {
                     pm.setDestination(target);
                 }
             }
+            rc.setIndicatorString(0,"2");
         } catch (Exception e) {
             System.out.println("Error in Launcher calculation " + e);
         }
@@ -159,6 +160,7 @@ public class B_Launcher implements Behavior {
 
     public void action() {
         try {
+        	rc.setIndicatorString(1, "" +Clock.getRoundNum());
             if (enemies.length > 0) {
                 launchThemAll();
                 if (wasHurt) {
@@ -188,6 +190,7 @@ public class B_Launcher implements Behavior {
 
     public void panicAlert() {
         // read and see if someone is under attack
+    	rc.setIndicatorString(1,"Panic: " + Clock.getRoundNum());
         try {
             int panicX = rc.readBroadcast(911);
             if (panicX != 0) { // try to assist

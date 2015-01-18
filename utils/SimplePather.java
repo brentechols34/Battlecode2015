@@ -23,6 +23,7 @@ import battlecode.common.TerrainTile;
 public class SimplePather {
 
 	private int[][] prev;
+	private float[][] cost;
 	private final float[] costs;
 	private final MapLocation[] q;
 	private int index;
@@ -50,9 +51,10 @@ public class SimplePather {
 		dy = enemyHQ.y - myHQ.y;
 		offsetMyHQ = new MapLocation(120 - dx, 120 - dy);
 		offsetEnemyHQ = new MapLocation(120 + dx, 120 + dx);
-		prev = new int[240][240];//new int[360][360];
+		prev = new int[maxX][maxY];
 		q = new MapLocation[2000];
 		costs = new float[2000];
+		cost = new float[maxX][maxY];
 	}
 	
 
@@ -69,12 +71,14 @@ public class SimplePather {
 		start = offsetMapLocation(start);
 		finish = offsetMapLocation(finish);
 		prev = new int[240][240];
+		cost = new float[240][240];
 		index = 0;
 		MapLocation current;
 		dest = start;
 		final int desx = dest.x;
 		final int desy = dest.y;
 		for (int i = 8; i != 0; i--) check(finish, i);
+		//int count = 0;
 		while (index != 0) {
 			current = q[--index];
 			if (current.x == desx && current.y == desy) {
@@ -134,9 +138,11 @@ public class SimplePather {
 		if (impassable(unOffsetMapLocation(n))) return;
 		final int nx = n.x;
 		final int ny = n.y;
-        if (prev[nx][ny] == 0) {
-            add(n, distance(n, dest) * 1.5f);
+		float potentialCost = cost[parent.x][parent.y] + distance(parent,n);
+        if (prev[nx][ny] == 0 || cost[nx][ny] > potentialCost) {
+            add(n, 1.3f*distance(n, dest) + potentialCost);
             prev[nx][ny] = dir;
+            cost[nx][ny] = potentialCost;
         }
 	}
 
