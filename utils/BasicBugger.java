@@ -1,4 +1,6 @@
 package team163.utils;
+import java.util.Random;
+
 import battlecode.common.*;
 
 public class BasicBugger {
@@ -10,6 +12,7 @@ public class BasicBugger {
 	private MapLocation hugStart;
 	private MapLocation hugEnd;
 	private boolean hugging;
+	private final Random rand;
 
 	static Direction[] directions = {Direction.NORTH, Direction.NORTH_EAST,
 		Direction.EAST, Direction.SOUTH_EAST, Direction.SOUTH,
@@ -18,6 +21,7 @@ public class BasicBugger {
 	public BasicBugger(RobotController rc) {
 		this.rc = rc;
 		reverse = false;
+		rand = new Random(rc.getID());
 	}
 
 	public void setDestination(MapLocation m) {
@@ -114,7 +118,7 @@ public class BasicBugger {
 			if (tt == TerrainTile.VOID) return true;
 			if (rc.canSenseLocation(m)) {
 				RobotInfo ri = rc.senseRobotAtLocation(m);
-				if (ri != null) return true; //rc.setIndicatorString(0,"RETREAT");
+				if (ri != null && (rand.nextDouble() > .8 || isStationary(ri.type))) return true; //
 			}
 			return false;
 		} catch(GameActionException e) {

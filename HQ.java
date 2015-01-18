@@ -220,7 +220,6 @@ public class HQ {
 				counts[13]++;
 				break;
 			case MINERFACTORY: {
-				//if (rc.getSupplyLevel()>0) rc.transferSupplies(100, r.location);
 				counts[14]++;
 				break;
 			}

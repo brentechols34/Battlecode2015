@@ -168,6 +168,10 @@ public class B_Launcher implements Behavior {
                 if (wasHurt) {
                     Move.tryMove(rc.getLocation().directionTo(nearest)
                             .opposite());
+                } else if (nearTower && isClear(target)) {
+                	if (rc.isWeaponReady() && rc.canLaunch(myLoc.directionTo(target))) {
+                        rc.launchMissile(myLoc.directionTo(target));
+                    }
                 }
             } else {
                 if (!Move.inTowerRange(myLoc, rc.senseEnemyTowerLocations(), 35)) {
@@ -176,7 +180,11 @@ public class B_Launcher implements Behavior {
                     nearTower = true;
                 }
                 if (nearTower) {
-                    if (isClear(target)) launchThemAll(target);
+                    if (isClear(target)) {
+                    	if (rc.isWeaponReady() && rc.canLaunch(myLoc.directionTo(target))) {
+                            rc.launchMissile(myLoc.directionTo(target));
+                        }
+                    }
                     else b.attemptMove();
                 } else {
                     previous = target;
@@ -190,10 +198,14 @@ public class B_Launcher implements Behavior {
     }
     
     public void target() throws GameActionException {
+    	Team t = rc.getTeam();
     	for (RobotInfo r : enemies) {
-    		if (isClear(r.location)) {
-    			launchThemAll(r.location);
-    			return;
+    		if (isClear(r.location) && rc.senseNearbyRobots(r.location, 2, t).length < 2) {
+            	if (rc.isWeaponReady() && rc.canLaunch(myLoc.directionTo(r.location))) {
+                    rc.launchMissile(myLoc.directionTo(r.location));
+                    return;
+                }
+    			
     		}
     	}
     }
@@ -203,7 +215,7 @@ public class B_Launcher implements Behavior {
     	MapLocation t = new MapLocation(myLoc.x,myLoc.y).add(d);
     	while (!t.equals(m)) {
     		d = t.directionTo(m);
-    		if (!rc.canSenseLocation(m)) return true;
+    		if (!rc.canSenseLocation(t)) return true;
     		RobotInfo r = rc.senseRobotAtLocation(t);
     		if (r != null && r.team == rc.getTeam() && r.type != RobotType.MISSILE) {
     			return false;
@@ -215,7 +227,6 @@ public class B_Launcher implements Behavior {
 
     public void panicAlert() {
         // read and see if someone is under attack
-    	rc.setIndicatorString(1,"Panic: " + Clock.getRoundNum());
         try {
             int panicX = rc.readBroadcast(911);
             if (panicX != 0) { // try to assist
