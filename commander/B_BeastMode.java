@@ -132,11 +132,18 @@ public class B_BeastMode implements Behavior {
             if (nearest.distanceSquaredTo(myLoc) < 7) {
                 Move.tryMove(nearest.directionTo(myLoc));
             }
-            if (!previous.equals(goal)) {
-                pm.setDestination(goal);
-                previous = goal;
+            MapLocation tow = closest(Commander.rc.senseEnemyTowerLocations());
+            if (tow.distanceSquaredTo(myLoc) < 35) {
+                if (tow.distanceSquaredTo(myLoc) < 34) {
+                    Move.tryMove(tow.directionTo(myLoc));
+                }
+            } else {
+                if (!previous.equals(goal)) {
+                    pm.setDestination(goal);
+                    previous = goal;
+                }
+                pm.attemptMove();
             }
-            pm.attemptMove();
         } catch (Exception e) {
             System.out.println("error in attack unit with commander " + e);
         }
@@ -149,14 +156,34 @@ public class B_BeastMode implements Behavior {
                 Move.tryMove(nearest.directionTo(myLoc));
             }
             attack(nearest, rush);//if rush true than uses flash
-            if (!previous.equals(rally)) {
-                pm.setDestination(rally);
-                previous = rally;
+            MapLocation tow = closest(Commander.rc.senseEnemyTowerLocations());
+            if (tow.distanceSquaredTo(myLoc) < 35) {
+                if (tow.distanceSquaredTo(myLoc) < 34) {
+                    Move.tryMove(tow.directionTo(myLoc));
+                }
+            } else {
+                if (!previous.equals(rally)) {
+                    pm.setDestination(rally);
+                    previous = rally;
+                }
+                pm.attemptMove();
             }
-            pm.attemptMove();
         } catch (Exception e) {
             System.out.println("error in commander roam " + e);
         }
+    }
+
+    private MapLocation closest(MapLocation[] in) {
+        MapLocation closest = myLoc;
+        int min = Integer.MAX_VALUE;
+        for (MapLocation m : in) {
+            int dis = m.distanceSquaredTo(myLoc);
+            if (dis < min) {
+                min = dis;
+                closest = m;
+            }
+        }
+        return closest;
     }
 
     private void defend(MapLocation m) {
@@ -180,11 +207,18 @@ public class B_BeastMode implements Behavior {
                 attack(nearest, true);
             } else {
                 if (Commander.rc.getFlashCooldown() > 0) {
-                    if (!previous.equals(closest)) {
-                        pm.setDestination(closest);
-                        previous = closest;
+                    MapLocation tow = closest(Commander.rc.senseEnemyTowerLocations());
+                    if (tow.distanceSquaredTo(myLoc) < 35) {
+                        if (tow.distanceSquaredTo(myLoc) < 34) {
+                            Move.tryMove(tow.directionTo(myLoc));
+                        }
+                    } else {
+                        if (!previous.equals(closest)) {
+                            pm.setDestination(closest);
+                            previous = closest;
+                        }
+                        pm.attemptMove();
                     }
-                    pm.attemptMove();
                 } else {
                     //flash
                     flash(closest);
@@ -204,8 +238,14 @@ public class B_BeastMode implements Behavior {
                     flash(m);
                 }
             }
-            if (Commander.rc.canAttackLocation(m) && Commander.rc.isWeaponReady()) {
-                Commander.rc.attackLocation(m);
+            if (myLoc.distanceSquaredTo(m) <= 10) {//is in range
+                RobotInfo ri = Commander.rc.senseRobotAtLocation(m);
+                if (Commander.rc.canAttackLocation(m)
+                        && ri != null && ri.team != Commander.team) {
+                    if (Commander.rc.isWeaponReady()) {
+                        Commander.rc.attackLocation(m);
+                    }
+                }
             }
         } catch (Exception e) {
             System.out.println("error in commander attack " + e);
@@ -226,7 +266,10 @@ public class B_BeastMode implements Behavior {
             }
             //don't waste flash if can not use well
             if (!flash.equals(myLoc) && Commander.rc.isCoreReady()) {
-                Commander.rc.castFlash(flash);
+                //don't flash into tower range
+                if (closest(Commander.rc.senseEnemyTowerLocations()).distanceSquaredTo(flash) > 30) {
+                    Commander.rc.castFlash(flash);
+                }
             }
         } catch (Exception e) {
             System.out.println("Error in flashing people " + e);
@@ -265,7 +308,7 @@ public class B_BeastMode implements Behavior {
     }
 
     public void panicAlert() {
-
+        //currently does not respond to panic alerts
     }
 
 }
