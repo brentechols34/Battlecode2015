@@ -32,14 +32,14 @@ public class Barracks {
                 
 
                 // get information broadcasted by the HQ
-                int numSoldiers = rc.readBroadcast(1);
-
+                //int numSoldiers = rc.readBroadcast(1);
+                int numBashers = rc.readBroadcast(2);
                 if (rc.isCoreReady()
-                        && rc.getTeamOre() >= 60
-                        && numSoldiers < 20 && rc.readBroadcast(18) < 10) {
+                        && rc.getTeamOre() >= 80
+                        && numBashers < 8) {
                     //&& fate < Math.pow(1.2, 15 - numSoldiers
                     //		- numBashers + numBeavers) * 10000) {
-                    Spawn.trySpawn(directions[rand.nextInt(8)], RobotType.SOLDIER);
+                    Spawn.trySpawn(directions[rand.nextInt(8)], RobotType.BASHER);
                 }
             } catch (Exception e) {
                 System.out.println("Barracks Exception");

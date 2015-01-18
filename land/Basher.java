@@ -36,6 +36,8 @@ public class Basher {
 
 	static MapLocation goal;
 	static MapLocation rally;
+	
+	static boolean attacking;
 
 	public static void run(RobotController rc) {
 		pm = new PathMove(rc);
@@ -53,13 +55,14 @@ public class Basher {
 				x = rc.readBroadcast(50);
 				y = rc.readBroadcast(51);
 				rally = new MapLocation(x,y);
-				if (rc.readBroadcast(66) == 1) {
-					if (!pm.goal.equals(goal)) pm.setDestination(goal);
+				attacking = (rc.readBroadcast(66) == 1);
+				if (attacking) {
+					if (!goal.equals(pm.goal)) pm.setDestination(goal);
 				} else {
-					if (!pm.goal.equals(rally)) pm.setDestination(rally);
+					if (!rally.equals(pm.goal)) pm.setDestination(rally);
 				}
 
-				yolo();
+				if (rc.isCoreReady()) yolo();
 
 				rc.yield();
 			} catch (GameActionException e) {
@@ -75,6 +78,12 @@ public class Basher {
 		MapLocation closest = null;
 		int dis = Integer.MAX_VALUE;
 		int maxCount = 0;
+		
+		if (!attacking && me.distanceSquaredTo(rally) > 10) { //keep kinda close to rally until we attack
+			pm.attemptMove();
+			return;
+		}
+		
 		for (RobotInfo r : enemies) {
 			if (r.type != RobotType.TOWER && r.type != RobotType.HQ) {
 				int t_dis = me.distanceSquaredTo(r.location);
@@ -90,29 +99,12 @@ public class Basher {
 				}
 			}
 		}
-		if (counts[maxCount] == 0) { //if the best direction puts me towards enemies
+		if (counts[maxCount] == 0) { //if the best direction puts me towards no one
 			if (closest != null) {
 				Direction toClosest = me.directionTo(closest);
 				if (rc.canMove(toClosest)) rc.move(toClosest);
 			} else {
-				RobotInfo[] allies = rc.senseNearbyRobots(RobotType.BASHER.sensorRadiusSquared, myTeam);
-				MapLocation closestLauncher = null;
-				dis = Integer.MAX_VALUE;
-				for (RobotInfo ally : allies) {
-					if (ally.type == RobotType.LAUNCHER) {
-						int t_dis = me.distanceSquaredTo(ally.location);
-						if (t_dis < dis) {
-							dis = t_dis;
-							closestLauncher = ally.location;
-						}
-					}
-				}
-				if (dis < 10) {
-					Direction d = me.directionTo(closestLauncher).opposite();
-					if (rc.canMove(d)) {
-						rc.move(d);
-					}
-				} else pm.attemptMove();
+				pm.attemptMove();
 			}
 
 		} else {
