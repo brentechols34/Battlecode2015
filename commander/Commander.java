@@ -30,7 +30,7 @@ public class Commander {
         Commander.rc = rc;
         Commander.range = rc.getType().attackRadiusSquared;
         Commander.team = rc.getTeam();
-        Commander.team = Commander.team.opponent();
+        Commander.opponent = Commander.team.opponent();
         Commander.enemyHQ = rc.senseEnemyHQLocation();
         Behavior mood = new B_BeastMode();
 
@@ -42,6 +42,7 @@ public class Commander {
                     mood.action();
                 }
                 mood.panicAlert();
+                Commander.rc.yield();
             } catch (Exception e) {
                 System.out.println("Commander issue " + e);
             }
