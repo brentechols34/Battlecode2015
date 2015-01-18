@@ -6,6 +6,7 @@
 package team163.commander;
 
 import battlecode.common.*;
+import team163.logistics.SupplyDrone;
 
 /**
  *
@@ -36,6 +37,7 @@ public class Commander {
 
         while (true) {
             try {
+                requestSupply();
                 mood.perception();
                 mood.calculation();
                 if (!panic) {
@@ -46,6 +48,21 @@ public class Commander {
             } catch (Exception e) {
                 System.out.println("Commander issue " + e);
             }
+        }
+    }
+
+    static void requestSupply() throws GameActionException {
+        if (rc.getSupplyLevel() < 250) {
+            resupplyChannel = SupplyDrone.requestResupply(rc, rc.getLocation(), resupplyChannel);
+
+            int head = rc.readBroadcast(196);
+            MapLocation beaverLoc = new MapLocation(rc.readBroadcast(198), rc.readBroadcast(199));
+            if (head == resupplyChannel && beaverLoc.distanceSquaredTo(rc.getLocation()) < 20) {
+                System.out.println("waiting for refuel");
+                Commander.rc.yield();
+            }
+        } else {
+            resupplyChannel = 0;
         }
     }
 
