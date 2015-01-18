@@ -28,7 +28,7 @@ public class SimplePather {
 	private final MapLocation[] q;
 	private int index;
 	private MapLocation dest;
-	public static final int MAX_PATH_LENGTH = 100;
+	public static final int MAX_PATH_LENGTH = 300;
 	private RobotController rc;
 	final int dx;
 	final int dy;
@@ -52,11 +52,11 @@ public class SimplePather {
 		offsetMyHQ = new MapLocation(120 - dx, 120 - dy);
 		offsetEnemyHQ = new MapLocation(120 + dx, 120 + dx);
 		prev = new int[maxX][maxY];
-		q = new MapLocation[2000];
-		costs = new float[2000];
+		q = new MapLocation[4000];
+		costs = new float[4000];
 		cost = new float[maxX][maxY];
 	}
-	
+
 
 	/**
 	 * Finds a path from some start to some finish.
@@ -110,7 +110,7 @@ public class SimplePather {
 		do {
 			int next = ((prev[current.x][current.y]+3)&7)+1;
 			if (dir == 0 || next != dir) { //this minimizes the path, for efficient radio-ing
-			path_temp[count++] = unOffsetMapLocation(current);
+				path_temp[count++] = unOffsetMapLocation(current);
 				dir = next;
 			}
 			current = moveTo(current, next);
@@ -129,7 +129,7 @@ public class SimplePather {
 			check(p, ((dir + 1) & 7)+1);
 		}
 		check(p, ((dir + 6) & 7)+1);
-		check(p, ((dir + 0) & 7)+1);
+		check(p, (dir & 7)+1);
 		check(p, dir);
 	}
 
@@ -139,16 +139,11 @@ public class SimplePather {
 		final int nx = n.x;
 		final int ny = n.y;
 		float potentialCost = cost[parent.x][parent.y] + parent.distanceSquaredTo(n);
-        if (prev[nx][ny] == 0 || cost[nx][ny] > potentialCost) {
-            add(n, 2 * n.distanceSquaredTo(dest) + potentialCost);
-            prev[nx][ny] = dir;
-            cost[nx][ny] = potentialCost;
-        }
-	}
-
-	private static int abs(int x) {
-		final int m = x >> 31;
-		return x + m ^ m;
+		if (prev[nx][ny] == 0 || cost[nx][ny] > potentialCost) {
+			add(n, 1f * n.distanceSquaredTo(dest) + potentialCost);
+			prev[nx][ny] = dir;
+			cost[nx][ny] = potentialCost;
+		}
 	}
 
 	/**
@@ -203,7 +198,7 @@ public class SimplePather {
 
 	private void add(MapLocation p, float c) {
 		int i = index;
-		for (; i != 0 && c > costs[i - 1]; i--) {
+		for (; i != 0 && c > costs[i - 1] && i > index-10; i--) {
 			costs[i] = costs[i - 1];
 			q[i] = q[i - 1];
 		}

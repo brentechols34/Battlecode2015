@@ -46,8 +46,6 @@ public class B_Tank {
 		} catch (GameActionException e) {
 			e.printStackTrace();
 		}
-
-
 	}
 
 	public void checkTarget() throws GameActionException{
@@ -80,7 +78,9 @@ public class B_Tank {
 		if (localEnemies.length > 0) {
 			int most=0;
 			RobotInfo best= null;
+			RobotInfo somebody = null;
 			for (RobotInfo r : localEnemies) {
+				somebody = r;
 				int allyCount = rc.senseNearbyRobots(r.location, RobotType.TANK.sensorRadiusSquared, myTeam).length;
 				if (allyCount > 6 && (best == null || most < allyCount)) {
 					best = r;
@@ -90,17 +90,11 @@ public class B_Tank {
 			if (best != null) { //there is a nearby enemy who should get rekt
 				kill(best.location);
 				return;
-			} else {
-				try {
-					rc.setIndicatorString(0,"PANTHER2");
-					p.attemptMove();
-				} catch (GameActionException e) {
-					e.printStackTrace();
-				}
+			} else { //run away
+				Move.tryMove(me.directionTo(somebody.location).opposite());
 			}
 		} else {
 			try {
-				rc.setIndicatorString(0,"PANTHER");
 				p.attemptMove();
 			} catch (GameActionException e) {
 				e.printStackTrace();

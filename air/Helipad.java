@@ -22,7 +22,7 @@ public class Helipad {
             	int droneCount = rc.readBroadcast(4);
             	int minerCount = rc.readBroadcast(14);
                 if (rc.isCoreReady() && rc.getTeamOre() >= 125
-                        && rand.nextBoolean() && droneCount < 30 && minerCount > 5) {
+                        && rand.nextBoolean() && droneCount < 50 && minerCount > 5) {
                     Spawn.randSpawn(
                             RobotType.DRONE);
                 }

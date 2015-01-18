@@ -83,7 +83,6 @@ public class SupplyDrone {
         // Default assign the channel to the tail
         if (channel == 0) {
             channel = requester.readBroadcast(197);
-            System.out.println("Requested on channel " + channel);
 
             // Adjust the tail pointer for new requests
             channel = (channel == 300) ? 200 : channel;
