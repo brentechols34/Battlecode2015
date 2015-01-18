@@ -124,7 +124,7 @@ public class SimplePather {
 	private void expand(MapLocation p) throws GameActionException {
 		final int dir = prev[p.x][p.y];
 		if (dir == 0) return;
-		if ((dir & 1) == 0) { //is diagonal
+		if ((dir & 1) == 0) {
 			check(p, ((dir + 5) & 7)+1);
 			check(p, ((dir + 1) & 7)+1);
 		}
@@ -138,21 +138,12 @@ public class SimplePather {
 		if (impassable(unOffsetMapLocation(n))) return;
 		final int nx = n.x;
 		final int ny = n.y;
-		float potentialCost = cost[parent.x][parent.y] + distance(parent,n);
+		float potentialCost = cost[parent.x][parent.y] + parent.distanceSquaredTo(n);
         if (prev[nx][ny] == 0 || cost[nx][ny] > potentialCost) {
-            add(n, 1.3f*distance(n, dest) + potentialCost);
+            add(n, 2 * n.distanceSquaredTo(dest) + potentialCost);
             prev[nx][ny] = dir;
             cost[nx][ny] = potentialCost;
         }
-	}
-
-	/**
-	 * Get the distance between 2 MapLocations
-	 */
-	private static float distance(MapLocation p1, MapLocation p2) {
-		final float dx = abs(p1.x - p2.x);
-		final float dy = abs(p1.y - p2.y);
-		return dx > dy ? (dy * 20f / 70 + dx) : (dx * 20f / 70 + dy);
 	}
 
 	private static int abs(int x) {

@@ -39,6 +39,9 @@ public class Missile {
                         }
                     }
                 }
+                if (loc.equals(rc.senseEnemyHQLocation())) {
+                	loc = findClosestToMe(rc);
+                }
 
                 if (allie == 0 && enemy > 0) {
                     ratio = 1;
@@ -62,5 +65,23 @@ public class Missile {
             e.printStackTrace();
         }
     }
+    
+	public static MapLocation findClosestToMe(RobotController rc) {
+		int mindex = 0;
+		MapLocation[] en = rc.senseEnemyTowerLocations();
+		MapLocation me = rc.getLocation();
+		MapLocation enHQ = rc.senseEnemyHQLocation();
+		MapLocation min = enHQ;
+		int dis = me.distanceSquaredTo(enHQ);
+		for (MapLocation m : en) {
+			int t_dis = me.distanceSquaredTo(m);
+			if (t_dis < dis) {
+				dis = t_dis;
+				min = m;
+				
+			}
+		} 
+		return min;
+	}
 
 }
