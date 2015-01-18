@@ -2,6 +2,7 @@ package team163.air;
 
 import java.util.Random;
 
+import team163.utils.BasicBugger;
 import team163.utils.Move;
 import battlecode.common.*;
 import team163.utils.PathMove;
@@ -25,6 +26,7 @@ public class B_Launcher implements Behavior {
     public boolean attacking;
     boolean nearTower = false;
     PathMove pm = new PathMove(Launcher.rc);
+    BasicBugger b = new BasicBugger(Launcher.rc);
     int xRally;
     int yRally;
     int xGoal;
@@ -127,11 +129,13 @@ public class B_Launcher implements Behavior {
                 if (previous.x != xGoal && previous.y != yGoal) {
                     target = new MapLocation(xGoal, yGoal);
                     pm.setDestination(target);
+                    b.setDestination(target);
                 }
             } else {
                 if (previous.x != xRally && previous.y != yRally) {
                     target = new MapLocation(xRally, yRally);
                     pm.setDestination(target);
+                    b.setDestination(target);
                 }
             }
             rc.setIndicatorString(0,"2");
@@ -140,8 +144,8 @@ public class B_Launcher implements Behavior {
         }
     }
 
-    private void launchThemAll() throws GameActionException {
-        Direction dir = rc.getLocation().directionTo(nearest);
+    private void launchThemAll(MapLocation n) throws GameActionException {
+        Direction dir = rc.getLocation().directionTo(n);
         for (int j = 0; j < 5; j++) {
             if (rc.getMissileCount() > 0) {
                 for (int i = 0; i < 8; i++) {
@@ -160,9 +164,8 @@ public class B_Launcher implements Behavior {
 
     public void action() {
         try {
-        	rc.setIndicatorString(1, "" +Clock.getRoundNum());
             if (enemies.length > 0) {
-                launchThemAll();
+                target();
                 if (wasHurt) {
                     Move.tryMove(rc.getLocation().directionTo(nearest)
                             .opposite());
@@ -174,18 +177,41 @@ public class B_Launcher implements Behavior {
                     nearTower = true;
                 }
                 if (nearTower) {
-                    launchThemAll();
+                    if (isClear(target)) launchThemAll(target);
+                    else b.attemptMove();
                 } else {
                     previous = target;
-                    rc.setIndicatorString(0,"ATTEMPTING MOVE");
                     pm.attemptMove();
-                    rc.setIndicatorString(0,"I DID IT");
-
                 }
             }
         } catch (Exception e) {
             System.out.println("Launcher action Error");
+            e.printStackTrace();
         }
+    }
+    
+    public void target() throws GameActionException {
+    	for (RobotInfo r : enemies) {
+    		if (isClear(r.location)) {
+    			launchThemAll(r.location);
+    			return;
+    		}
+    	}
+    }
+    
+    public boolean isClear(MapLocation m) throws GameActionException {
+    	Direction d = myLoc.directionTo(m);
+    	MapLocation t = new MapLocation(myLoc.x,myLoc.y).add(d);
+    	while (!t.equals(m)) {
+    		d = t.directionTo(m);
+    		if (!rc.canSenseLocation(m)) return true;
+    		RobotInfo r = rc.senseRobotAtLocation(t);
+    		if (r != null && r.team == rc.getTeam() && r.type != RobotType.MISSILE) {
+    			return false;
+    		}
+    		t = t.add(d);
+    	}
+    	return true;
     }
 
     public void panicAlert() {

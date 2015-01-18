@@ -13,39 +13,43 @@ import battlecode.common.*;
  * @author sweetness
  */
 public class Missile {
-	
-    static Direction[] directions = {Direction.NORTH, Direction.NORTH_EAST,
-        Direction.EAST, Direction.SOUTH_EAST, Direction.SOUTH,
-        Direction.SOUTH_WEST, Direction.WEST, Direction.NORTH_WEST};
 
-    public static void run(RobotController rc) {
-        try {
-            Team team = rc.getTeam();
-            MapLocation loc = findClosestToMe(rc);
-            if (loc == null) {
-            	RobotInfo[] en = rc.senseNearbyRobots(24, team.opponent());
-            	if (en.length > 0) loc = en[0].location;
-            	else loc = rc.senseEnemyHQLocation();
-            }
-            MapLocation myLoc;
-            
+	static Direction[] directions = {Direction.NORTH, Direction.NORTH_EAST,
+		Direction.EAST, Direction.SOUTH_EAST, Direction.SOUTH,
+		Direction.SOUTH_WEST, Direction.WEST, Direction.NORTH_WEST};
 
-            //missiles only live 5 rounds
-            while (true) {
-                /* perform round */
-            	Direction dir = rc.getLocation().directionTo(loc);
-            	if (rc.canMove(dir)) {
-            		rc.move(dir);
-            	}
-                /* end round */
-                rc.yield();
-            }
-        } catch (Exception e) {
-            System.out.println("Missile Exception");
-            e.printStackTrace();
-        }
-    }
-    
+	public static void run(RobotController rc) {
+		try {
+			Team team = rc.getTeam();
+			int x = rc.readBroadcast(67);
+			int y = rc.readBroadcast(68);
+			MapLocation m = rc.getLocation();
+			MapLocation loc;
+			if (m.distanceSquaredTo(new MapLocation(x,y)) < 35) {
+				loc = new MapLocation(x,y);
+			} else {
+					RobotInfo[] en = rc.senseNearbyRobots(24, team.opponent());
+					if (en.length > 0) loc = en[0].location;
+					else loc = rc.senseEnemyHQLocation();
+			}
+			rc.setIndicatorString(0, loc.toString());
+
+			//missiles only live 5 rounds
+			while (true) {
+				/* perform round */
+				Direction dir = rc.getLocation().directionTo(loc);
+				if (rc.canMove(dir) && rc.isCoreReady()) {
+					rc.move(dir);
+				}
+				/* end round */
+				rc.yield();
+			}
+		} catch (Exception e) {
+			System.out.println("Missile Exception");
+			e.printStackTrace();
+		}
+	}
+
 	public static MapLocation findClosestToMe(RobotController rc) {
 		MapLocation[] en = rc.senseEnemyTowerLocations();
 		MapLocation me = rc.getLocation();
