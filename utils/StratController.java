@@ -134,7 +134,7 @@ public class StratController {
         int toMake = mindex(counts);
         rc.setIndicatorString(1,counts[toMake] + " " + maxCounts[toMake] + " " + Clock.getRoundNum() + " " + (counts[toMake] < maxCounts[toMake]
                 && oreCount >= oreCosts[toMake]));
-        if (counts[toMake] + priorityOffsets[toMake] < maxCounts[toMake]
+        if (counts[toMake] < maxCounts[toMake]
                 && oreCount >= oreCosts[toMake]) {
             switch (toMake) {
                 case 0:
