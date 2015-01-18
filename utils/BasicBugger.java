@@ -114,7 +114,7 @@ public class BasicBugger {
 			if (tt == TerrainTile.VOID) return true;
 			if (rc.canSenseLocation(m)) {
 				RobotInfo ri = rc.senseRobotAtLocation(m);
-				if (ri != null && isStationary(ri.type)) return true;
+				if (ri != null) return true; //rc.setIndicatorString(0,"RETREAT");
 			}
 			return false;
 		} catch(GameActionException e) {

@@ -33,9 +33,9 @@ public class SimplePather {
 	final int dy;
 
 	int minX = 0;
-	int maxX = 360;
+	int maxX = 240;
 	int minY = 0;
-	int maxY = 360;
+	int maxY = 240;
 
 	MapLocation myHQ;
 	MapLocation enemyHQ;
@@ -50,7 +50,7 @@ public class SimplePather {
 		dy = enemyHQ.y - myHQ.y;
 		offsetMyHQ = new MapLocation(120 - dx, 120 - dy);
 		offsetEnemyHQ = new MapLocation(120 + dx, 120 + dx);
-		prev = new int[360][360];
+		prev = new int[240][240];//new int[360][360];
 		q = new MapLocation[2000];
 		costs = new float[2000];
 	}
@@ -68,7 +68,7 @@ public class SimplePather {
 	public MapLocation[] pathfind(MapLocation start, MapLocation finish) throws GameActionException {
 		start = offsetMapLocation(start);
 		finish = offsetMapLocation(finish);
-		prev = new int[360][360];
+		prev = new int[240][240];
 		index = 0;
 		MapLocation current;
 		dest = start;

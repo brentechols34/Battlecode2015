@@ -6,7 +6,7 @@ import battlecode.common.*;
 public class Tank {
 
     static RobotController rc;
-    static B_Turtle mood; /* current behavior */
+    static B_Tank mood; /* current behavior */
 
     static int range;
     static int senseRange = 24;
@@ -25,7 +25,7 @@ public class Tank {
             Tank.team = rc.getTeam();
 
 			//Move.setRc(rc);
-            mood = new B_Turtle(); /* starting behavior of turtling */
+            mood = new B_Tank(rc); /* starting behavior of turtling */
 
             while (true) {
             	MapLocation myLoc = rc.getLocation();
@@ -38,12 +38,11 @@ public class Tank {
             	}
 
                 /* get behavior */
-                update();
+                //update();
 
                 /* perform round */
                 mood.perception();
-                mood.calculation();
-                mood.action();
+                mood.act();
 
                 /* end round */
                 Tank.rc.yield();
@@ -60,19 +59,19 @@ public class Tank {
      *
      * @return Behavior interface
      */
-    private static void update() {
-        try {
-            if (rc.readBroadcast(66) == 1) {
-                mood.attacking = true;
-            } else {
-                mood.attacking = false;
-            }
-
-//            requestSupply();
-        } catch (Exception e) {
-            System.out.println("Error caught in choosing tank behavior");
-        }
-    }
+//    private static void update() {
+//        try {
+//            if (rc.readBroadcast(66) == 1) {
+//                mood.attacking = true;
+//            } else {
+//                mood.attacking = false;
+//            }
+//
+////            requestSupply();
+//        } catch (Exception e) {
+//            System.out.println("Error caught in choosing tank behavior");
+//        }
+//    }
 
     static void requestSupply() throws GameActionException {
         if (rc.getSupplyLevel() < 250) {

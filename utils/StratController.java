@@ -15,10 +15,10 @@ public class StratController {
 		Direction.SOUTH_WEST, Direction.WEST, Direction.NORTH_WEST};
 
 	// max counts of buildings
-	static int maxBarracks = 1;
+	static int maxBarracks = 0;
 	static int maxHelipad = 1;
 	static int maxMinerfactory = 2;
-	static int maxTankfactory = 2;
+	static int maxTankfactory = 0;
 	static int maxSupply = 5;
 	static int maxAerospace = 10;
 	
@@ -90,7 +90,7 @@ public class StratController {
 		};
 		int[] maxCounts = new int[]{maxBarracks, maxHelipad,
 				maxMinerfactory, maxTankfactory, maxSupply, maxAerospace};
-		int[] priorityOffsets = new int[]{1, 2, 3,
+		int[] priorityOffsets = new int[]{1, 3, 3,
 				(counts[0] > 0) ? 1 : -1000, 1, (counts[1] > 0) ? 1 : -1000};
 		boolean oneGood = false;
 		for (int i = 0; i < priorityOffsets.length; i++) {

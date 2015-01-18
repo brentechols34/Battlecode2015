@@ -106,7 +106,7 @@ public class Miner {
 			Direction d = findSpot();
 			if (d == Direction.NONE) {
                 rc.setIndicatorString(1, "Moving to best: " + bestLoc);
-                if (rc.readBroadcast(1000)==0) Move.tryMove(confusedDirection);
+                if (rc.readBroadcast(1000)<3) Move.tryMove(confusedDirection);
                 else {
                 	if (!bestLoc.equals(bb.goal)) bb.setDestination(bestLoc);
                 	bb.attemptMove();
