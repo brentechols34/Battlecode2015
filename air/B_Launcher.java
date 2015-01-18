@@ -175,7 +175,9 @@ public class B_Launcher implements Behavior {
                     launchThemAll();
                 } else {
                     previous = target;
+                    rc.setIndicatorString(0,"ATTEMPTING MOVE");
                     pm.attemptMove();
+                    rc.setIndicatorString(0,"I DID IT");
 
                 }
             }
@@ -214,8 +216,9 @@ public class B_Launcher implements Behavior {
                 } else {
                     if (nearest != previous) {
                         previous = nearest;
-                        pm.attemptMove();
+                        if (!pm.goal.equals(nearest)) pm.setDestination(nearest);
                     }
+                    pm.attemptMove();
                 }
             } else {
                 Launcher.panic = false; // no alarm

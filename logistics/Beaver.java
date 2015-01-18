@@ -116,6 +116,7 @@ public class Beaver {
 			if (toMake!=null && rc.canBuild(dir, toMake)) {
 				rc.build(myLoc.directionTo(panther.goal),toMake);
 			}
+			
 		} else panther.attemptMove();
 	}
 

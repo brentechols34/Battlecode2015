@@ -175,7 +175,9 @@ public class PathMove {
 	 * @throws GameActionException
 	 */
 	public void attemptMove() throws GameActionException {
-		if (path==null) return;
+		if (path==null) {
+			return;
+		}
 		//System.out.println(Arrays.toString(path) + " " + currentNode);
 		//rc.setIndicatorString(0, "");
 		MapLocation myLoc = rc.getLocation();

@@ -19,20 +19,29 @@ public class Commander {
     static Team team;
     static int resupplyChannel = 0;
     static boolean panic = false; //is there a distress signal
+    static Team opponent;
+    static MapLocation enemyHQ;
 
     static Direction[] directions = {Direction.NORTH, Direction.NORTH_EAST,
         Direction.EAST, Direction.SOUTH_EAST, Direction.SOUTH,
         Direction.SOUTH_WEST, Direction.WEST, Direction.NORTH_WEST};
 
     public static void run(RobotController rc) {
-        Behavior mood = new B_BeastMode();
         Commander.rc = rc;
         Commander.range = rc.getType().attackRadiusSquared;
         Commander.team = rc.getTeam();
+        Commander.team = Commander.team.opponent();
+        Commander.enemyHQ = rc.senseEnemyHQLocation();
+        Behavior mood = new B_BeastMode();
 
         while (true) {
             try {
-
+                mood.perception();
+                mood.calculation();
+                if (!panic) {
+                    mood.action();
+                }
+                mood.panicAlert();
             } catch (Exception e) {
                 System.out.println("Commander issue " + e);
             }

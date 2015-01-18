@@ -12,11 +12,13 @@ import java.util.*;
 import team163.land.Barracks;
 import team163.land.Basher;
 import team163.commander.Commander;
+import team163.commander.TrainingField;
 import team163.land.Soldier;
 import team163.logistics.Beaver;
 import team163.logistics.Computer;
 import team163.logistics.Miner;
 import team163.logistics.MinerFactory;
+import team163.logistics.TechnologyInstitute;
 
 public class RobotPlayer {
 
@@ -88,13 +90,21 @@ public class RobotPlayer {
                 case SUPPLYDEPOT:
                     SupplyDepot.run(tomatojuice);
                     break;
-                    
+
                 case COMPUTER:
                     Computer.run(tomatojuice);
                     break;
-                    
+
                 case COMMANDER:
                     Commander.run(tomatojuice);
+                    break;
+
+                case TRAININGFIELD:
+                    TrainingField.run(tomatojuice);
+                    break;
+
+                case TECHNOLOGYINSTITUTE:
+                    TechnologyInstitute.run(tomatojuice);
                     break;
 
                 default:
