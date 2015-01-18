@@ -36,7 +36,7 @@ public class Barracks {
                 int numBashers = rc.readBroadcast(2);
                 if (rc.isCoreReady()
                         && rc.getTeamOre() >= 80
-                        && numBashers < 8) {
+                        && (numBashers < 10 || rc.getTeamOre() > 800)) {
                     //&& fate < Math.pow(1.2, 15 - numSoldiers
                     //		- numBashers + numBeavers) * 10000) {
                     Spawn.trySpawn(directions[rand.nextInt(8)], RobotType.BASHER);
