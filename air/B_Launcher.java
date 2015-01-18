@@ -54,6 +54,7 @@ public class B_Launcher implements Behavior {
             xGoal = rc.readBroadcast(67);
             yGoal = rc.readBroadcast(68);
             checkTarget();
+            rc.setIndicatorString(0, target.toString());
             if (rc.readBroadcast(66) == 1) {
                 attack = true;
             } else {
@@ -75,7 +76,7 @@ public class B_Launcher implements Behavior {
 		int y = rc.readBroadcast(68);
 		MapLocation r = new MapLocation(x,y);
 		RobotInfo ri;
-		if (rc.canSenseLocation(r) && (ri=rc.senseRobotAtLocation(r)) != null && (ri.type != RobotType.TOWER && ri.type != RobotType.HQ)) {
+		if (rc.canSenseLocation(r) && (((ri=rc.senseRobotAtLocation(r)) != null && (ri.type != RobotType.TOWER && ri.type != RobotType.HQ)) || ri == null)) {
 			retarget();
 		}
 
@@ -124,7 +125,6 @@ public class B_Launcher implements Behavior {
                     }
                 }
             }
-            rc.setIndicatorString(0,"1");
             if (attack) {
                 if (previous.x != xGoal && previous.y != yGoal) {
                     target = new MapLocation(xGoal, yGoal);
@@ -138,7 +138,6 @@ public class B_Launcher implements Behavior {
                     b.setDestination(target);
                 }
             }
-            rc.setIndicatorString(0,"2");
         } catch (Exception e) {
             System.out.println("Error in Launcher calculation " + e);
         }
