@@ -5,56 +5,72 @@
  */
 package team163.air;
 
-import battlecode.common.MapLocation;
-import battlecode.common.RobotController;
-import battlecode.common.Team;
+import battlecode.common.*;
+import team163.logistics.SupplyDrone;
 
 /**
- * 
+ *
  * @author sweetness
  */
 public class Launcher {
 
-	static RobotController rc;
-	static Behavior mood; /* current behavior */
+    static RobotController rc;
+    static Behavior mood; /* current behavior */
 
-	static int range;
-	static Team team;
-	static MapLocation hq;
-	static MapLocation enemyHQ;
-	static int channel;
-	static boolean panic = false;
+    static int range;
+    static Team team;
+    static MapLocation hq;
+    static MapLocation enemyHQ;
+    static int channel;
+    static boolean panic = false;
+    static int resupplyChannel = 0;
 
-	public static void run(RobotController rc) {
-		try {
-			Launcher.rc = rc;
-			Launcher.range = rc.getType().attackRadiusSquared;
-			Launcher.team = rc.getTeam();
-			Launcher.hq = rc.senseHQLocation();
-			Launcher.enemyHQ = rc.senseEnemyHQLocation();
-			
-			mood = new B_Launcher(); /* starting behavior of turtling */
+    public static void run(RobotController rc) {
+        try {
+            Launcher.rc = rc;
+            Launcher.range = rc.getType().attackRadiusSquared;
+            Launcher.team = rc.getTeam();
+            Launcher.hq = rc.senseHQLocation();
+            Launcher.enemyHQ = rc.senseEnemyHQLocation();
 
-			while (true) {
+            mood = new B_Launcher(); /* starting behavior of turtling */
 
-				/* get behavior */
-				mood = chooseB();
+            while (true) {
 
-				/* perform round */
-				mood.perception();
-				mood.calculation();
-				mood.action();
-				
-				/* end round */
-				Launcher.rc.yield();
-			}
-		} catch (Exception e) {
-			System.out.println("Launcher Exception");
-			e.printStackTrace();
-		}
-	}
+                /* get behavior */
+                mood = chooseB();
 
-	private static Behavior chooseB() {
-		return mood;
-	}
+                /* perform round */
+                requestSupply();
+                mood.perception();
+                mood.calculation();
+                mood.action();
+
+                /* end round */
+                Launcher.rc.yield();
+            }
+        } catch (Exception e) {
+            System.out.println("Launcher Exception");
+            e.printStackTrace();
+        }
+    }
+
+    static void requestSupply() throws GameActionException {
+        if (rc.getSupplyLevel() < 250) {
+            resupplyChannel = SupplyDrone.requestResupply(rc, rc.getLocation(), resupplyChannel);
+
+            int head = rc.readBroadcast(196);
+            MapLocation beaverLoc = new MapLocation(rc.readBroadcast(198), rc.readBroadcast(199));
+            if (head == resupplyChannel && beaverLoc.distanceSquaredTo(rc.getLocation()) < 20) {
+                System.out.println("waiting for refuel");
+                Launcher.rc.yield();
+            }
+        } else {
+            resupplyChannel = 0;
+        }
+    }
+
+    private static Behavior chooseB() {
+        return mood;
+    }
 }

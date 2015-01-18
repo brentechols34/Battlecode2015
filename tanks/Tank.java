@@ -24,23 +24,24 @@ public class Tank {
             Tank.range = rc.getType().attackRadiusSquared;
             Tank.team = rc.getTeam();
 
-			//Move.setRc(rc);
+            //Move.setRc(rc);
             mood = new B_Tank(rc); /* starting behavior of turtling */
 
             while (true) {
-            	MapLocation myLoc = rc.getLocation();
-            	double best = rc.readBroadcast(1000);
-            	double here = rc.senseOre(myLoc);
-            	if (here < best) {
-            		rc.broadcast(1000, (int) (.5+here));
-            		rc.broadcast(1001, myLoc.x);
-            		rc.broadcast(1002, myLoc.y);
-            	}
+                MapLocation myLoc = rc.getLocation();
+                double best = rc.readBroadcast(1000);
+                double here = rc.senseOre(myLoc);
+                if (here < best) {
+                    rc.broadcast(1000, (int) (.5 + here));
+                    rc.broadcast(1001, myLoc.x);
+                    rc.broadcast(1002, myLoc.y);
+                }
 
                 /* get behavior */
                 //update();
 
                 /* perform round */
+                requestSupply();
                 mood.perception();
                 mood.act();
 
@@ -72,7 +73,6 @@ public class Tank {
 //            System.out.println("Error caught in choosing tank behavior");
 //        }
 //    }
-
     static void requestSupply() throws GameActionException {
         if (rc.getSupplyLevel() < 250) {
             resupplyChannel = SupplyDrone.requestResupply(rc, rc.getLocation(), resupplyChannel);
