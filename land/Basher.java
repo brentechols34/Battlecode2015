@@ -79,15 +79,15 @@ public class Basher {
 		int dis = Integer.MAX_VALUE;
 		int maxCount = 0;
 		
-		if (!attacking && me.distanceSquaredTo(rally) > 10) { //keep kinda close to rally until we attack
+		if (!attacking && me.distanceSquaredTo(rally) > 24) { //keep kinda close to rally until we attack
 			pm.attemptMove();
 			return;
 		}
 		
 		for (RobotInfo r : enemies) {
-			if (r.type != RobotType.TOWER && r.type != RobotType.HQ) {
+			if (r.type != RobotType.TOWER && r.type != RobotType.HQ && r.location.distanceSquaredTo(goal) > 24) {
 				int t_dis = me.distanceSquaredTo(r.location);
-				if (t_dis < dis || closest == null) {
+				if ((t_dis < dis || closest == null)) {
 					dis = t_dis;
 					closest = r.location;
 				}
@@ -104,7 +104,11 @@ public class Basher {
 				Direction toClosest = me.directionTo(closest);
 				if (rc.canMove(toClosest)) rc.move(toClosest);
 			} else {
-				pm.attemptMove();
+				if (!attacking || me.distanceSquaredTo(goal) > 35) pm.attemptMove();
+				else { //I'm attacking and I'm close to the goal
+					
+					
+				}
 			}
 
 		} else {
