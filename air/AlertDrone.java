@@ -22,11 +22,12 @@ public class AlertDrone {
     static boolean right; //turn right
     static boolean panic = false;
     static RobotInfo[] enemies;
+    static RobotInfo[] allies;
     static Random random;
 
     static Direction[] directions = {Direction.NORTH, Direction.NORTH_EAST,
-            Direction.EAST, Direction.SOUTH_EAST, Direction.SOUTH,
-            Direction.SOUTH_WEST, Direction.WEST, Direction.NORTH_WEST};
+        Direction.EAST, Direction.SOUTH_EAST, Direction.SOUTH,
+        Direction.SOUTH_WEST, Direction.WEST, Direction.NORTH_WEST};
 
     public static void run(RobotController rc) {
         try {
@@ -56,6 +57,7 @@ public class AlertDrone {
             State state = new Patrolling();
             while (true) {
                 AlertDrone.enemies = rc.senseNearbyRobots(rc.getType().sensorRadiusSquared, AlertDrone.opponent);
+                AlertDrone.allies = rc.senseNearbyRobots(rc.getType().sensorRadiusSquared, AlertDrone.team);
                 state = state.run(rc);
 
                 AlertDrone.rc.yield();
@@ -68,13 +70,15 @@ public class AlertDrone {
 }
 
 interface State {
-    State run (RobotController rc) throws GameActionException;
+
+    State run(RobotController rc) throws GameActionException;
 }
 
 class Patrolling implements State {
+
     MapLocation nextTower = null;
 
-    public State run (RobotController rc) throws GameActionException {
+    public State run(RobotController rc) throws GameActionException {
         if (nextTower != null) {
             rc.setIndicatorString(0, "Patrolling to " + nextTower.toString());
         }
@@ -86,9 +90,17 @@ class Patrolling implements State {
             nextTower = new MapLocation(x, y);
         }
 
+        //add goal location to patrol if attacking
+        if (rc.readBroadcast(CHANNELS.ORDER66.getValue()) == 1
+                && nextTower == null) {
+            x = rc.readBroadcast(CHANNELS.GOAL_X.getValue());
+            y = rc.readBroadcast(CHANNELS.GOAL_Y.getValue());
+            nextTower = new MapLocation(x, y);
+        }
+
         if (AlertDrone.enemies.length > 0) {
             Chasing state = new Chasing();
-            state.run(rc);
+            //state.run(rc);
 
             return state;
         }
@@ -100,7 +112,7 @@ class Patrolling implements State {
             }
 
             MapLocation[] towers = rc.senseTowerLocations();
-            int index = (int)(Math.random() * towers.length + 1);
+            int index = (int) (Math.random() * towers.length + 1);
 
             if (index == towers.length) {
                 nextTower = AlertDrone.hq;
@@ -109,7 +121,7 @@ class Patrolling implements State {
             }
         }
 
-        Move.tryFly(nextTower);
+        Move.tryKite(nextTower, rc.senseEnemyTowerLocations());
 
         if (Clock.getBytecodesLeft() > 500) {
             Supply.supplyConservatively(rc, AlertDrone.team);
@@ -120,24 +132,41 @@ class Patrolling implements State {
 }
 
 class Responding implements State {
-    public State run (RobotController rc) throws GameActionException {
+
+    public State run(RobotController rc) throws GameActionException {
         return this;
     }
 }
 
 class Chasing implements State {
-    public State run (RobotController rc) throws GameActionException {
+
+    public State run(RobotController rc) throws GameActionException {
         rc.setIndicatorString(0, "Chasing");
         if (AlertDrone.enemies.length == 0) {
             Patrolling state = new Patrolling();
-            state.run(rc);
+            //state.run(rc);
 
             return state;
         }
 
         AttackUtils.attackSomething(rc, AlertDrone.range, AlertDrone.opponent);
-        Move.tryFly(AlertDrone.enemies[0].location);
+        MapLocation[] towers = rc.senseEnemyTowerLocations();
+        if (Move.inTowerRange(AlertDrone.enemies[0].location, towers)) {
+            //enemy moved into tower range
+            if (AlertDrone.allies.length < 4) {
+                //call off chase
+                Patrolling state = new Patrolling();
+                //state.run(rc);
 
+                return state;
+            }
+        }
+
+        if (AlertDrone.allies.length < 4) {
+            Move.tryFly(AlertDrone.enemies[0].location);
+        } else {
+            Move.tryKite(AlertDrone.enemies[0].location, rc.senseEnemyTowerLocations());
+        }
         return this;
     }
 }

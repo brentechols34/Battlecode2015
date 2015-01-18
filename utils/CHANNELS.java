@@ -7,6 +7,9 @@ public enum CHANNELS {
 
     PANIC_X(911),
     PANIC_Y(912),
+    ORDER66(66), //attack
+    GOAL_X(67), //goal is set to attack
+    GOAL_Y(68),
     SUPPLY_DRONE1(913),
     SUPPLY_DRONE2(914),
     SUPPLY_DRONE3(915),

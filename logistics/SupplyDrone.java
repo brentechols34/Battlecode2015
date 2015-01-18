@@ -23,8 +23,8 @@ import javax.xml.stream.Location;
 public class SupplyDrone {
 
     static Direction[] directions = {Direction.NORTH, Direction.NORTH_EAST,
-            Direction.EAST, Direction.SOUTH_EAST, Direction.SOUTH,
-            Direction.SOUTH_WEST, Direction.WEST, Direction.NORTH_WEST};
+        Direction.EAST, Direction.SOUTH_EAST, Direction.SOUTH,
+        Direction.SOUTH_WEST, Direction.WEST, Direction.NORTH_WEST};
 
     static RobotController rc;
     static Team myTeam;
@@ -79,7 +79,7 @@ public class SupplyDrone {
     }
 
     // THIS IS CALLED BY OTHER PEOPLE SO DONT USE CLASS VARIABLES
-    public static int requestResupply (RobotController requester, MapLocation loc, int channel) throws GameActionException {
+    public static int requestResupply(RobotController requester, MapLocation loc, int channel) throws GameActionException {
         // Default assign the channel to the tail
         if (channel == 0) {
             channel = requester.readBroadcast(197);
@@ -96,7 +96,7 @@ public class SupplyDrone {
         return channel;
     }
 
-    static void goToBase () throws GameActionException {
+    static void goToBase() throws GameActionException {
         rc.setIndicatorString(1, "Heading back to base!");
         wasReturning = true;
         if (travelLoc != null && !travelLoc.equals(rc.senseHQLocation())) {
@@ -104,7 +104,7 @@ public class SupplyDrone {
         }
 
         MapLocation hqLoc = rc.senseHQLocation();
-        if(myLoc.distanceSquaredTo(hqLoc) <= GameConstants.SUPPLY_TRANSFER_RADIUS_SQUARED) {
+        if (myLoc.distanceSquaredTo(hqLoc) <= GameConstants.SUPPLY_TRANSFER_RADIUS_SQUARED) {
             rc.setIndicatorString(1, "Resupplying!");
             return;
         }
@@ -112,7 +112,7 @@ public class SupplyDrone {
         usePathMove(hqLoc);
     }
 
-    static void goSupplyPeople () throws GameActionException {
+    static void goSupplyPeople() throws GameActionException {
         if (wasReturning) {
             travelLoc = null;
         }
@@ -151,17 +151,17 @@ public class SupplyDrone {
         usePathMove(dest);
     }
 
-    static void claimDelivery () throws GameActionException {
+    static void claimDelivery() throws GameActionException {
         myHead = rc.readBroadcast(196);
         rc.broadcast(196, (myHead == 298) ? 200 : (myHead + 2));
     }
 
-    static void completeDelivery () {
+    static void completeDelivery() {
         myHead = -1;
         turnsWaited = 0;
     }
 
-    static void usePathMove (MapLocation dest) throws GameActionException {
-        Move.tryFly(dest);
+    static void usePathMove(MapLocation dest) throws GameActionException {
+        Move.tryKite(dest, rc.senseEnemyTowerLocations());
     }
 }
