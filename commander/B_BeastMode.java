@@ -14,7 +14,7 @@ import team163.utils.PathMove;
  * @author sweetness
  */
 public class B_BeastMode implements Behavior {
-    
+
     double health = Commander.rc.getHealth();
     double curHealth = health;
     boolean wasHurt = false;
@@ -32,7 +32,9 @@ public class B_BeastMode implements Behavior {
     MapLocation goal;
     RobotInfo[] enemies;
     RobotInfo[] allies;
-    
+
+    int countTest = 0;
+
     public B_BeastMode() {
         try {
             pm = new PathMove(Commander.rc);
@@ -45,19 +47,19 @@ public class B_BeastMode implements Behavior {
             System.out.println("error in beast mode constroctor " + e);
         }
     }
-    
+
     public void perception() {
         try {
             myLoc = Commander.rc.getLocation();
             curHealth = Commander.rc.getHealth();
-            
+
             int xGoal = Commander.rc.readBroadcast(67);
             int yGoal = Commander.rc.readBroadcast(68);
             goal = new MapLocation(xGoal, yGoal);
-            
+
             enemies = Commander.rc.senseNearbyRobots(24, Commander.opponent);
             allies = Commander.rc.senseNearbyRobots(24, Commander.team);
-            
+
             if (curHealth < health) {
                 wasHurt = true;
             } else {
@@ -68,8 +70,9 @@ public class B_BeastMode implements Behavior {
             System.out.println("error in commander perception " + e);
         }
     }
-    
+
     public void calculation() {
+        countTest++;
         try {
             if (curHealth < 100) {
                 run = true;
@@ -88,7 +91,7 @@ public class B_BeastMode implements Behavior {
                 attacking = false;
                 roaming = true;
             }
-            
+
             nearest = Commander.enemyHQ;
             int min = Integer.MAX_VALUE;
             for (RobotInfo ri : enemies) {
@@ -109,23 +112,37 @@ public class B_BeastMode implements Behavior {
         } catch (Exception e) {
             System.out.println("error in commander calculation " + e);
         }
-        
+
     }
-    
+
     public void action() {
-        if (run) {
-            retreat();
-        } else if (attacking) {
-            attackUnit();
-        } else if (roaming) {
-            roam();
-        } else {
-            //if for what ever reason nothing else set than defend
-            defend(null);
+        try {
+            if (run) {
+                Commander.rc.setIndicatorString(1, "retreating " + " count: " + countTest);
+                retreat();
+            } else if (attacking) {
+                Commander.rc.setIndicatorString(1, "attacking " + goal.toString() + "previous " + previous.toString() + " count: " + countTest);
+                if (!previous.equals(goal)) {
+                    pm.setDestination(goal);
+                    previous = goal;
+                }
+                attackUnit();
+            } else if (roaming) {
+                Commander.rc.setIndicatorString(1, "roaming " + rally.toString() + "previous " + previous.toString() + " count: " + countTest);
+                if (!previous.equals(rally)) {
+                    pm.setDestination(rally);
+                    previous = rally;
+                }
+                roam();
+            } else {
+                //if for what ever reason nothing else set than defend
+                defend(null);
+            }
+        } catch (Exception e) {
+            System.out.println("error in commander action " + e);
         }
-        
     }
-    
+
     private void attackUnit() {
         try {
             attack(nearest, true);
@@ -133,23 +150,22 @@ public class B_BeastMode implements Behavior {
             if (nearest.distanceSquaredTo(myLoc) < 7) {
                 Move.tryMove(nearest.directionTo(myLoc));
             }
-            MapLocation tow = closest(Commander.rc.senseEnemyTowerLocations());
-            if (tow.distanceSquaredTo(myLoc) < 35) {
-                if (tow.distanceSquaredTo(myLoc) < 34) {
-                    Move.tryMove(tow.directionTo(myLoc));
+            MapLocation[] towers = Commander.rc.senseEnemyTowerLocations();
+            if (towers.length > 0) {
+                MapLocation tow = closest(towers);
+                if (tow.distanceSquaredTo(myLoc) < 35) {
+                    if (tow.distanceSquaredTo(myLoc) < 34) {
+                        Move.tryMove(tow.directionTo(myLoc));
+                    }
                 }
             } else {
-                if (!previous.equals(goal)) {
-                    pm.setDestination(goal);
-                    previous = goal;
-                }
                 pm.attemptMove();
             }
         } catch (Exception e) {
             System.out.println("error in attack unit with commander " + e);
         }
     }
-    
+
     private void roam() {
         try {
             //most units attack is of range 5 so if unit is closer than 7 retreat some
@@ -163,17 +179,13 @@ public class B_BeastMode implements Behavior {
                     Move.tryMove(tow.directionTo(myLoc));
                 }
             } else {
-                if (!previous.equals(rally)) {
-                    pm.setDestination(rally);
-                    previous = rally;
-                }
                 pm.attemptMove();
             }
         } catch (Exception e) {
             System.out.println("error in commander roam " + e);
         }
     }
-    
+
     private MapLocation closest(MapLocation[] in) {
         MapLocation closest = myLoc;
         int min = Integer.MAX_VALUE;
@@ -186,7 +198,7 @@ public class B_BeastMode implements Behavior {
         }
         return closest;
     }
-    
+
     private void defend(MapLocation m) {
         try {
             MapLocation closest;
@@ -307,9 +319,9 @@ public class B_BeastMode implements Behavior {
             System.out.println("error in retreat " + e);
         }
     }
-    
+
     public void panicAlert() {
         //currently does not respond to panic alerts
     }
-    
+
 }

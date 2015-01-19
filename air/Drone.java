@@ -7,8 +7,6 @@ import battlecode.common.*;
 public class Drone {
 
     static RobotController rc;
-    static Behavior mood; /* current behavior */
-
     static int range;
     static Team team;
     static Team opponent;
@@ -29,29 +27,25 @@ public class Drone {
             Drone.opponent = rc.getTeam().opponent();
             Drone.hq = rc.senseHQLocation();
             Drone.enemyHQ = rc.senseEnemyHQLocation();
-            Drone.right = (rc.getID() % 2 == 0); //50% chance of right
 
-            mood = new B_Kite(); /* starting behavior of turtling */
+            Behavior mood = new B_Scout(); /* starting behavior of turtling */
 
             while (true) {
 
                 /* get behavior */
                 //mood = chooseB();
-            	MapLocation myLoc = rc.getLocation();
-            	double best = rc.readBroadcast(1000);
-            	double here = rc.senseOre(myLoc);
-            	if (here < best) {
-            		rc.broadcast(1000, (int) (.5+here));
-            		rc.broadcast(1001, myLoc.x);
-            		rc.broadcast(1002, myLoc.y);
-            	}
+                MapLocation myLoc = rc.getLocation();
+                double best = rc.readBroadcast(1000);
+                double here = rc.senseOre(myLoc);
+                if (here > best) {
+                    rc.broadcast(1000, (int) (.5 + here));
+                    rc.broadcast(1001, myLoc.x);
+                    rc.broadcast(1002, myLoc.y);
+                }
                 /* perform round */
                 mood.perception();
                 mood.calculation();
-                if (!panic) {
-                    mood.action();
-                }
-                mood.panicAlert();
+                mood.action();
 
                 /* end round */
                 Drone.rc.yield();

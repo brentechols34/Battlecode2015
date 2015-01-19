@@ -19,6 +19,7 @@ import team163.logistics.Computer;
 import team163.logistics.Miner;
 import team163.logistics.MinerFactory;
 import team163.logistics.TechnologyInstitute;
+import team163.utils.CHANNELS;
 
 public class RobotPlayer {
 

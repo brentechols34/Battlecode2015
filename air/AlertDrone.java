@@ -34,6 +34,12 @@ public class AlertDrone {
             int supplierAlive = rc.readBroadcast(CHANNELS.SUPPLY_DRONE1.getValue());
             int round = Clock.getRoundNum();
             int lastRound = round - 1;
+
+            //check for if scout drone is needed
+            if (round < 500 && rc.readBroadcast(CHANNELS.NUMBER_DRONE.getValue()) < 2) {
+                Drone.run(rc);
+            }
+
             if (supplierAlive != round && supplierAlive != lastRound) {
                 SupplyDrone.run(rc, 1);
             }
@@ -98,7 +104,8 @@ class Patrolling implements State {
             nextTower = new MapLocation(x, y);
         }
 
-        if (AlertDrone.enemies.length > 0) {
+        if (AlertDrone.enemies.length > 0
+                && ((double) AlertDrone.allies.length + 1.0) * 1.3 > AlertDrone.enemies.length) {
             Chasing state = new Chasing();
             //state.run(rc);
 
@@ -114,10 +121,17 @@ class Patrolling implements State {
             MapLocation[] towers = rc.senseTowerLocations();
             int index = (int) (Math.random() * towers.length + 1);
 
-            if (index == towers.length) {
-                nextTower = AlertDrone.hq;
+            //add chance to patroll ore location
+            if (Math.random() > 0.8) {
+                int xOre = rc.readBroadcast(CHANNELS.BEST_ORE_X.getValue());
+                int yOre = rc.readBroadcast(CHANNELS.BEST_ORE_Y.getValue());
+                nextTower = new MapLocation(xOre, yOre);
             } else {
-                nextTower = towers[index];
+                if (index == towers.length) {
+                    nextTower = AlertDrone.hq;
+                } else {
+                    nextTower = towers[index];
+                }
             }
         }
 
@@ -162,7 +176,14 @@ class Chasing implements State {
             }
         }
 
-        if (AlertDrone.allies.length < 4) {
+        //test if outnumbered
+        if (((double) AlertDrone.allies.length + 1.0) * 1.3 < AlertDrone.enemies.length) {
+            Patrolling state = new Patrolling();
+            //state.run(rc);
+            return state;
+        }
+
+        if (AlertDrone.allies.length > 4) { //charge
             Move.tryFly(AlertDrone.enemies[0].location);
         } else {
             Move.tryKite(AlertDrone.enemies[0].location, rc.senseEnemyTowerLocations());

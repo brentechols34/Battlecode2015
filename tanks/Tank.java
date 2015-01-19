@@ -31,7 +31,7 @@ public class Tank {
                 MapLocation myLoc = rc.getLocation();
                 double best = rc.readBroadcast(1000);
                 double here = rc.senseOre(myLoc);
-                if (here < best) {
+                if (here > best) {
                     rc.broadcast(1000, (int) (.5 + here));
                     rc.broadcast(1001, myLoc.x);
                     rc.broadcast(1002, myLoc.y);

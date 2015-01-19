@@ -14,7 +14,7 @@ public class StratController {
     static Direction[] directions = {Direction.NORTH, Direction.NORTH_EAST,
         Direction.EAST, Direction.SOUTH_EAST, Direction.SOUTH,
         Direction.SOUTH_WEST, Direction.WEST, Direction.NORTH_WEST};
-    
+
     public static boolean shouldBuildHere(RobotController rc, MapLocation m) {
         int count = 0;
         for (Direction d : directions) {
@@ -184,9 +184,9 @@ public class StratController {
     public static void calculateRatios(RobotController rc) {
         try {
             int maxBarracks = 1;
-            int maxHelipad = 1;
-            int maxMinerfactory = 2;
-            int maxTankfactory = 3;
+            int maxHelipad = 2;
+            int maxMinerfactory = 5;
+            int maxTankfactory;
             int maxSupply = 5;
             int maxAerospace = 0;
             int maxTechnologyInstitute = 1;
@@ -194,12 +194,51 @@ public class StratController {
             int roundNum = Clock.getRoundNum();
             int mapSize = 3600; //60 * 60 assuming average to begin
 
-            int maxSoldiers = 0;
+            int maxSoldiers = 0;//soldiers seem weak
             int maxDrones = 60;
             int maxMiner = 50;
             int maxTank = 50;
-            int maxLauncher = 20;
+            int maxLauncher;
             int maxBasher = 20;
+
+            int countSoldiers = rc.readBroadcast(CHANNELS.NUMBER_SOLDIER.getValue());
+            int countDrones = rc.readBroadcast(CHANNELS.NUMBER_DRONE.getValue());
+            int countMiner = rc.readBroadcast(CHANNELS.NUMBER_MINER.getValue());
+            int countTank = rc.readBroadcast(CHANNELS.NUMBER_TANK.getValue());
+            int countLauncher = rc.readBroadcast(CHANNELS.NUMBER_LAUNCHER.getValue());
+            int countBasher = rc.readBroadcast(CHANNELS.NUMBER_BASHER.getValue());
+
+            int countBarracks = rc.readBroadcast(CHANNELS.NUMBER_BARRACKS.getValue());
+            int countHelipad = rc.readBroadcast(CHANNELS.NUMBER_HELIPAD.getValue());
+            int countMineFact = rc.readBroadcast(CHANNELS.NUMBER_MINERFACTORY.getValue());
+            int countTankFact = rc.readBroadcast(CHANNELS.NUMBER_TANKFACTORY.getValue());
+            int countSupply = rc.readBroadcast(CHANNELS.NUMBER_SUPPLYDEPOT.getValue());
+            int countAeroSpace = rc.readBroadcast(CHANNELS.NUMBER_AEROSPACELAB.getValue());
+
+            //set launchers to 10% of tanks
+            maxLauncher = (int) ((double) countTank * 0.1);
+
+            //max tank factory small to begin round
+            if (roundNum < 500) {
+                maxTankfactory = 2;
+            } else {
+                maxTankfactory = 5;
+            }
+            
+            //if no tank factorys than no aerospace is needed
+            if (countTankFact < 1) {
+                maxAerospace = 0;
+            } else {
+                maxAerospace = (int) ((double) countTankFact / 2) + 1;
+            }
+
+            //set drones depending on tanks
+            if (countDrones > 10 && countTank < 10) {
+                maxDrones = 10;
+            }
+
+            //set max basher as percentage of tanks
+            maxBasher = (int) ((double) countTank * 0.3);
 
             //building max values
             rc.broadcast(CHANNELS.BUILD_NUM_BARRACKS.getValue(), maxBarracks);

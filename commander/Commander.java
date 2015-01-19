@@ -41,6 +41,7 @@ public class Commander {
                 mood.perception();
                 mood.calculation();
                 if (!panic) {
+                    rc.setIndicatorDot(rc.getLocation(), 5, 5, 5);
                     mood.action();
                 }
                 mood.panicAlert();
