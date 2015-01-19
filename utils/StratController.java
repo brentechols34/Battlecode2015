@@ -131,7 +131,7 @@ public class StratController {
             maxTechnologyInstitute, maxTrainingField};
         int[] priorityOffsets = new int[]{1, 2, 3,
             (counts[0] > 0) ? 1 : -10000, 1, (counts[1] > 0) ? 1 : -10000,
-            1, (counts[6] > 0) ? 1 : -10000};
+            1, (counts[6] > 0 && maxAerospace > 0) ? 1 : -10000};
         for (int i = 0; i < priorityOffsets.length; i++) {
             if (counts[i] >= maxCounts[i]) {
                 priorityOffsets[i] = -10000;
@@ -184,8 +184,8 @@ public class StratController {
     public static void calculateRatios(RobotController rc) {
         try {
             int maxBarracks = 1;
-            int maxHelipad = 2;
-            int maxMinerfactory = 5;
+            int maxHelipad = 10;
+            int maxMinerfactory = 7;
             int maxTankfactory;
             int maxSupply = 5;
             int maxAerospace = 0;
@@ -195,8 +195,8 @@ public class StratController {
             int mapSize = 3600; //60 * 60 assuming average to begin
 
             int maxSoldiers = 0;//soldiers seem weak
-            int maxDrones = 60;
-            int maxMiner = 50;
+            int maxDrones = 100;
+            int maxMiner = 100;
             int maxTank = 50;
             int maxLauncher;
             int maxBasher = 20;
@@ -224,19 +224,18 @@ public class StratController {
             } else {
                 maxTankfactory = 5;
             }
-            
+
             //if no tank factorys than no aerospace is needed
-            if (countTankFact < 1) {
+            if (countTankFact < 1 || countTank < 20) {
                 maxAerospace = 0;
             } else {
                 maxAerospace = (int) ((double) countTankFact / 2) + 1;
             }
 
             //set drones depending on tanks
-            if (countDrones > 10 && countTank < 10) {
-                maxDrones = 10;
-            }
-
+            //if (countDrones > 10 && countTank < 10) {
+            //    maxDrones = 10;
+            //}
             //set max basher as percentage of tanks
             maxBasher = (int) ((double) countTank * 0.3);
 

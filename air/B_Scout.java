@@ -29,6 +29,8 @@ public class B_Scout implements Behavior {
     boolean north = false;
     boolean east = false;
     boolean west = false;
+    int count = 10;
+    int count2 = 10;
 
     RobotInfo[] nearRobots;
     RobotInfo[] enemies;
@@ -94,7 +96,6 @@ public class B_Scout implements Behavior {
                 }
             } else {
                 if (rc.isCoreReady()) {
-
                     if (!south) {
                         if (Drone.rc.senseTerrainTile(myLoc.add(Direction.SOUTH)).equals(TerrainTile.OFF_MAP)) {
                             south = true;
@@ -110,11 +111,18 @@ public class B_Scout implements Behavior {
                             east = true;
                         }
                         Move.tryMove(Direction.NORTH_EAST);
+                    } else if ((count--) > 0) {
+                        if (Drone.rc.senseTerrainTile(myLoc.add(Direction.WEST)).equals(TerrainTile.OFF_MAP)) {
+                            north = true;
+                        }
+                        Move.tryMove(Direction.WEST);
                     } else if (!north) {
                         if (Drone.rc.senseTerrainTile(myLoc.add(Direction.NORTH)).equals(TerrainTile.OFF_MAP)) {
                             north = true;
                         }
                         Move.tryMove(Direction.NORTH);
+                    } else if ((count2--) > 0) {
+                        Move.tryMove(Direction.SOUTH);
                     } else if (!east) {
                         if (Drone.rc.senseTerrainTile(myLoc.add(Direction.EAST)).equals(TerrainTile.OFF_MAP)) {
                             east = true;

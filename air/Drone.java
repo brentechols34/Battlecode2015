@@ -51,8 +51,7 @@ public class Drone {
                 Drone.rc.yield();
             }
         } catch (Exception e) {
-            System.out.println("Drone Exception");
-            e.printStackTrace();
+            System.out.println("Drone Exception " + e);
         }
     }
 }

@@ -67,6 +67,9 @@ public class Miner {
                 enemies = rc.senseNearbyRobots(24, Miner.enemyTeam);
 
                 attackSomething(rc, myRange, enemyTeam);
+                if(Clock.getRoundNum() > 1750) {
+                    Miner_Rush.run(rc);
+                }
 
                 // Update the most lucrative position's ore
                 if (myLoc.x == rc.readBroadcast(1001) && myLoc.y == rc.readBroadcast(1002)) {

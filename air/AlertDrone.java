@@ -69,7 +69,7 @@ public class AlertDrone {
                 AlertDrone.rc.yield();
             }
         } catch (Exception e) {
-            System.out.println("Drone Exception");
+            System.out.println("Alert Drone Exception");
             e.printStackTrace();
         }
     }
@@ -130,7 +130,11 @@ class Patrolling implements State {
                 if (index == towers.length) {
                     nextTower = AlertDrone.hq;
                 } else {
-                    nextTower = towers[index];
+                    if (index > towers.length) {
+                        nextTower = AlertDrone.hq;
+                    } else {
+                        nextTower = towers[index];
+                    }
                 }
             }
         }
@@ -165,7 +169,8 @@ class Chasing implements State {
 
         AttackUtils.attackSomething(rc, AlertDrone.range, AlertDrone.opponent);
         MapLocation[] towers = rc.senseEnemyTowerLocations();
-        if (Move.inTowerRange(AlertDrone.enemies[0].location, towers)) {
+        if (AlertDrone.enemies.length > 0
+                && Move.inTowerRange(AlertDrone.enemies[0].location, towers)) {
             //enemy moved into tower range
             if (AlertDrone.allies.length < 4) {
                 //call off chase
@@ -183,10 +188,12 @@ class Chasing implements State {
             return state;
         }
 
-        if (AlertDrone.allies.length > 4) { //charge
-            Move.tryFly(AlertDrone.enemies[0].location);
-        } else {
-            Move.tryKite(AlertDrone.enemies[0].location, rc.senseEnemyTowerLocations());
+        if (AlertDrone.enemies.length > 0) {
+            if (AlertDrone.allies.length > 4) { //charge
+                Move.tryFly(AlertDrone.enemies[0].location);
+            } else {
+                Move.tryKite(AlertDrone.enemies[0].location, rc.senseEnemyTowerLocations());
+            }
         }
         return this;
     }
