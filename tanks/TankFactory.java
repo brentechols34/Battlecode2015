@@ -3,6 +3,7 @@ package team163.tanks;
 import battlecode.common.*;
 import java.util.*;
 import team163.utils.CHANNELS;
+import team163.utils.Spawn;
 import static team163.utils.Spawn.trySpawn;
 
 public class TankFactory {
@@ -16,6 +17,7 @@ public class TankFactory {
 
         rc = TankFactoryRC;
         Random rand = new Random();
+        Spawn.rc = rc;
         while (true) {
             try {
                 // get information broadcasted by the HQ

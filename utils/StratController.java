@@ -199,7 +199,7 @@ public class StratController {
             int maxMiner = 50;
             int maxTank = 50;
             int maxLauncher = 20;
-            int maxBasher = 100;
+            int maxBasher = 20;
 
             //building max values
             rc.broadcast(CHANNELS.BUILD_NUM_BARRACKS.getValue(), maxBarracks);
