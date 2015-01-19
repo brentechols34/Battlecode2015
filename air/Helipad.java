@@ -1,28 +1,25 @@
 package team163.air;
 
-import java.util.Random;
-
 import battlecode.common.Direction;
 import battlecode.common.GameActionException;
 import battlecode.common.RobotController;
 import battlecode.common.RobotType;
+import team163.utils.CHANNELS;
 import team163.utils.Spawn;
 
 public class Helipad {
-    
+
     static RobotController rc;
-    static Random rand;
 
     public static void run(RobotController rc) {
         try {
             Spawn.rc = rc;
             Helipad.rc = rc;
-            rand = new Random(rc.getID());
             while (true) {
-            	int droneCount = rc.readBroadcast(4);
-            	int minerCount = rc.readBroadcast(14);
+                int maxDrone = rc.readBroadcast(CHANNELS.BUILD_NUM_DRONE.getValue());
+                int droneCount = rc.readBroadcast(CHANNELS.NUMBER_DRONE.getValue());
                 if (rc.isCoreReady() && rc.getTeamOre() >= 125
-                        && rand.nextBoolean() && droneCount < 50 && minerCount > 5) {
+                        && droneCount < maxDrone) {
                     Spawn.randSpawn(
                             RobotType.DRONE);
                 }

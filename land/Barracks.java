@@ -7,6 +7,7 @@ package team163.land;
 
 import battlecode.common.*;
 import java.util.Random;
+import team163.utils.CHANNELS;
 import team163.utils.Spawn;
 
 /**
@@ -29,17 +30,18 @@ public class Barracks {
         Spawn.rc = rc;
         while (true) {
             try {
-                
+                int maxBasher = rc.readBroadcast(CHANNELS.BUILD_NUM_BASHER.getValue());
+                int countBasher = rc.readBroadcast(CHANNELS.NUMBER_BASHER.getValue());
+                int maxSoldier = rc.readBroadcast(CHANNELS.BUILD_NUM_SOLDIER.getValue());
+                int countSoldier = rc.readBroadcast(CHANNELS.NUMBER_SOLDIER.getValue());
 
-                // get information broadcasted by the HQ
-                //int numSoldiers = rc.readBroadcast(1);
-                int numBashers = rc.readBroadcast(2);
-                if (rc.isCoreReady()
-                        && rc.getTeamOre() >= 80
-                        && (numBashers < 10 || rc.getTeamOre() > 800)) {
-                    //&& fate < Math.pow(1.2, 15 - numSoldiers
-                    //		- numBashers + numBeavers) * 10000) {
+                if (rc.isCoreReady() && rc.getTeamOre() >= 100
+                        && countBasher < maxBasher) {
                     Spawn.trySpawn(directions[rand.nextInt(8)], RobotType.BASHER);
+                }
+                if (rc.isCoreReady() && rc.getTeamOre() >= 60
+                        && countSoldier < maxSoldier) {
+                    Spawn.trySpawn(directions[rand.nextInt(8)], RobotType.SOLDIER);
                 }
             } catch (Exception e) {
                 System.out.println("Barracks Exception");
