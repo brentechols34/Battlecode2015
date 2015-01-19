@@ -93,7 +93,7 @@ public class Basher {
 			}
 		}
 		for (RobotInfo r : enemies) {
-			if (r.type != RobotType.TOWER && r.type != RobotType.HQ && r.location.distanceSquaredTo(goal) > 24) {
+			//if (r.type != RobotType.TOWER && r.type != RobotType.HQ && r.location.distanceSquaredTo(goal) > 24) {
 				int t_dis = me.distanceSquaredTo(r.location);
 				if ((t_dis < dis || closest == null)) {
 					dis = t_dis;
@@ -105,7 +105,7 @@ public class Basher {
 					counts[di]++;
 					if (counts[di] > counts[maxCount]) maxCount = di;
 				}
-			}
+			//}
 		}
 		if (counts[maxCount] == 0) { //if the best direction puts me towards no one
 			if (closest != null) {

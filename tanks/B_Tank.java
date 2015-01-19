@@ -127,17 +127,17 @@ public class B_Tank {
 	public void kill(MapLocation loc) {
 		try {
 
-			if (rc.senseNearbyRobots(loc, RobotType.TOWER.sensorRadiusSquared +7, myTeam).length > 6) {
+			if (rc.senseNearbyRobots(loc, RobotType.TOWER.sensorRadiusSquared+10, myTeam).length > 6) {
 				if (!rc.canAttackLocation(loc)) { //if I can't attack
 					if (!rc.isWeaponReady()) { //if weapon isn't ready
-						rc.setIndicatorString(0,"MOVE FORWARDS");
+						rc.setIndicatorString(1,"MOVE FORWARDS");
 						moveTo(loc);
 					} else return;
 				} else rc.attackLocation(loc);
 				return;
 			} else {
 				//retreat!
-				rc.setIndicatorString(0,"RETREAT");
+				rc.setIndicatorString(1,"RETREAT");
 				Direction d = me.directionTo(loc).opposite();
 				Move.tryMove(d);
 			}
