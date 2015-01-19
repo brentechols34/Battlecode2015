@@ -19,6 +19,7 @@ public class TankFactory {
 
         rc = TankFactoryRC;
         Random rand = new Random();
+        Spawn.rc = rc;
         while (true) {
             try {
                 // get information broadcasted by the HQ
