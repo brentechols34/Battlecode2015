@@ -88,6 +88,8 @@ public class B_Tank {
 				}
 			}
 			if (best != null) { //there is a nearby enemy who should get rekt
+
+				rc.setIndicatorString(1, "1");
 				kill(best.location);
 				return;
 			} else { //run away
@@ -108,7 +110,6 @@ public class B_Tank {
 		if (!isInBadRange(me.add(d)) || loc.equals(goal)) { //if it is a safe spot, or I'm aggro-ing a tower/HQ
 			if (rc.canMove(d)) { //if I can move
 				try {
-
 					rc.move(d);
 				} catch (GameActionException e) {
 					e.printStackTrace();
@@ -128,17 +129,18 @@ public class B_Tank {
 		try {
 
 			if (rc.senseNearbyRobots(loc, RobotType.TOWER.sensorRadiusSquared+10, myTeam).length > 6) {
-				if (!rc.canAttackLocation(loc)) { //if I can't attack
-					if (!rc.isWeaponReady()) { //if weapon isn't ready
-						rc.setIndicatorString(1,"MOVE FORWARDS");
-						moveTo(loc);
-					} else return;
-				} else rc.attackLocation(loc);
+				if (!rc.canAttackLocation(loc) || !rc.isWeaponReady()) { //if I can't attack
+					moveTo(loc);
+					rc.setIndicatorString(1, "2");
+				} else {
+					if (rc.isWeaponReady() && rc.canAttackLocation(loc)) rc.attackLocation(loc);
+					else moveTo(loc);
+				}
 				return;
 			} else {
 				//retreat!
-				rc.setIndicatorString(1,"RETREAT");
 				Direction d = me.directionTo(loc).opposite();
+				rc.setIndicatorString(1, "3");
 				Move.tryMove(d);
 			}
 		} catch (GameActionException e) {

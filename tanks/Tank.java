@@ -6,7 +6,7 @@ import battlecode.common.*;
 public class Tank {
 
     static RobotController rc;
-    static B_Turtle mood; /* current behavior */
+    static B_Tank mood; /* current behavior */
 
     static int range;
     static int senseRange = 24;
@@ -25,7 +25,7 @@ public class Tank {
             Tank.team = rc.getTeam();
 
             //Move.setRc(rc);
-            mood = new B_Turtle(); /* starting behavior of turtling */
+            mood = new B_Tank(rc); /* starting behavior of turtling */
 
             while (true) {
                 MapLocation myLoc = rc.getLocation();
@@ -43,8 +43,7 @@ public class Tank {
                 /* perform round */
                 requestSupply();
                 mood.perception();
-                mood.calculation();
-                mood.action();
+                mood.act();
 
                 /* end round */
                 Tank.rc.yield();
