@@ -34,7 +34,7 @@ public class MinerFactory {
 				// get information broadcasted by the HQ
 				int numMiners = rc.readBroadcast(14);
 				//System.out.println(numMiners);
-				if (rc.isCoreReady() && rc.getTeamOre() >= 250 && numMiners < 30) {
+				if (rc.isCoreReady() && rc.getTeamOre() >= 250 && numMiners < 50) {
 					trySpawn(directions[rand.nextInt(8)], RobotType.MINER);
 				}
 				RobotInfo[] bots = rc.senseNearbyRobots(15, myTeam);

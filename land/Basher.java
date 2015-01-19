@@ -5,6 +5,8 @@
  */
 package team163.land;
 
+import team163.air.Launcher;
+import team163.logistics.SupplyDrone;
 import team163.utils.BasicBugger;
 import team163.utils.PathMove;
 import battlecode.common.Direction;
@@ -25,7 +27,7 @@ public class Basher {
 		Direction.EAST, Direction.SOUTH_EAST, Direction.SOUTH,
 		Direction.SOUTH_WEST, Direction.WEST, Direction.NORTH_WEST};
 
-
+	static int resupplyChannel = 0;
 	static PathMove pm;
 	static BasicBugger bb;
 	static RobotController rc;
@@ -36,7 +38,7 @@ public class Basher {
 
 	static MapLocation goal;
 	static MapLocation rally;
-	
+
 	static boolean attacking;
 
 	public static void run(RobotController rc) {
@@ -63,6 +65,7 @@ public class Basher {
 				}
 
 				if (rc.isCoreReady()) yolo();
+				requestSupply();
 
 				rc.yield();
 			} catch (GameActionException e) {
@@ -71,6 +74,8 @@ public class Basher {
 		}
 	}
 
+
+	static int backCount = 0;
 	public static void yolo() throws GameActionException {
 		RobotInfo[] enemies = rc.senseNearbyRobots(RobotType.BASHER.sensorRadiusSquared, enemyTeam);
 		//maximize enemies adjacent
@@ -78,12 +83,15 @@ public class Basher {
 		MapLocation closest = null;
 		int dis = Integer.MAX_VALUE;
 		int maxCount = 0;
-		
-		if (!attacking && me.distanceSquaredTo(rally) > 24) { //keep kinda close to rally until we attack
-			pm.attemptMove();
-			return;
+		if (!attacking) {
+			if (me.distanceSquaredTo(rally) > 50) { //keep kinda close to rally until we attack
+				backCount=5;
+			}
+			if (backCount > 0 && rc.getHealth() > RobotType.BASHER.maxHealth/2) {
+				pm.attemptMove();
+				backCount--;
+			}
 		}
-		
 		for (RobotInfo r : enemies) {
 			if (r.type != RobotType.TOWER && r.type != RobotType.HQ && r.location.distanceSquaredTo(goal) > 24) {
 				int t_dis = me.distanceSquaredTo(r.location);
@@ -102,19 +110,27 @@ public class Basher {
 		if (counts[maxCount] == 0) { //if the best direction puts me towards no one
 			if (closest != null) {
 				Direction toClosest = me.directionTo(closest);
-				if (rc.canMove(toClosest)) rc.move(toClosest);
+				if (rc.canMove(toClosest) && rc.isCoreReady()) rc.move(toClosest);
 			} else {
 				if (!attacking || me.distanceSquaredTo(goal) > 35) pm.attemptMove();
 				else { //I'm attacking and I'm close to the goal
-					
-					
+
+
 				}
 			}
 
 		} else {
-			if (rc.canMove(directions[maxCount])) {
+			if (rc.canMove(directions[maxCount]) && rc.isCoreReady()) {
 				rc.move(directions[maxCount]);
 			}
+		}
+	}
+
+	static void requestSupply() throws GameActionException {
+		if (rc.getSupplyLevel() < 100) {
+			resupplyChannel = SupplyDrone.requestResupply(rc, rc.getLocation(), resupplyChannel);
+		} else {
+			resupplyChannel = 0;
 		}
 	}
 

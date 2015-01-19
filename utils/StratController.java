@@ -16,7 +16,7 @@ public class StratController {
         Direction.SOUTH_WEST, Direction.WEST, Direction.NORTH_WEST};
     
     // max counts of buildings
-    static int maxBarracks = 1;
+    static int maxBarracks = 2;
     static int maxHelipad = 1;
     static int maxMinerfactory = 2;
     static int maxTankfactory = 0;

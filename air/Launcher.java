@@ -58,13 +58,6 @@ public class Launcher {
     static void requestSupply() throws GameActionException {
         if (rc.getSupplyLevel() < 250) {
             resupplyChannel = SupplyDrone.requestResupply(rc, rc.getLocation(), resupplyChannel);
-
-            int head = rc.readBroadcast(196);
-            MapLocation beaverLoc = new MapLocation(rc.readBroadcast(198), rc.readBroadcast(199));
-            if (head == resupplyChannel && beaverLoc.distanceSquaredTo(rc.getLocation()) < 20) {
-                System.out.println("waiting for refuel");
-                Launcher.rc.yield();
-            }
         } else {
             resupplyChannel = 0;
         }
