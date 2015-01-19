@@ -14,16 +14,6 @@ public class StratController {
     static Direction[] directions = {Direction.NORTH, Direction.NORTH_EAST,
         Direction.EAST, Direction.SOUTH_EAST, Direction.SOUTH,
         Direction.SOUTH_WEST, Direction.WEST, Direction.NORTH_WEST};
-    
-    // max counts of buildings
-    static int maxBarracks = 1;
-    static int maxHelipad = 1;
-    static int maxMinerfactory = 2;
-    static int maxTankfactory = 0;
-    static int maxSupply = 5;
-    static int maxAerospace = 10;
-    static int maxTechnologyInstitute = 1;
-    static int maxTrainingField = 1;
 
     public static boolean shouldBuildHere(RobotController rc, MapLocation m) {
         int count = 0;
@@ -50,8 +40,12 @@ public class StratController {
             return false;
         }
         try {
-        	if (rc.canSenseLocation(m) && rc.senseRobotAtLocation(m)!=null) return false;
-        } catch (GameActionException e) { e.printStackTrace(); }
+            if (rc.canSenseLocation(m) && rc.senseRobotAtLocation(m) != null) {
+                return false;
+            }
+        } catch (GameActionException e) {
+            e.printStackTrace();
+        }
         return isSafe(rc, m) && !m.isAdjacentTo(rc.senseHQLocation());
     }
 
@@ -101,6 +95,23 @@ public class StratController {
     }
 
     public static RobotType toMake(RobotController rc) throws GameActionException {
+
+        //read in brodcast channels for make number to build
+        int maxBarracks = rc.readBroadcast(CHANNELS.BUILD_NUM_BARRACKS.getValue());
+        int maxHelipad = rc.readBroadcast(CHANNELS.BUILD_NUM_HELIPAD.getValue());
+        int maxMinerfactory = rc.readBroadcast(CHANNELS.BUILD_NUM_MINEFACTORY.getValue());
+        int maxTankfactory = rc.readBroadcast(CHANNELS.BUILD_NUM_TANKFACTORY.getValue());
+        int maxSupply = rc.readBroadcast(CHANNELS.BUILD_NUM_SUPPLY.getValue());
+        int maxAerospace = rc.readBroadcast(CHANNELS.BUILD_NUM_AEROSPACELAB.getValue());
+        int maxTechnologyInstitute;
+        int maxTrainingField;
+        if (rc.hasCommander()) {
+            maxTechnologyInstitute = 0;
+            maxTrainingField = 0;
+        } else {
+            maxTechnologyInstitute = 1;
+            maxTrainingField = 1;
+        }
         if (rc.getTeamMemory()[0] == 1) {
             maxHelipad = 5;
             maxTankfactory = 0;
@@ -132,7 +143,7 @@ public class StratController {
             counts[i] -= priorityOffsets[i];
         }
         int toMake = mindex(counts);
-        rc.setIndicatorString(1,counts[toMake] + " " + maxCounts[toMake] + " " + Clock.getRoundNum() + " " + (counts[toMake] < maxCounts[toMake]
+        rc.setIndicatorString(1, counts[toMake] + " " + maxCounts[toMake] + " " + Clock.getRoundNum() + " " + (counts[toMake] < maxCounts[toMake]
                 && oreCount >= oreCosts[toMake]));
         if (counts[toMake] < maxCounts[toMake]
                 && oreCount >= oreCosts[toMake]) {
@@ -169,7 +180,45 @@ public class StratController {
         }
         return dex;
     }
-    
-    
 
+    public static void calculateRatios(RobotController rc) {
+        try {
+            int maxBarracks = 1;
+            int maxHelipad = 1;
+            int maxMinerfactory = 2;
+            int maxTankfactory = 0;
+            int maxSupply = 5;
+            int maxAerospace = 10;
+            int maxTechnologyInstitute = 1;
+            int maxTrainingField = 1;
+            int roundNum = Clock.getRoundNum();
+            int mapSize = 3600; //60 * 60 assuming average to begin
+
+            int maxSoldiers = 0;
+            int maxDrones = 60;
+            int maxMiner = 50;
+            int maxTank = 50;
+            int maxLauncher = 20;
+            int maxBasher = 100;
+
+            //building max values
+            rc.broadcast(CHANNELS.BUILD_NUM_BARRACKS.getValue(), maxBarracks);
+            rc.broadcast(CHANNELS.BUILD_NUM_HELIPAD.getValue(), maxHelipad);
+            rc.broadcast(CHANNELS.BUILD_NUM_MINEFACTORY.getValue(), maxMinerfactory);
+            rc.broadcast(CHANNELS.BUILD_NUM_TANKFACTORY.getValue(), maxTankfactory);
+            rc.broadcast(CHANNELS.BUILD_NUM_SUPPLY.getValue(), maxSupply);
+            rc.broadcast(CHANNELS.BUILD_NUM_AEROSPACELAB.getValue(), maxAerospace);
+
+            //unit max values
+            rc.broadcast(CHANNELS.BUILD_NUM_SOLDIER.getValue(), maxSoldiers);
+            rc.broadcast(CHANNELS.BUILD_NUM_DRONE.getValue(), maxDrones);
+            rc.broadcast(CHANNELS.BUILD_NUM_MINER.getValue(), maxMiner);
+            rc.broadcast(CHANNELS.BUILD_NUM_TANK.getValue(), maxTank);
+            rc.broadcast(CHANNELS.BUILD_NUM_LAUNCHER.getValue(), maxLauncher);
+            rc.broadcast(CHANNELS.BUILD_NUM_BASHER.getValue(), maxBasher);
+
+        } catch (Exception e) {
+            System.out.println("Error in claculating ratios " + e);
+        }
+    }
 }
