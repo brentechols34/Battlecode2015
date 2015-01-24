@@ -131,7 +131,7 @@ public class StratController {
             maxTechnologyInstitute, maxTrainingField};
         int[] priorityOffsets = new int[]{1, 2, 3,
             (counts[0] > 0) ? 1 : -10000, 1, (counts[1] > 0) ? 1 : -10000,
-            1, (counts[6] > 0 && maxAerospace > 0) ? 1 : -10000};
+            1000, (counts[6] > 0) ? 1000 : -10000};
         for (int i = 0; i < priorityOffsets.length; i++) {
             if (counts[i] >= maxCounts[i]) {
                 priorityOffsets[i] = -10000;
@@ -194,9 +194,9 @@ public class StratController {
             int roundNum = Clock.getRoundNum();
             int mapSize = 3600; //60 * 60 assuming average to begin
 
-            int maxSoldiers = 0;//soldiers seem weak
-            int maxDrones = 100;
-            int maxMiner = 100;
+            int maxSoldiers = 100;//soldiers seem weak
+            int maxDrones = 5;
+            int maxMiner = 50;
             int maxTank = 50;
             int maxLauncher;
             int maxBasher = 20;

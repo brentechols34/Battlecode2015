@@ -145,7 +145,7 @@ public class B_BeastMode implements Behavior {
 
     private void attackUnit() {
         try {
-            attack(nearest, true);
+            Actions.attack(nearest, true);
             //most units attack is of range 5 so if unit is closer than 7 retreat some
             if (nearest.distanceSquaredTo(myLoc) < 7) {
                 Move.tryMove(nearest.directionTo(myLoc));
@@ -172,7 +172,7 @@ public class B_BeastMode implements Behavior {
             if (nearest.distanceSquaredTo(myLoc) < 7) {
                 Move.tryMove(nearest.directionTo(myLoc));
             }
-            attack(nearest, rush);//if rush true than uses flash
+            Actions.attack(nearest, rush);//if rush true than uses flash
             MapLocation tow = closest(Commander.rc.senseEnemyTowerLocations());
             if (tow.distanceSquaredTo(myLoc) < 35) {
                 if (tow.distanceSquaredTo(myLoc) < 34) {
@@ -217,7 +217,7 @@ public class B_BeastMode implements Behavior {
                 closest = m;
             }
             if (enemies.length > 0) {
-                attack(nearest, true);
+                Actions.attack(nearest, true);
             } else {
                 if (Commander.rc.getFlashCooldown() > 0) {
                     MapLocation tow = closest(Commander.rc.senseEnemyTowerLocations());
@@ -234,7 +234,7 @@ public class B_BeastMode implements Behavior {
                     }
                 } else {
                     //flash
-                    flash(closest);
+                    Actions.flash(closest);
                 }
             }
         } catch (Exception e) {
@@ -242,58 +242,11 @@ public class B_BeastMode implements Behavior {
         }
     }
 
-    //f is boolean of wheather to flash the enemy or not
-    private void attack(MapLocation m, boolean f) {
-        try {
-            //see about using flash
-            if (f && myLoc.distanceSquaredTo(m) > 20) {
-                if (Commander.rc.getFlashCooldown() == 0) {
-                    flash(m);
-                }
-            }
-            if (myLoc.distanceSquaredTo(m) <= 10) {//is in range
-                RobotInfo ri = Commander.rc.senseRobotAtLocation(m);
-                if (Commander.rc.canAttackLocation(m)
-                        && ri != null && ri.team != Commander.team) {
-                    if (Commander.rc.isWeaponReady()) {
-                        Commander.rc.attackLocation(m);
-                    }
-                }
-            }
-        } catch (Exception e) {
-            System.out.println("error in commander attack " + e);
-        }
-    }
-
-    //flash towards target location
-    private void flash(MapLocation target) {
-        MapLocation flash = myLoc;
-        try {
-            MapLocation next = myLoc;
-            while (myLoc.distanceSquaredTo(next) < 10) {
-                if (Commander.rc.senseTerrainTile(next).equals(TerrainTile.NORMAL)
-                        && Commander.rc.senseRobotAtLocation(next) == null) {
-                    flash = next;
-                }
-                next = next.add(myLoc.directionTo(target));
-            }
-            //don't waste flash if can not use well
-            if (!flash.equals(myLoc) && Commander.rc.isCoreReady()) {
-                //don't flash into tower range
-                if (closest(Commander.rc.senseEnemyTowerLocations()).distanceSquaredTo(flash) > 30) {
-                    Commander.rc.castFlash(flash);
-                }
-            }
-        } catch (Exception e) {
-            System.out.println("Error in flashing people " + e);
-            System.out.println("distance = " + myLoc.distanceSquaredTo(flash));
-        }
-    }
 
     //try and use flash also -- fighting retreat
     private void retreat() {
         try {
-            attack(nearest, false);
+            Actions.tryAttack(enemies, false);
             //retreat to closest tower
             MapLocation[] towers = Commander.rc.senseTowerLocations();
             int max = Integer.MAX_VALUE;
@@ -305,16 +258,7 @@ public class B_BeastMode implements Behavior {
                     closest = t;
                 }
             }
-            if (Commander.rc.getFlashCooldown() > 0) {
-                if (!previous.equals(closest)) {
-                    pm.setDestination(closest);
-                    previous = closest;
-                }
-                pm.attemptMove();
-            } else {
-                //flash
-                flash(closest);
-            }
+            Actions.kiteMove(closest, Commander.rc.senseEnemyTowerLocations(), 33);
         } catch (Exception e) {
             System.out.println("error in retreat " + e);
         }

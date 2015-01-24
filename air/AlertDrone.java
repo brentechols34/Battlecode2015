@@ -35,11 +35,6 @@ public class AlertDrone {
             int round = Clock.getRoundNum();
             int lastRound = round - 1;
 
-            //check for if scout drone is needed
-            if (round < 500 && rc.readBroadcast(CHANNELS.NUMBER_DRONE.getValue()) < 2) {
-                Drone.run(rc);
-            }
-
             if (supplierAlive != round && supplierAlive != lastRound) {
                 SupplyDrone.run(rc, 1);
             }
