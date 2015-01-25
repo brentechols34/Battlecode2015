@@ -183,8 +183,8 @@ public class StratController {
 
     public static void calculateRatios(RobotController rc) {
         try {
-            int maxBarracks = 1;
-            int maxHelipad = 10;
+            int maxBarracks = 3;
+            int maxHelipad = 2;
             int maxMinerfactory = 7;
             int maxTankfactory;
             int maxSupply = 5;
@@ -194,11 +194,11 @@ public class StratController {
             int roundNum = Clock.getRoundNum();
             int mapSize = 3600; //60 * 60 assuming average to begin
 
-            int maxSoldiers = 100;//soldiers seem weak
-            int maxDrones = 5;
+            int maxSoldiers = 100;
+            int maxDrones = 10; //needed for resupply
             int maxMiner = 50;
             int maxTank = 50;
-            int maxLauncher;
+            int maxLauncher = 0;
             int maxBasher = 20;
 
             int countSoldiers = rc.readBroadcast(CHANNELS.NUMBER_SOLDIER.getValue());
@@ -225,17 +225,20 @@ public class StratController {
                 maxTankfactory = 5;
             }
 
-            //if no tank factorys than no aerospace is needed
-            if (countTankFact < 1 || countTank < 20) {
-                maxAerospace = 0;
-            } else {
-                maxAerospace = (int) ((double) countTankFact / 2) + 1;
+            //if team ore is greater than 400 start making a couple more buildings
+            double ore = rc.getTeamOre();
+            if (ore > 400) {
+                int unit = (int) ore / 40;
+                int build = (int) ore / 400;
+                maxBarracks += build;
+                maxHelipad += build;
+                maxTankfactory += build;
+                maxSoldiers += unit;
+                maxDrones += unit;
+                maxTank += 2 * unit;
+                maxBasher += unit;
             }
 
-            //set drones depending on tanks
-            //if (countDrones > 10 && countTank < 10) {
-            //    maxDrones = 10;
-            //}
             //set max basher as percentage of tanks
             maxBasher = (int) ((double) countTank * 0.3);
 

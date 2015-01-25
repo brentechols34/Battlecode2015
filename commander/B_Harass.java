@@ -33,7 +33,7 @@ public class B_Harass implements Behavior {
         //if (Commander.rc.getSupplyLevel() < 10) {
         //    needSupply = true;
         //} else {
-            needSupply = false;
+        needSupply = false;
         //}
     }
 
@@ -118,7 +118,11 @@ public class B_Harass implements Behavior {
                     closest = t;
                 }
             }
-            Actions.directSafe(Commander.myLoc.directionTo(closest));
+            if (enemies.length > 0) {
+                Actions.directSafe(enemies[0].location.directionTo(Commander.myLoc));
+            } else {
+                Actions.safeMove(closest);
+            }
             //Actions.safeMove(closest);
             Commander.rc.setIndicatorString(1, "running away to location " + closest.toString());
         } catch (Exception e) {

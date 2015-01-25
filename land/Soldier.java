@@ -17,33 +17,37 @@ import team163.utils.PathMove;
 
 /**
  * Alex
+ * sweetness
  */
 public class Soldier {
 
-	static PathMove panther;
-	static MapLocation rally;
-	static MapLocation goal;
-	static boolean attacking;
-	static BasicBugger bb;
+    static MapLocation rally;
+    static MapLocation goal;
+    static boolean attacking;
 
-	public static void run(RobotController rc) {
-		//panther = new PathMove(rc);
-		bb = new BasicBugger(rc);
-		panther = new PathMove(rc);
-		while (true) {
-			try {
-				bb.attemptMove();
-				
-				
-				rc.yield();
-			} catch (GameActionException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-		}
-	}
-	
-	
+    public static void run(RobotController rc) {
+        RobotInfo[] enemies;
+        boolean building = false;
+        Actions.rc = rc;
+        while (true) {
+            try {
+                enemies = rc.senseNearbyRobots(24, rc.getTeam().opponent());
+                if (!building) {
+                    int xGoal = rc.readBroadcast(67);
+                    int yGoal = rc.readBroadcast(68);
+                    goal = new MapLocation(xGoal, yGoal);
+                }
+                Actions.myLoc = rc.getLocation();
+                building = Actions.tryAttack(enemies);
+                if (!building) {
+                    Actions.safeMove(goal);
+                }
+                
+                rc.yield();
+            } catch (Exception e) {
+                System.out.println("error in soldier " + e);
+            }
+        }
+    }
 
 }
-

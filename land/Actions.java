@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package team163.commander;
+package team163.land;
 
 import battlecode.common.*;
 import java.util.Arrays;
@@ -35,7 +35,6 @@ public class Actions {
      * rc in constructor needs to be set up for the specific type of robot
      */
     public Actions() {
-        rc = Commander.rc;
         try {
             pm = new PathMove(rc);
             bug = new BasicBugger(rc);
@@ -69,22 +68,15 @@ public class Actions {
     }
 
     /**
-     * f is boolean of wheather to flash the enemy or not
+     *
      *
      * @param enemies
-     * @param f
      * @rerturn true if attacking a building or priority
      */
-    static public boolean tryAttack(RobotInfo[] enemies, boolean f) {
+    static public boolean tryAttack(RobotInfo[] enemies) {
         try {
             MapLocation close = closestRobot(enemies);
-            //see about using flash
-            if (f && Commander.myLoc.distanceSquaredTo(close) > 20) {
-                if (rc.getFlashCooldown() == 0) {
-                    flashSafe(close);
-                }
-            }
-            if (Commander.myLoc.distanceSquaredTo(close) <= attackRange) {//is in range
+            if (myLoc.distanceSquaredTo(close) <= attackRange) {//is in range
                 if (rc.isWeaponReady()) {
                     rc.attackLocation(close);
                     RobotType ri = rc.senseRobotAtLocation(close).type;
@@ -130,7 +122,7 @@ public class Actions {
                     case TANKFACTORY:
                     case TECHNOLOGYINSTITUTE:
                     case TRAININGFIELD:
-                        if (Commander.myLoc.distanceSquaredTo(ri.location)
+                        if (myLoc.distanceSquaredTo(ri.location)
                                 <= attackRange) {//is in range
                             if (rc.isWeaponReady()) {
                                 rc.attackLocation(ri.location);
@@ -140,7 +132,7 @@ public class Actions {
                     default:
                 }
             }
-            return tryAttack(enemies, false);
+            return tryAttack(enemies);
         } catch (Exception e) {
             System.out.println("error in commander try target " + e);
         }
@@ -153,18 +145,12 @@ public class Actions {
      * @param m
      * @param f
      */
-    static public void attack(MapLocation m, boolean f) {
+    static public void attack(MapLocation m) {
         try {
-            //see about using flash
-            if (f && Commander.myLoc.distanceSquaredTo(m) > 20) {
-                if (rc.getFlashCooldown() == 0) {
-                    flash(m);
-                }
-            }
-            if (Commander.myLoc.distanceSquaredTo(m) <= attackRange) {//is in range
+            if (myLoc.distanceSquaredTo(m) <= attackRange) {//is in range
                 RobotInfo ri = rc.senseRobotAtLocation(m);
-                if (Commander.rc.canAttackLocation(m)
-                        && ri != null && ri.team != Commander.team) {
+                if (rc.canAttackLocation(m)
+                        && ri != null && ri.team != rc.getTeam()) {
                     if (rc.isWeaponReady()) {
                         rc.attackLocation(m);
                     }
@@ -175,88 +161,11 @@ public class Actions {
         }
     }
 
-    //flash towards target location
-    static public void flash(MapLocation target) {
-        MapLocation flash = Commander.myLoc;
-        try {
-            MapLocation next = Commander.myLoc;
-            while (Commander.myLoc.distanceSquaredTo(next) < 10) {
-                if (rc.senseTerrainTile(next).equals(TerrainTile.NORMAL)
-                        && rc.senseRobotAtLocation(next) == null) {
-                    flash = next;
-                }
-                next = next.add(Commander.myLoc.directionTo(target));
-            }
-            //don't waste flash if can not use well
-            if (!flash.equals(Commander.myLoc) && rc.isCoreReady()) {
-                rc.castFlash(flash);
-            }
-        } catch (Exception e) {
-            System.out.println("Error in flashing people " + e);
-            System.out.println("distance = " + Commander.myLoc.distanceSquaredTo(flash));
-        }
-    }
-
-    //flash towards target location avoiding range of something
-    static public void flashAvoid(MapLocation target, MapLocation avoid, int dis) {
-        MapLocation flash = Commander.myLoc;
-        try {
-            MapLocation next = Commander.myLoc;
-            while (Commander.myLoc.distanceSquaredTo(next) < 10) {
-                if (rc.senseTerrainTile(next).equals(TerrainTile.NORMAL)
-                        && rc.senseRobotAtLocation(next) == null
-                        && next.distanceSquaredTo(avoid) < dis) {
-                    flash = next;
-                }
-                next = next.add(Commander.myLoc.directionTo(target));
-            }
-            //don't waste flash if can not use well
-            if (!flash.equals(Commander.myLoc) && rc.isCoreReady()) {
-                //don't flash into tower range
-                if (closest(rc.senseEnemyTowerLocations()).distanceSquaredTo(flash) > 30) {
-                    rc.castFlash(flash);
-                }
-            }
-        } catch (Exception e) {
-            System.out.println("Error in flashing people " + e);
-            System.out.println("distance = " + Commander.myLoc.distanceSquaredTo(flash));
-        }
-    }
-
-    static public void flashSafe(MapLocation target) {
-        MapLocation flash = Commander.myLoc;
-        MapLocation[] towers = rc.senseEnemyTowerLocations();
-        MapLocation[] objs = new MapLocation[towers.length + 1];
-        System.arraycopy(towers, 0, objs, 0, towers.length);
-        objs[towers.length] = rc.senseEnemyHQLocation();
-        try {
-            MapLocation next = Commander.myLoc;
-            while (Commander.myLoc.distanceSquaredTo(next) < 10) {
-                if (rc.senseTerrainTile(next).equals(TerrainTile.NORMAL)
-                        && rc.senseRobotAtLocation(next) == null
-                        && !inRange(next, objs, 34)) {
-                    flash = next;
-                }
-                next = next.add(Commander.myLoc.directionTo(target));
-            }
-            //don't waste flash if can not use well
-            if (!flash.equals(Commander.myLoc) && rc.isCoreReady()) {
-                //don't flash into tower range
-                if (closest(rc.senseEnemyTowerLocations()).distanceSquaredTo(flash) > 30) {
-                    rc.castFlash(flash);
-                }
-            }
-        } catch (Exception e) {
-            System.out.println("Error in safe flashing people " + e);
-            System.out.println("distance = " + Commander.myLoc.distanceSquaredTo(flash));
-        }
-    }
-
     static public MapLocation closest(MapLocation[] in) {
-        MapLocation closest = Commander.myLoc;
+        MapLocation closest = myLoc;
         int min = Integer.MAX_VALUE;
         for (MapLocation m : in) {
-            int dis = m.distanceSquaredTo(Commander.myLoc);
+            int dis = m.distanceSquaredTo(myLoc);
             if (dis < min) {
                 min = dis;
                 closest = m;
@@ -266,10 +175,10 @@ public class Actions {
     }
 
     static public MapLocation closestRobot(RobotInfo[] in) {
-        MapLocation closest = Commander.myLoc;
+        MapLocation closest = myLoc;
         int min = Integer.MAX_VALUE;
         for (RobotInfo x : in) {
-            int dis = x.location.distanceSquaredTo(Commander.myLoc);
+            int dis = x.location.distanceSquaredTo(myLoc);
             if (dis < min) {
                 min = dis;
                 closest = x.location;
@@ -286,10 +195,6 @@ public class Actions {
      */
     static public void directMove(MapLocation m) {
         try {
-            if (rc.getFlashCooldown() == 0) {
-                //flash
-                flashSafe(m);
-            }
             if (!previous.equals(m)) {
                 pm.setDestination(m);
                 previous = m;
@@ -311,16 +216,10 @@ public class Actions {
             MapLocation[] objs = new MapLocation[towers.length + 1];
             System.arraycopy(towers, 0, objs, 0, towers.length);
             objs[towers.length] = rc.senseEnemyHQLocation();
-
-            if (rc.getFlashCooldown() == 0) {
-                //flash
-                flashSafe(Commander.myLoc.add(dir, 10));
-            }
-
             boolean right = (rc.getID() % 2 == 0);
             Direction c = dir;
             for (int i = 0; i < 8; i++) {
-                if (rc.isCoreReady() && rc.canMove(c) && !inRange(Commander.myLoc, objs, 35)) {
+                if (rc.isCoreReady() && rc.canMove(c) && !inRange(myLoc, objs, 35)) {
                     rc.move(c);
                     return;
                 } else {
@@ -366,84 +265,80 @@ public class Actions {
     static public void kiteMove(MapLocation m, MapLocation[] objects, int dis) {
         try {
             MapLocation close = closest(objects);
-            //if (Commander.myLoc.distanceSquaredTo(close) <= (dis)) {
-            boolean right = (rc.getID() % 2 == 0);
-            Direction dir = pre;
-            MapLocation myLoc = Commander.myLoc;
-            MapLocation next = myLoc.add(dir);
-            if (m == null || myLoc.compareTo(m) == 0) {
-                m = rc.senseHQLocation();
-            }
+            if (myLoc.distanceSquaredTo(close) <= (dis)) {
+                rc.setIndicatorString(1, "in range kiting");
+                boolean right = (rc.getID() % 2 == 0);
+                Direction dir = pre;
+                MapLocation next = myLoc.add(dir);
+                if (m == null || myLoc.compareTo(m) == 0) {
+                    m = rc.senseHQLocation();
+                }
 
-            if (right && inRange(myLoc.add(pre), objects, dis)
-                    && inRange(myLoc.add(pre.rotateRight()), objects, dis)
-                    && inRange(myLoc.add(pre.rotateRight().rotateRight()), objects, dis)) {
-                right = false;
-            }
+                if (right && inRange(myLoc.add(pre), objects, dis)
+                        && inRange(myLoc.add(pre.rotateRight()), objects, dis)
+                        && inRange(myLoc.add(pre.rotateRight().rotateRight()), objects, dis)) {
+                    right = false;
+                }
 
-            if (!right && inRange(myLoc.add(pre), objects, dis)
-                    && inRange(myLoc.add(pre.rotateLeft()), objects, dis)
-                    && inRange(myLoc.add(pre.rotateLeft().rotateLeft()), objects, dis)) {
-                right = true;
-            }
+                if (!right && inRange(myLoc.add(pre), objects, dis)
+                        && inRange(myLoc.add(pre.rotateLeft()), objects, dis)
+                        && inRange(myLoc.add(pre.rotateLeft().rotateLeft()), objects, dis)) {
+                    right = true;
+                }
 
-            boolean check = true;
-            int count = 8;
-            while (check && count-- > 0) {
-                for (MapLocation x : objects) {
-                    if (x != null && x.x != 0 && x.y != 0) {
-                        for (int j = 0; j < 8; j++) {
-                            if (x.distanceSquaredTo(next) < dis) {
-                                Direction nDir = (right) ? dir.rotateRight() : dir
-                                        .rotateLeft(); // turn right or left
-                                next = myLoc.add(nDir);
+                boolean check = true;
+                int count = 8;
+                while (check && count-- > 0) {
+                    for (MapLocation x : objects) {
+                        if (x != null && x.x != 0 && x.y != 0) {
+                            for (int j = 0; j < 8; j++) {
+                                if (x.distanceSquaredTo(next) < dis) {
+                                    Direction nDir = (right) ? dir.rotateRight() : dir
+                                            .rotateLeft(); // turn right or left
+                                    next = myLoc.add(nDir);
+                                }
                             }
                         }
                     }
+                    // reached the end to the next location is good
+                    check = false;
                 }
-                // reached the end to the next location is good
-                check = false;
-            }
 
-            //curve toward target
-            //boolean canChange = true;
-            Direction direct = myLoc.directionTo(m);
-            Direction d = myLoc.directionTo(next);
-            do {
-                if (right) {
-                    d = d.rotateRight();
-                } else {
-                    d = d.rotateLeft();
-                }
-            } while (!inRange(myLoc.add(d), objects, dis) && d.compareTo(direct) != 0);
-            dir = d;
-            if (rc.senseTerrainTile(next) == TerrainTile.OFF_MAP) {
-                dir = dir.opposite();
-            }
-            if (rc.isCoreReady()) {
-                for (int i = 0; i < 8; i++) {
-                    if (rc.canMove(dir) && !inRange(myLoc.add(dir), objects, dis)) {
-                        pre = dir;
-                        rc.move(dir);
-                        return;
+                //curve toward target
+                //boolean canChange = true;
+                Direction direct = myLoc.directionTo(m);
+                Direction d = myLoc.directionTo(next);
+                do {
+                    if (right) {
+                        d = d.rotateRight();
                     } else {
-                        dir = (right) ? dir.rotateRight() : dir.rotateLeft();
+                        d = d.rotateLeft();
+                    }
+                } while (!inRange(myLoc.add(d), objects, dis) && d.compareTo(direct) != 0);
+                dir = d;
+                if (rc.senseTerrainTile(next) == TerrainTile.OFF_MAP) {
+                    dir = dir.opposite();
+                }
+                if (rc.isCoreReady()) {
+                    for (int i = 0; i < 8; i++) {
+                        if (rc.canMove(dir) && !inRange(myLoc.add(dir), objects, dis)) {
+                            pre = dir;
+                            rc.move(dir);
+                            return;
+                        } else {
+                            dir = (right) ? dir.rotateRight() : dir.rotateLeft();
+                        }
                     }
                 }
+                //if this point is reached than just move away from object
+                //directMove(close.directionTo(Commander.myLoc));
+            } else {
+                if (!previous.equals(m)) {
+                    pm.setDestination(m);
+                    previous = m;
+                }
+                pm.attemptMove();
             }
-            //if this point is reached than just move away from object
-            //directMove(close.directionTo(Commander.myLoc));
-            //} else {
-            if (rc.getFlashCooldown() == 0) {
-                //flash
-                flashSafe(m);
-            }
-//                if (!previous.equals(m)) {
-//                    pm.setDestination(m);
-//                    previous = m;
-//                }
-//                pm.attemptMove();
-            //}
         } catch (Exception e) {
             System.out.println("kites move error (with direction) " + e);
         }
@@ -456,6 +351,7 @@ public class Actions {
      * @param m map location to move to
      */
     static public void safeMove(MapLocation m) {
+        rc.setIndicatorString(1, "making safe move");
         MapLocation[] towers = rc.senseEnemyTowerLocations();
         MapLocation[] objs = new MapLocation[towers.length + 1];
         System.arraycopy(towers, 0, objs, 0, towers.length);
